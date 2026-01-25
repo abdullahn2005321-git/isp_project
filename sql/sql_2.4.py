@@ -10,11 +10,16 @@ print(cur.fetchall())
 cur.execute("""
 UPDATE users
 SET phone = ?
-WHERE id = ?
-""", ("07762102020",46))
-conn.commit
+WHERE phone LIKE ?
+""", ("","0770%"))
+conn.commit()
 print("\n update done, affected rows:", cur.rowcount)
 
 cur.execute("DELETE FROM users WHERE id = ?", (45,))
-conn.commit
+conn.commit()
 print("\n delete done, affected rows:", cur.rowcount)
+
+cur.execute("SELECT * FROM users")
+print(cur.fetchall())
+
+conn.close()
