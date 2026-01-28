@@ -3,7 +3,10 @@ import sqlite3
 conn = sqlite3.connect("practice.db")
 cur = conn.cursor()
 
-cur.execute("PRAGMA foreing_keys = NO")
+cur.execute("PRAGMA foreign_keys = ON")
+
+cur.execute("DROP TABLE IF EXISTS tasks")
+conn.commit()
 
 cur.execute("""
 CREATE TABLE IF NOT EXISTS tasks (
@@ -11,7 +14,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     user_id INTEGER NOT NULL,
     title TEXT NOT NULL,
     done INTEGER DEFAULT 0,
-    FOREIGN KEY (user_id) REFERENCES users_safa(id)
+    FOREIGN KEY (user_id) REFERENCES users_safe(id)
 )
 """)
 conn.commit()

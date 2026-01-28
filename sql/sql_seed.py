@@ -18,6 +18,8 @@ conn.commit()
 # تنظيف البيانات القديمة حتى تصير النتائج ثابتة
 cur.execute("DELETE FROM users_safe")
 conn.commit()
+cur.execute("DELETE FROM sqlite_sequence WHERE name='users_safe'")
+conn.commit()
 
 users = [
     ("Abdullah Ali",   "u1@mail.com",  "07700000001", "Baghdad", 20),
