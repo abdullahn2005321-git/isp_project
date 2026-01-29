@@ -1,6 +1,7 @@
+import os
 import sqlite3
 
-conn = sqlite3.connect("practice.db")
+conn = sqlite3.connect(os.path.join(os.path.dirname(__file__), "db", "practice.db"))
 cur = conn.cursor()
 
 cur.execute("""
@@ -10,12 +11,11 @@ CREATE TABLE IF NOT EXISTS users_safe (
     email TEXT UNIQUE NOT NULL,
     phone TEXT UNIQUE NOT NULL,
     area TEXT DEFAULT 'Unknown',
-    age INTEGER CHECK(age >= 0)
+    age INTEGER CHECK(age >= 18)
 )
 """)
 conn.commit()
 
-# تنظيف البيانات القديمة حتى تصير النتائج ثابتة
 cur.execute("DELETE FROM users_safe")
 conn.commit()
 cur.execute("DELETE FROM sqlite_sequence WHERE name='users_safe'")
@@ -33,7 +33,7 @@ users = [
     ("Maryam Qasim",   "u9@mail.com",  "07700000009", "Erbil",   24),
     ("Noor Yasin",     "u10@mail.com", "07700000010", "Basra",   21),
     ("Mustafa Adnan",  "u11@mail.com", "07700000011", "Najaf",   27),
-    ("Rami Fadel",     "u12@mail.com", "07700000012", "Baghdad", 17),
+    ("Rami Fadel",     "u12@mail.com", "07700000012", "Baghdad", 18),
 ]
 
 cur.executemany("""

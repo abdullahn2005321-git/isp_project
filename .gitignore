@@ -3,3 +3,8 @@ __pycache__/
 *.pyc
 .venv/
 .env
+*.db
+*.sqlite*
+SQL.DB/
+subs.txt
+subs.csv

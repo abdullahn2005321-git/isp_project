@@ -1,5 +1,6 @@
+import os
 import sqlite3
-conn = sqlite3.connect("practice.db")
+conn = sqlite3.connect(os.path.join(os.path.dirname(__file__), "db", "practice.db"))
 cur = conn.cursor()
 cur.execute("PRAGMA foreign_keys = ON")
 

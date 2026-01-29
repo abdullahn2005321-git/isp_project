@@ -1,11 +1,19 @@
-name = input("Enter new subscriber name:").strip()
+import os
+
+file_path = os.path.join(os.path.dirname(__file__), "subs.txt")
+
+if not os.path.exists(file_path):
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write("")
+
+name = input("Enter new subscriber name: ").strip()
 
 
 if name == "":
     print("Name cannot be empty!")
 
 else:
-    with open("subs.txt", "r") as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
 
     clean_names = [line.strip() for line in lines]
@@ -15,10 +23,10 @@ else:
         print("Name already exists!")
     
     else:
-        with open("subs.txt", "a") as f:
+        with open(file_path, "a", encoding="utf-8") as f:
             f.write(name + "\n")
 
-        with open("subs.txt", "r") as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
 
         count = 1

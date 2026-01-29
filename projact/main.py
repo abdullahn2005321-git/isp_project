@@ -1,8 +1,11 @@
+import os
 from manager import SubscriberManager
 from subscriber import Subscriber
 
+
 def menu():
-    manager = SubscriberManager("subs.json")
+    data_path = os.path.join(os.path.dirname(__file__), "data", "subs.json")
+    manager = SubscriberManager(data_path)
 
     while True:
         print("\n--- Subscriber Manager ---")
@@ -13,16 +16,16 @@ def menu():
         print("5) Delete subscriber (by name)")
         print("0) Exit")
 
-        choice = input("choose an optine: ").strip()
+        choice = input("choose an option: ").strip()
 
         if choice == "1":
             manager.list_all()
-        
+
         elif choice == "2":
             name = input("Enter name: ").strip()
             ip = input("Enter IP: ").strip()
             manager.add(Subscriber(name, ip))
-            
+
         elif choice == "3":
             q = input("Search by name or IP: ").strip()
             results = manager.search(q)

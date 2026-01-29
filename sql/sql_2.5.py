@@ -1,7 +1,7 @@
-#المستوى 5 — القيود Constraints (تحمي بياناتك)
+import os
 import sqlite3
 
-conn = sqlite3.connect("practice.db")
+conn = sqlite3.connect(os.path.join(os.path.dirname(__file__), "db", "practice.db"))
 cur = conn.cursor()
 
 cur.execute("""
@@ -21,11 +21,11 @@ try:
     cur.execute("""
     INSERT INTO users_safe (full_name, email, phone, area, age)
     VALUES (?, ?, ?, ?, ?)
-    """, ("Hasan", "", "07705555555","pop", 19))
+    """, ("Hasan", "", "07705555555", "pop", 19))
     conn.commit()
-    print("insert OK")
+    print("Insert OK")
 except sqlite3.IntegrityError as e:
-    print("Blocked by constrint:", e)
+    print("Blocked by constraint:", e)
 
 cur.execute("SELECT * FROM users_safe")
 print(cur.fetchall())

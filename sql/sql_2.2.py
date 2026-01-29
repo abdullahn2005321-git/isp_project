@@ -1,7 +1,7 @@
-#المستوى 2 — إنشاء جدول + إدخال + قراءة (أول CRUD)
+import os
 import sqlite3
 
-conn = sqlite3.connect("practice.db")
+conn = sqlite3.connect(os.path.join(os.path.dirname(__file__), "db", "practice.db"))
 cur = conn.cursor()
 
 cur.execute("""
@@ -23,14 +23,14 @@ VALUES (?, ?, ?, ?, ?)
 cur.execute("""
 INSERT INTO users (full_name, email, phone, area, mother_name)
 VALUES (?, ?, ?, ?, ?)
-""", ("Omar Hassan","omar@gmali.com", "07701223308", "Basra", "Sara"))
+""", ("Omar Hassan", "omar@gmali.com", "07701223308", "Basra", "Sara"))
 
 cur.execute("""
 INSERT INTO users (full_name, email, phone, area, mother_name)
 VALUES (?, ?, ?, ?, ?)
 """, ("Ahmad", "ahmad@gmali.com", "07708109109", "Arbel", "Zinab"))
 
-#cur.execute("DELETE FROM users")
+# cur.execute("DELETE FROM users")
 
 conn.commit()
 

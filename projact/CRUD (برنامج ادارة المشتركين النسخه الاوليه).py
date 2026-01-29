@@ -1,20 +1,23 @@
-import json
+﻿import json
 import os
 
-file = "subs.json"
+BASE_DIR = os.path.dirname(__file__)
+file = os.path.join(BASE_DIR, "data", "subs.json")
+os.makedirs(os.path.dirname(file), exist_ok=True)
 
 if not os.path.exists(file):
-    with open(file, "w") as f:
-        json.dump([],f)
+    with open(file, "w", encoding="utf-8") as f:
+        json.dump([], f, ensure_ascii=False)
 
-#اضافه مشتركين
+
+# Add subscriber
 def add_subscriber():
-    name = input("enter name: ").strip()
-    ip = input("enter ip").strip()
+    name = input("Enter name: ").strip()
+    ip = input("Enter ip: ").strip()
 
-    with open(file, "r") as f:
+    with open(file, "r", encoding="utf-8") as f:
         subs = json.load(f)
-    
+
     names = [s["name"].lower() for s in subs]
 
     if name == "":
@@ -23,17 +26,18 @@ def add_subscriber():
     elif name.lower() in names:
         print("Name already exists!")
         return
-    
-    subs.append({"name": name, "ip":ip})
 
-    with open(file, "w") as f:
-        json.dump(subs, f, indent=4)
+    subs.append({"name": name, "ip": ip})
+
+    with open(file, "w", encoding="utf-8") as f:
+        json.dump(subs, f, indent=4, ensure_ascii=False)
 
     print(f"{name} added successfully!")
 
-#قائمه المشتركين
+
+# List subscribers
 def list_subscribers():
-    with open(file, "r") as f:
+    with open(file, "r", encoding="utf-8") as f:
         subs = json.load(f)
 
     if not subs:
@@ -43,12 +47,13 @@ def list_subscribers():
     for i, s in enumerate(subs, start=1):
         print(f"{i}) {s['name']} - {s['ip']}")
 
-#بحث عن مشترك
+
+# Search subscriber
 def search_subscriber():
     query = input("Search by name or IP: ").strip().lower()
-    with open(file, "r") as f:
+    with open(file, "r", encoding="utf-8") as f:
         subs = json.load(f)
-    
+
     results = [s for s in subs if query in s["name"].lower() or query in s["ip"]]
 
     if not results:
@@ -57,51 +62,54 @@ def search_subscriber():
         for s in results:
             print(f"{s['name']} - {s['ip']}")
 
-#تعديل مشترك
+
+# Update subscriber
 def update_subscriber():
-    targrt = input("Enter name to update: ").strip().lower()
+    target = input("Enter name to update: ").strip().lower()
     new_name = input("New name (leave empty to keep same): ").strip()
     new_ip = input("New IP (leave empty to keep same): ").strip()
 
-    with open(file, "r") as f:
+    with open(file, "r", encoding="utf-8") as f:
         subs = json.load(f)
 
     found = False
     for s in subs:
-        if s["name"].lower() == targrt:
+        if s["name"].lower() == target:
             if new_name:
                 s["name"] = new_name
             if new_ip:
                 s["ip"] = new_ip
             found = True
             break
-    
+
     if not found:
         print("Subscriber not found.")
         return
-    
-    with open(file, "w") as f:
-        json.dump(subs, f, indent=4)
+
+    with open(file, "w", encoding="utf-8") as f:
+        json.dump(subs, f, indent=4, ensure_ascii=False)
     print("Subscriber updated successfully!")
 
-#حذف مشترك
+
+# Delete subscriber
 def delete_subscriber():
     target = input("Enter name to delete: ").strip().lower()
 
-    with open(file, "r") as f:
+    with open(file, "r", encoding="utf-8") as f:
         subs = json.load(f)
-    
+
     new_subs = [s for s in subs if s["name"].lower() != target]
 
     if len(new_subs) == len(subs):
         print("Subscriber not found.")
         return
-    
-    with open(file, "w") as f:
-        json.dump(new_subs, f, indent=4)
+
+    with open(file, "w", encoding="utf-8") as f:
+        json.dump(new_subs, f, indent=4, ensure_ascii=False)
     print("Subscriber deleted successfully!")
 
-#menu
+
+# Menu
 def menu():
     while True:
         print("\n--- Subscriber Manager ---")
@@ -112,7 +120,7 @@ def menu():
         print("5) Delete subscriber")
         print("0) Exit")
 
-        choice = input("choice an option: ").strip()
+        choice = input("choose an option: ").strip()
 
         if choice == "1":
             list_subscribers()
@@ -129,4 +137,6 @@ def menu():
             break
         else:
             print("Invalid choice, try again.")
+
+
 menu()

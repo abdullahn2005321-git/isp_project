@@ -1,6 +1,7 @@
+import os
 import sqlite3
 
-conn = sqlite3.connect("vocab.db")
+conn = sqlite3.connect(os.path.join(os.path.dirname(__file__), "db", "vocab.db"))
 cur = conn.cursor()
 
 cur.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT)")
