@@ -10,7 +10,7 @@ This folder contains learning exercises and a few small projects.
   - `learning/versions/` - CSV/subscriber exercises (v1-v4)
 - `projact/` - subscriber manager project
 - `sql/` - SQLite practice scripts
-- `flask_api_project/`, `my_api/` - other projects
+- `flask_api_project/` - another project
 
 ## Running
 
@@ -23,3 +23,5 @@ This folder contains learning exercises and a few small projects.
 ## Notes
 
 - Database files are ignored in `.gitignore`.
+- `my_api` is now maintained as a separate repository:
+  - https://github.com/abdullahn2005321-git/my_api
