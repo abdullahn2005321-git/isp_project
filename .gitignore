@@ -1,11 +1,6 @@
-app.db
-__pycache__/
-*.pyc
-.venv/
-.env
-*.db
-*.sqlite*
-SQL.DB/
-subs.txt
-subs.csv
-my_api/
+/*
+
+!isp_project/
+
+!.gitignore
+!README.md
