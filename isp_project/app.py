@@ -1,21 +1,29 @@
 from flask import Flask , request, jsonify
-from flask_sqlalchemy import SQLAlchemy
-
+from models import db, Area, Subscriber, Payment
 app = Flask(__name__)
 app.json.ensure_ascii = False
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@127.0.0.1/isp_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+db.init_app(app)
 
 
-db = SQLAlchemy(app)
+@app.route('/api/areas', methods=['POST'])
+def add_area():
+    data = request.get_json()
 
-@app.route('/')
-def home():
-    return {
-        "status": "success",
-        "message": "🚀 مرحباً بك في نظام إدارة المشتركين! السيرفر يعمل وجاهز لاستقبال البيانات."
-    }
+    if not data or 'name' not in data:
+        return jsonify({"status": "error", "message": "Area name is required."}), 400
+    
+    new_area = Area(name=data['name'])
 
+    try:
+        db.session.add(new_area)
+        db.session.commit()
+        return jsonify({"status": "success", "message": "Area added successfully."}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"status": "error", "message": str(e)}), 500
+    
 if __name__ == '__main__':
     app.run(debug=True)
