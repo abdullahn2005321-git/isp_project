@@ -8,7 +8,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
-
+# area endpoints
 @app.route('/api/areas', methods=['POST'])
 def add_area():
     data = request.get_json()
@@ -40,6 +40,8 @@ def get_areas():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+
+# subscriber endpoints
 @app.route('/api/subscribers', methods=['POST'])
 def add_subscriber():
     data = request.get_json()
@@ -100,6 +102,61 @@ def get_subscribers():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+
+@app.route('/api/subscribers/<int:sub_id>', methods=['PUT'])
+def update_subscriber(sub_id):
+
+    sub = Subscriber.query.get(sub_id)
+    if not sub:
+        return jsonify({
+            "status": "error",
+            "message": "Subscriber not found."
+        }), 404
+
+    data = request.get_json()
+
+    if 'area_id' in data:
+
+        new_area = Area.query.get(data['area_id'])
+        if not new_area:
+            return jsonify({
+                "status": "error",
+                "message": "Area not found."
+            }), 404
+        sub.area_id = data['area_id']
+    
+    if 'phone_number' in data:
+        sub.phone_number = data['phone_number']
+    
+    if 'name' in data:
+        sub.name = data['name']
+    
+    if 'parent_company_id' in data:
+        sub.parent_company_id = data['parent_company_id']
+    
+    if 'notes' in data:
+        sub.notes = data['notes']
+
+    try:
+        db.session.commit()
+        return jsonify({
+            "status": "success",
+            "message": f"Subscriber '{sub.name}' updated successfully."
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+
+        if 'phone_number' in str(e).lower() or 'duplicate' in str(e).lower():
+            return jsonify({
+                "status": "error",
+                "message": "Phone number already exists."
+            }), 400
+
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+    
 
 if __name__ == '__main__':
     app.run(debug=True)
