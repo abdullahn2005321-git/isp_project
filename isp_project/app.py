@@ -156,7 +156,31 @@ def update_subscriber(sub_id):
             "status": "error",
             "message": str(e)
         }), 500
-    
+
+
+@app.route('/api/subscribers/<int:sub_id>', methods=['DELETE'])
+def delete_subscriber(sub_id):
+    sub = Subscriber.query.get(sub_id)
+    if not sub:
+        return jsonify({
+            "status": "error",
+            "message": "Subscriber not found."
+        }), 404
+
+    try:
+        db.session.delete(sub)
+        db.session.commit()
+        return jsonify({
+            "status": "success",
+            "message": f"Subscriber '{sub.name}' deleted successfully."
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
