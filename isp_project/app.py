@@ -25,5 +25,19 @@ def add_area():
         db.session.rollback()
         return jsonify({"status": "error", "message": str(e)}), 500
     
+@app.route('/api/areas', methods=['GET'])
+def get_areas():
+    try:
+        areas = Area.query.all()
+        
+        areas_list = [{"id": area.id, "name": area.name} for area in areas]
+        return jsonify({
+            "status": "success",
+            "areas": areas_list
+        }), 200
+    
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)
