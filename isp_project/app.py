@@ -1,5 +1,6 @@
 from flask import Flask , request, jsonify
 from models import db, Area, Subscriber, Payment
+
 app = Flask(__name__)
 app.json.ensure_ascii = False
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@127.0.0.1/isp_db'
@@ -73,6 +74,31 @@ def add_subscriber():
             "status": "error",
             "message": str(e)
         }), 500
+
+@app.route('/api/subscribers', methods=['GET'])
+def get_subscribers():
+    try:
+        subscribers = Subscriber.query.all()
+
+        sub_list = []
+        for subscriber in subscribers:
+            sub_list.append({
+                "id": subscriber.id,
+                "name": subscriber.name,
+                "phone_number": subscriber.phone_number,
+                "area_id": subscriber.area_id,
+                "parent_company_id": subscriber.parent_company_id,
+                "notes": subscriber.notes
+            })
+        
+        return jsonify({
+            "status": "success",
+            "total": len(sub_list),
+            "subscribers": sub_list
+        }), 200
+    
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 if __name__ == '__main__':
