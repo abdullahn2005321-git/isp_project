@@ -29,7 +29,7 @@ def add_area():
 def get_areas():
     try:
         areas = Area.query.all()
-        
+
         areas_list = [{"id": area.id, "name": area.name} for area in areas]
         return jsonify({
             "status": "success",
@@ -38,6 +38,42 @@ def get_areas():
     
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/subscribers', methods=['POST'])
+def add_subscriber():
+    data = request.get_json()
+
+    required_fields = ['name', 'phone_number', 'area_id']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"status": "error", "message": f"{field} is required."}), 400
+
+    new_subscriber = Subscriber(
+        name = data['name'],
+        phone_number = data['phone_number'],
+        area_id = data['area_id'],
+        parent_company_id = data.get('parent_company_id', ''),
+        notes = data.get('notes', '')
+    )
+    try:
+        db.session.add(new_subscriber)
+        db.session.commit()
+        return jsonify({
+            "status" : "success",
+            "message": f"Subscriber added successfully'{new_subscriber.name}'."
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        if 'phone_number' in str(e).lower() or 'duplicate' in str(e).lower():
+            return jsonify({
+                "status": "error",
+                "message": "Phone number already exists."
+            }), 400
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
