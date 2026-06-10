@@ -1,5 +1,6 @@
 from flask import Flask , request, jsonify
 from models import db, Area, Subscriber, Payment, Renewal
+from datetime import date
 
 app = Flask(__name__)
 app.json.ensure_ascii = False
@@ -275,6 +276,52 @@ def renew_subscription():
             "message": str(e)
         }), 500
 
+@app.route('/api/daily_report', methods=['GET'])
+def daily_report():
+    try:
+        target_date = request.args.get('date', str(date.today()))
+
+        payments = Payment.query.filter(db.func.date(Payment.payment_date) == target_date).all()
+
+        renewals = Renewal.query.filter(db.func.date(Renewal.renewal_date) == target_date).all()
+
+        payments_amount = sum(payment.amount for payment in payments)
+
+        renewals_amount = sum(renewal.amount for renewal in renewals)
+
+        total = payments_amount - renewals_amount
+
+        if total > 0:
+            status = "good"
+            message = "Today's collections are good."
+        elif total < 0:
+            status = "bad"
+            message = "Today's collections are bad."
+        else:
+            status = "neutral"
+            message = "Today's collections are neutral."
+
+        report_data = {
+            "target_date": target_date,
+            "status": "success",
+            "message": message,
+            "summary": {
+                "total_payments_collected": payments_amount,
+                "payments_count": len(payments),
+                "total_renewals_value": renewals_amount,
+                "renewals_count": len(renewals),
+                "net_total": total,
+                "report_status": status
+            }
+        }    
+        
+        return jsonify(report_data), 200
+    
+    except Exception as e:
+         return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
