@@ -27,13 +27,21 @@ class Subscriber(db.Model):
     balance = db.Column(db.Float, default=0.0)
     notes = db.Column(db.Text, nullable=True)
     payments = db.relationship('Payment', backref='subscriber', lazy=True)
+    renewals = db.relationship('Renewal', backref='subscriber', lazy=True)
 
 class Payment(db.Model):
     __tablename__ = 'payments'
     id = db.Column(db.Integer, primary_key=True)
     subscriber_id = db.Column(db.Integer, db.ForeignKey('subscribers.id'), nullable=False)
     amount = db.Column(db.Float, nullable=False)
-    payment_date = db.Column(db.DateTime, default=datetime.now)
+    payment_date = db.Column(db.DateTime, default=db.func.now())
+
+class Renewal(db.Model):
+    __tablename__ = 'renewals'
+    id = db.Column(db.Integer, primary_key=True)
+    subscriber_id = db.Column(db.Integer, db.ForeignKey('subscribers.id'), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    renewal_date = db.Column(db.DateTime, default=db.func.now())
 
 with app.app_context():
     db.create_all()

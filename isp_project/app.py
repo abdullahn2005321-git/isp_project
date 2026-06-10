@@ -1,5 +1,5 @@
 from flask import Flask , request, jsonify
-from models import db, Area, Subscriber, Payment
+from models import db, Area, Subscriber, Payment, Renewal
 
 app = Flask(__name__)
 app.json.ensure_ascii = False
@@ -8,7 +8,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 #==============================
-#================area endpoints
+#=============area endpoints
 #==============================
 @app.route('/api/areas', methods=['POST'])
 def add_area():
@@ -42,7 +42,7 @@ def get_areas():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 #==============================
-#==========subscriber endpoints
+#=======subscriber endpoints
 #==============================
 @app.route('/api/subscribers', methods=['POST'])
 def add_subscriber():
@@ -228,6 +228,53 @@ def add_payment():
             "status": "error",
             "message": str(e)
         }), 500
+
+#==============================
+#==========renewal endpoints
+#==============================
+@app.route('/api/renew', methods=['POST'])
+def renew_subscription():
+    data = request.get_json()
+    if not data or not 'subscriber_id' in data or not 'amount' in data:
+        return jsonify({
+            "status": "error",
+            "message": "subscriber_id and amount are required."
+        }), 400
+    
+    sub = Subscriber.query.get(data['subscriber_id'])
+
+    if not sub:
+        return jsonify({
+            "status": "error",
+            "message": "Subscriber not found."
+        }), 404
+    
+    renewal_amount = float(data['amount'])
+
+    sub.balance -= renewal_amount
+
+    new_renewal = Renewal(
+        subscriber_id = sub.id,
+        amount = renewal_amount
+    )
+    try:
+        db.session.add(new_renewal)
+        db.session.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": f"Subscription renewed for subscriber '{sub.name}' with amount {renewal_amount}.",
+            "new_balance": sub.balance,
+            "renewal_date": new_renewal.renewal_date.strftime("%Y-%m-%d %H:%M:%S")
+        }), 201
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
