@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة المشتركين</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .navbar-brand { font-weight: bold; font-size: 1.5rem; }
+        .nav-tabs .nav-link { font-weight: 600; color: #495057; cursor: pointer; }
+        .nav-tabs .nav-link.active { color: #0d6efd; border-bottom: 3px solid #0d6efd; background-color: transparent; border-top: none; border-left: none; border-right: none;}
+        .section-content { display: none; }
+        .section-content.active { display: block; animation: fadeIn 0.4s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow">
+        <div class="container">
+            <a class="navbar-brand" href="#"><i class="fa-solid fa-network-wired text-primary"></i> نظام إدارة الـ 1600 مشترك</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <ul class="nav nav-tabs mb-4" id="systemTabs">
+            <li class="nav-item">
+                <a class="nav-link active" id="tab-dashboard" onclick="switchSection('dashboard')"><i class="fa-solid fa-chart-pie"></i> الداشبورد</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="tab-subscribers" onclick="switchSection('subscribers')"><i class="fa-solid fa-users"></i> المشتركين</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="tab-logs" onclick="switchSection('logs')"><i class="fa-solid fa-clipboard-list"></i> سجل العمليات (اللوگ)</a>
+            </li>
+        </ul>
+
+        <div id="dashboard" class="section-content active">
+            <h4 class="mb-4 text-secondary">نظرة عامة على النظام</h4>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card text-white bg-primary mb-3 shadow-sm border-0">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fa-solid fa-users"></i> إجمالي المشتركين</h5>
+                            <h2 class="card-text fw-bold" id="total-subscribers">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-white bg-success mb-3 shadow-sm border-0">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fa-solid fa-money-bill-wave"></i> دخل اليوم (الصافي)</h5>
+                            <h2 class="card-text fw-bold" id="today-income">0 د.ع</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-white bg-danger mb-3 shadow-sm border-0">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fa-solid fa-file-invoice-dollar"></i> إجمالي الديون</h5>
+                            <h2 class="card-text fw-bold" id="total-debt">0 د.ع</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="subscribers" class="section-content">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <h5 class="m-0 text-secondary"><i class="fa-solid fa-list"></i> قائمة المشتركين وإدارة الأرصدة</h5>
+                    <button class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> إضافة مشترك جديد</button>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover table-bordered text-center align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th># ID</th>
+                                <th>اسم المشترك</th>
+                                <th>المنطقة</th>
+                                <th>الرصيد / الدين</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="subscribers-table-body">
+                            <tr><td colspan="5" class="text-muted p-4">جاري تحميل البيانات...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="logs" class="section-content">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h5 class="m-0 text-secondary"><i class="fa-solid fa-clock-rotate-left"></i> السجل الزمني للعمليات (التسديد والتجديد)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-striped text-center align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>التاريخ والوقت</th>
+                                <th>المشترك</th>
+                                <th>نوع العملية</th>
+                                <th>المبلغ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-table-body">
+                            <tr><td colspan="4" class="text-muted p-4">البيانات غير متوفرة (يحتاج لربط المسار في السيرفر)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="actionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="actionModalLabel">تأكيد العملية</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6 id="modal-subscriber-name" class="text-primary mb-3"></h6>
+                    <input type="hidden" id="modal-subscriber-id">
+                    <input type="hidden" id="modal-action-type">
+                    <div class="mb-3">
+                        <label for="amountInput" class="form-label fw-bold">المبلغ (دينار عراقي):</label>
+                        <input type="number" class="form-control" id="amountInput" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-success" id="confirmBtn" onclick="submitAction()">تأكيد العملية</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_URL = 'http://127.0.0.1:5000/api';
+        let actionModal;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            actionModal = new bootstrap.Modal(document.getElementById('actionModal'));
+            loadSubscribers();
+            loadDailyReport();
+            // loadLogs(); // سنقوم بتفعيلها بعد برمجة المسار في بايثون
+        });
+
+        // 🟢 دالة التنقل بين المحاور (الداشبورد / المشتركين / السجل)
+        function switchSection(sectionName) {
+            // إخفاء كل الأقسام
+            document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));
+            // إزالة اللون الأزرق عن كل الأزرار
+            document.querySelectorAll('.nav-tabs .nav-link').forEach(el => el.classList.remove('active'));
+            
+            // إظهار القسم المطلوب وتلوين زره
+            document.getElementById(sectionName).classList.add('active');
+            document.getElementById('tab-' + sectionName).classList.add('active');
+        }
+
+        // نفس الدوال السابقة التي برمجناها (تحميل المشتركين والتقرير)
+        async function loadSubscribers() {
+            try {
+                const response = await fetch(`${API_URL}/subscribers`);
+                const data = await response.json(); 
+                const subscribersList = data.subscribers ? data.subscribers : data;
+
+                document.getElementById('total-subscribers').innerText = subscribersList.length;
+                const tableBody = document.getElementById('subscribers-table-body');
+                tableBody.innerHTML = '';
+                let totalDebt = 0; 
+
+                subscribersList.forEach(sub => {
+                    let balanceColor = sub.balance < 0 ? 'bg-danger' : 'bg-success';
+                    if (sub.balance < 0) totalDebt += Math.abs(sub.balance);
+                    
+                    let row = `
+                        <tr>
+                            <td>${sub.id}</td>
+                            <td class="fw-bold">${sub.name}</td>
+                            <td><span class="text-secondary">${sub.area_name || sub.area_id || '-'}</span></td>
+                            <td dir="ltr"><span class="badge ${balanceColor} fs-6">${sub.balance}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-success me-1" onclick="openModal(${sub.id}, '${sub.name}', 'renewal')">تجديد</button>
+                                <button class="btn btn-sm btn-outline-primary" onclick="openModal(${sub.id}, '${sub.name}', 'payment')">تسديد</button>
+                            </td>
+                        </tr>`;
+                    tableBody.innerHTML += row;
+                });
+                document.getElementById('total-debt').innerText = totalDebt.toLocaleString() + " د.ع";
+            } catch (error) { console.error("خطأ:", error); }
+        }
+
+        async function loadDailyReport() {
+            try {
+                const response = await fetch(`${API_URL}/daily_report`);
+                const data = await response.json();
+                let netTotal = data.summary ? data.summary.net_total : 0;
+                document.getElementById('today-income').innerText = netTotal.toLocaleString() + " د.ع";
+            } catch (error) { console.error("خطأ:", error); }
+        }
+
+        function openModal(subscriberId, subscriberName, actionType) {
+            const titleLabel = document.getElementById('actionModalLabel');
+            const confirmBtn = document.getElementById('confirmBtn');
+            if (actionType === 'payment') {
+                titleLabel.innerHTML = 'تسديد دين';
+                confirmBtn.className = 'btn btn-primary';
+            } else {
+                titleLabel.innerHTML = 'تجديد اشتراك';
+                confirmBtn.className = 'btn btn-success';
+            }
+            document.getElementById('modal-subscriber-name').innerText = `المشترك: ${subscriberName}`;
+            document.getElementById('amountInput').value = '';
+            document.getElementById('modal-subscriber-id').value = subscriberId;
+            document.getElementById('modal-action-type').value = actionType;
+            actionModal.show();
+        }
+
+        async function submitAction() {
+            const subscriberId = document.getElementById('modal-subscriber-id').value;
+            const actionType = document.getElementById('modal-action-type').value;
+            const amount = document.getElementById('amountInput').value;
+
+            if (!amount || amount <= 0) return alert("يرجى إدخال مبلغ صحيح!");
+            const endpoint = actionType === 'payment' ? '/payments' : '/renewals';
+
+            try {
+                const response = await fetch(`${API_URL}${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subscriber_id: subscriberId, amount: parseFloat(amount) })
+                });
+
+                if (response.ok) {
+                    actionModal.hide();
+                    loadSubscribers();
+                    loadDailyReport();
+                    // loadLogs(); // سنقوم بتحديث اللوگ أيضاً بعد الدفع
+                } else {
+                    alert("❌ حدث خطأ!");
+                }
+            } catch (error) { alert("❌ خطأ في الاتصال بالسيرفر!"); }
+        }
+    </script>
+</body>
+</html>

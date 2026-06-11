@@ -1,8 +1,10 @@
 from flask import Flask , request, jsonify
 from models import db, Area, Subscriber, Payment, Renewal
 from datetime import date
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 app.json.ensure_ascii = False
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@127.0.0.1/isp_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -92,8 +94,10 @@ def get_subscribers():
                 "name": subscriber.name,
                 "phone_number": subscriber.phone_number,
                 "area_id": subscriber.area_id,
+                "area_name": subscriber.area.name if subscriber.area else None,
                 "parent_company_id": subscriber.parent_company_id,
-                "notes": subscriber.notes
+                "notes": subscriber.notes,
+                "balance": subscriber.balance
             })
         
         return jsonify({
@@ -233,7 +237,7 @@ def add_payment():
 #==============================
 #==========renewal endpoints
 #==============================
-@app.route('/api/renew', methods=['POST'])
+@app.route('/api/renewals', methods=['POST'])
 def renew_subscription():
     data = request.get_json()
     if not data or not 'subscriber_id' in data or not 'amount' in data:
