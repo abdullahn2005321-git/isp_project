@@ -71,7 +71,12 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
                     <h5 class="m-0 text-secondary"><i class="fa-solid fa-list"></i> قائمة المشتركين وإدارة الأرصدة</h5>
-                    <button class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> إضافة مشترك جديد</button>
+                    <div>
+                        <button class="btn btn-warning btn-sm fw-bold me-2 shadow-sm" onclick="loadPromisesToday()">
+                            <i class="fa-solid fa-bell"></i> وعود اليوم
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="loadSubscribers()"><i class="fa-solid fa-rotate-right"></i> تحديث الكل</button>
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     <table class="table table-hover table-bordered text-center align-middle mb-0">
@@ -119,22 +124,37 @@
     <div class="modal fade" id="actionModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="actionModalLabel">تأكيد العملية</h5>
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="actionModalLabel">تأكيد العملية</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <h6 id="modal-subscriber-name" class="text-primary mb-3"></h6>
+                    <h6 id="modal-subscriber-name" class="text-primary mb-4 text-center fw-bold fs-5"></h6>
+                    
                     <input type="hidden" id="modal-subscriber-id">
                     <input type="hidden" id="modal-action-type">
-                    <div class="mb-3">
-                        <label for="amountInput" class="form-label fw-bold">المبلغ (دينار عراقي):</label>
-                        <input type="number" class="form-control" id="amountInput" required>
+                    
+                    <div class="mb-4">
+                        <label for="amountInput" class="form-label fw-bold text-secondary">المبلغ (دينار عراقي):</label>
+                        <input type="number" class="form-control form-control-lg text-center fw-bold" id="amountInput" placeholder="0" required>
+                        
+                        <div class="mt-3 d-flex justify-content-center gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="setQuickAmount(35000)">35,000</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="setQuickAmount(45000)">45,000</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" onclick="setFullDebtAmount()" id="fullDebtBtn">تسديد كامل الدين</button>
+                        </div>
                     </div>
+
+                    <div class="mb-2 bg-light p-3 rounded border border-warning-subtle">
+                        <label for="promiseDate" class="form-label text-dark fw-bold"><i class="fa-solid fa-calendar-day text-warning"></i> تاريخ الوعد بالتسديد (اختياري)</label>
+                        <input type="date" class="form-control" id="promiseDate">
+                        <small class="text-danger mt-1 d-block" style="font-size: 12px;">* مطلوب فقط إذا كان المشترك سيبقى مديوناً بعد العملية</small>
+                    </div>
+
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="button" class="btn btn-success" id="confirmBtn" onclick="submitAction()">تأكيد العملية</button>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light w-100 mb-2" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-success w-100 py-2 fw-bold fs-5" id="confirmBtn" onclick="submitAction()">تأكيد العملية</button>
                 </div>
             </div>
         </div>
@@ -144,59 +164,90 @@
     <script>
         const API_URL = 'http://127.0.0.1:5000/api';
         let actionModal;
+        
+        // متغير لحفظ دين المشترك الحالي لزر "تسديد كامل الدين"
+        let currentSubscriberDebt = 0; 
 
         document.addEventListener("DOMContentLoaded", function() {
             actionModal = new bootstrap.Modal(document.getElementById('actionModal'));
             loadSubscribers();
             loadDailyReport();
-            // loadLogs(); // سنقوم بتفعيلها بعد برمجة المسار في بايثون
         });
 
-        // 🟢 دالة التنقل بين المحاور (الداشبورد / المشتركين / السجل)
+        // التنقل بين المحاور
         function switchSection(sectionName) {
-            // إخفاء كل الأقسام
             document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));
-            // إزالة اللون الأزرق عن كل الأزرار
             document.querySelectorAll('.nav-tabs .nav-link').forEach(el => el.classList.remove('active'));
-            
-            // إظهار القسم المطلوب وتلوين زره
             document.getElementById(sectionName).classList.add('active');
             document.getElementById('tab-' + sectionName).classList.add('active');
         }
 
-        // نفس الدوال السابقة التي برمجناها (تحميل المشتركين والتقرير)
+        // دالة سحب كل المشتركين
         async function loadSubscribers() {
             try {
                 const response = await fetch(`${API_URL}/subscribers`);
                 const data = await response.json(); 
                 const subscribersList = data.subscribers ? data.subscribers : data;
-
+                
                 document.getElementById('total-subscribers').innerText = subscribersList.length;
-                const tableBody = document.getElementById('subscribers-table-body');
-                tableBody.innerHTML = '';
-                let totalDebt = 0; 
-
-                subscribersList.forEach(sub => {
-                    let balanceColor = sub.balance < 0 ? 'bg-danger' : 'bg-success';
-                    if (sub.balance < 0) totalDebt += Math.abs(sub.balance);
-                    
-                    let row = `
-                        <tr>
-                            <td>${sub.id}</td>
-                            <td class="fw-bold">${sub.name}</td>
-                            <td><span class="text-secondary">${sub.area_name || sub.area_id || '-'}</span></td>
-                            <td dir="ltr"><span class="badge ${balanceColor} fs-6">${sub.balance}</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-success me-1" onclick="openModal(${sub.id}, '${sub.name}', 'renewal')">تجديد</button>
-                                <button class="btn btn-sm btn-outline-primary" onclick="openModal(${sub.id}, '${sub.name}', 'payment')">تسديد</button>
-                            </td>
-                        </tr>`;
-                    tableBody.innerHTML += row;
-                });
-                document.getElementById('total-debt').innerText = totalDebt.toLocaleString() + " د.ع";
+                renderTable(subscribersList); // نستخدم دالة الرسم
             } catch (error) { console.error("خطأ:", error); }
         }
 
+        // دالة سحب الوعود اليومية فقط 🔔
+        async function loadPromisesToday() {
+            try {
+                const response = await fetch(`${API_URL}/promises_today`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    if (data.count === 0) {
+                        alert("لا توجد وعود مستحقة لهذا اليوم! 🎉");
+                        loadSubscribers(); // نرجع نعرض كل المشتركين
+                    } else {
+                        renderTable(data.subscribers); // نعرض المديونين فقط
+                        alert(`تم العثور على ${data.count} وعود مستحقة اليوم!`);
+                    }
+                }
+            } catch (error) {
+                alert("❌ حدث خطأ في جلب الوعود من السيرفر!");
+                console.error(error);
+            }
+        }
+
+        // دالة مخصصة لرسم الجدول لكي لا نكرر الكود
+        function renderTable(list) {
+            const tableBody = document.getElementById('subscribers-table-body');
+            tableBody.innerHTML = '';
+            let totalDebt = 0; 
+
+            if(list.length === 0){
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-muted p-4">لا توجد بيانات للعرض</td></tr>';
+                return;
+            }
+
+            list.forEach(sub => {
+                let balanceColor = sub.balance < 0 ? 'bg-danger' : 'bg-success';
+                if (sub.balance < 0) totalDebt += Math.abs(sub.balance);
+                
+                // لاحظ أننا نمرر sub.balance لـ openModal
+                let row = `
+                    <tr>
+                        <td>${sub.id}</td>
+                        <td class="fw-bold">${sub.name} <br> <small class="text-muted" style="font-size:11px">${sub.promise_date && sub.promise_date !== 'None' ? '🗓️ وعد: ' + sub.promise_date : ''}</small></td>
+                        <td><span class="text-secondary">${sub.area_name || sub.area_id || '-'}</span></td>
+                        <td dir="ltr"><span class="badge ${balanceColor} fs-6">${sub.balance}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-success me-1 fw-bold" onclick="openModal(${sub.id}, '${sub.name}', 'renewal', ${sub.balance})">تجديد</button>
+                            <button class="btn btn-sm btn-outline-primary fw-bold" onclick="openModal(${sub.id}, '${sub.name}', 'payment', ${sub.balance})">تسديد</button>
+                        </td>
+                    </tr>`;
+                tableBody.innerHTML += row;
+            });
+            document.getElementById('total-debt').innerText = totalDebt.toLocaleString() + " د.ع";
+        }
+
+        // سحب تقرير اليوم
         async function loadDailyReport() {
             try {
                 const response = await fetch(`${API_URL}/daily_report`);
@@ -206,45 +257,78 @@
             } catch (error) { console.error("خطأ:", error); }
         }
 
-        function openModal(subscriberId, subscriberName, actionType) {
+        // فتح النافذة المنبثقة
+        function openModal(subscriberId, subscriberName, actionType, currentBalance) {
             const titleLabel = document.getElementById('actionModalLabel');
             const confirmBtn = document.getElementById('confirmBtn');
+            
+            // حساب الدين الحالي للمشترك لزر التسديد الكامل
+            currentSubscriberDebt = currentBalance < 0 ? Math.abs(currentBalance) : 0;
+
             if (actionType === 'payment') {
-                titleLabel.innerHTML = 'تسديد دين';
-                confirmBtn.className = 'btn btn-primary';
+                titleLabel.innerHTML = '<i class="fa-solid fa-hand-holding-dollar text-primary"></i> تسديد مبلغ';
+                confirmBtn.className = 'btn btn-primary w-100 py-2 fw-bold fs-5';
             } else {
-                titleLabel.innerHTML = 'تجديد اشتراك';
-                confirmBtn.className = 'btn btn-success';
+                titleLabel.innerHTML = '<i class="fa-solid fa-wifi text-success"></i> تجديد اشتراك';
+                confirmBtn.className = 'btn btn-success w-100 py-2 fw-bold fs-5';
             }
-            document.getElementById('modal-subscriber-name').innerText = `المشترك: ${subscriberName}`;
+            
+            document.getElementById('modal-subscriber-name').innerText = subscriberName;
             document.getElementById('amountInput').value = '';
+            document.getElementById('promiseDate').value = ''; // تصفير الوعد
             document.getElementById('modal-subscriber-id').value = subscriberId;
             document.getElementById('modal-action-type').value = actionType;
+            
             actionModal.show();
         }
 
+        // دوال أزرار الاختصارات
+        function setQuickAmount(amount) {
+            document.getElementById('amountInput').value = amount;
+        }
+
+        function setFullDebtAmount() {
+            if (currentSubscriberDebt > 0) {
+                document.getElementById('amountInput').value = currentSubscriberDebt;
+            } else {
+                alert("هذا المشترك ليس عليه دين ليتم تسديده!");
+            }
+        }
+
+        // إرسال البيانات للسيرفر
         async function submitAction() {
             const subscriberId = document.getElementById('modal-subscriber-id').value;
             const actionType = document.getElementById('modal-action-type').value;
             const amount = document.getElementById('amountInput').value;
+            const promiseDate = document.getElementById('promiseDate').value; // التقاط تاريخ الوعد
 
             if (!amount || amount <= 0) return alert("يرجى إدخال مبلغ صحيح!");
+            
             const endpoint = actionType === 'payment' ? '/payments' : '/renewals';
+
+            // تجهيز البيانات
+            const requestData = { 
+                subscriber_id: subscriberId, 
+                amount: parseFloat(amount),
+                promise_date: promiseDate // نرسلها للسيرفر (سيقوم السيرفر بفلترتها بذكاء)
+            };
 
             try {
                 const response = await fetch(`${API_URL}${endpoint}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ subscriber_id: subscriberId, amount: parseFloat(amount) })
+                    body: JSON.stringify(requestData)
                 });
+                
+                const data = await response.json();
 
                 if (response.ok) {
                     actionModal.hide();
                     loadSubscribers();
                     loadDailyReport();
-                    // loadLogs(); // سنقوم بتحديث اللوگ أيضاً بعد الدفع
                 } else {
-                    alert("❌ حدث خطأ!");
+                    // عرض رسالة الخطأ القادمة من السيرفر (مثل: "يجب تحديد موعد!")
+                    alert("❌ تنبيه: " + data.message);
                 }
             } catch (error) { alert("❌ خطأ في الاتصال بالسيرفر!"); }
         }
