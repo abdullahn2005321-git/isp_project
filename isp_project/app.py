@@ -111,6 +111,31 @@ def get_subscribers():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+@app.route('/api/subscribers/<int:sub_id>', methods=['GET'])
+def get_subscriber(sub_id):
+    sub = Subscriber.query.get(sub_id)
+    if not sub:
+        return jsonify({
+            "status": "error",
+            "message": "Subscriber not found."
+        }), 404
+    
+    sub_data = {
+        "id": sub.id,
+        "name": sub.name,
+        "phone": sub.phone_number if sub.phone_number and sub.phone_number.strip() != "" else "لا يوجد رقم مسجل",
+        "area_id": sub.area_id,
+        "area_name": sub.area.name if sub.area else None,
+        "parent_company_id": sub.parent_company_id,
+        "notes": sub.notes,
+        "balance": sub.balance,
+        "promise_date": str(sub.promise_date) if sub.promise_date else "لا يوجد وعد مسجل"
+    }
+    return jsonify({
+        "status": "success",
+        "subscriber": sub_data
+    }), 200
+
 @app.route('/api/subscribers/<int:sub_id>', methods=['PUT'])
 def update_subscriber(sub_id):
 
