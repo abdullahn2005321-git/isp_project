@@ -2,6 +2,7 @@ from flask import Flask , request, jsonify
 from models import db, Area, Subscriber, Payment, Renewal
 from datetime import date
 from flask_cors import CORS
+from sqlalchemy.exc import IntegrityError
 
 app = Flask(__name__)
 CORS(app)
@@ -54,13 +55,18 @@ def add_subscriber():
     required_fields = ['name', 'phone_number', 'area_id']
     for field in required_fields:
         if field not in data:
-            return jsonify({"status": "error", "message": f"{field} is required."}), 400
+            return jsonify({
+                "status": "error",
+                "message": f"{field} is required."
+            }), 400
 
     new_subscriber = Subscriber(
         name = data['name'],
         phone_number = data['phone_number'],
         area_id = data['area_id'],
         parent_company_id = data.get('parent_company_id', ''),
+        balance = float(data.get('balance', 0.0)),
+        promise_date = data.get('promise_date') if data.get('promise_date') and data.get('promise_date').strip() != "" else None,
         notes = data.get('notes', '')
     )
     try:
@@ -68,15 +74,18 @@ def add_subscriber():
         db.session.commit()
         return jsonify({
             "status" : "success",
-            "message": f"Subscriber added successfully'{new_subscriber.name}'."
+            "message": f"Subscriber added successfully'{new_subscriber.name}'.",
+            "subscriber_id": new_subscriber.id
         }), 201
+    
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({
+            "status": "error",
+            "message": "Phone number already exists."
+        }), 400
     except Exception as e:
         db.session.rollback()
-        if 'phone_number' in str(e).lower() or 'duplicate' in str(e).lower():
-            return jsonify({
-                "status": "error",
-                "message": "Phone number already exists."
-            }), 400
         return jsonify({
             "status": "error",
             "message": str(e)
@@ -179,15 +188,14 @@ def update_subscriber(sub_id):
             "status": "success",
             "message": f"Subscriber '{sub.name}' updated successfully."
         }), 200
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({
+            "status": "error",
+            "message": "Phone number already exists."
+        }), 400
     except Exception as e:
         db.session.rollback()
-
-        if 'phone_number' in str(e).lower() or 'duplicate' in str(e).lower():
-            return jsonify({
-                "status": "error",
-                "message": "Phone number already exists."
-            }), 400
-
         return jsonify({
             "status": "error",
             "message": str(e)
