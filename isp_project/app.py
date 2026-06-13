@@ -280,64 +280,65 @@ def add_payment():
 @app.route('/api/renewals', methods=['POST'])
 def renew_subscription():
     data = request.get_json()
+    
     if not data or not 'subscriber_id' in data or not 'amount' in data:
         return jsonify({
             "status": "error",
-            "message": "subscriber_id, amount, and promise_date are required."
+            "message": "subscriber_id and amount are required."
         }), 400
     
     sub = Subscriber.query.get(data['subscriber_id'])
 
     if not sub:
-        return jsonify({
-            "status": "error",
-            "message": "Subscriber not found."
-        }), 404
+        return jsonify({"status": "error", "message": "Subscriber not found."}), 404
     
     renewal_amount = float(data['amount'])
-
-    promise_date = data['promise_date']
+    
+    is_cash = data.get('is_cash', False)
 
     sub.balance -= renewal_amount
+    
+    new_renewal = Renewal(subscriber_id=sub.id, amount=renewal_amount)
+    db.session.add(new_renewal)
 
-    promise_date = data.get('promise_date')
-
-    if sub.balance < 0:
-
-        if not promise_date or promise_date.strip() == "":
-            return jsonify({
-                "status": "error",
-                "message": "Promise date is required."
-            }), 400
+    if is_cash:
+        new_payment = Payment(subscriber_id=sub.id, amount=renewal_amount)
+        db.session.add(new_payment)
         
-        else:
-            sub.promise_date = promise_date
+        sub.balance += renewal_amount
+        
+        if sub.balance >= 0:
+            sub.promise_date = None
+            
     else:
-        sub.promise_date = None
+        promise_date = data.get('promise_date')
+        if sub.balance < 0:
+            if not promise_date or promise_date.strip() == "":
+                return jsonify({
+                    "status": "error",
+                    "message": "المشترك أصبح مديوناً الآن. يجب تحديد تاريخ (وعد) للتسديد!"
+                }), 400
+            else:
+                sub.promise_date = promise_date
+        else:
+            sub.promise_date = None
 
-    new_renewal = Renewal(
-        subscriber_id = sub.id,
-        amount = renewal_amount
-    )
     try:
-        db.session.add(new_renewal)
         db.session.commit()
-
+        msg_type = "نقداً 💵" if is_cash else "بالدين 📝"
         return jsonify({
             "status": "success",
-            "message": f"Subscription renewed for subscriber '{sub.name}' with amount {renewal_amount}.",
-            "new_balance": sub.balance,
-            "promise_date": str(sub.promise_date) if sub.promise_date else None,
-            "renewal_date": new_renewal.renewal_date.strftime("%Y-%m-%d %H:%M:%S")
+            "message": f"تم تجديد اشتراك '{sub.name}' بنجاح ({msg_type}).",
+            "new_balance": sub.balance
         }), 201
-    
+        
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            "status": "error",
-            "message": str(e)
-        }), 500
+        return jsonify({"status": "error", "message": str(e)}), 500
 
+#==============================
+#==========daily report endpoint
+#==============================
 @app.route('/api/daily_report', methods=['GET'])
 def daily_report():
     try:
@@ -378,6 +379,46 @@ def daily_report():
         }    
         
         return jsonify(report_data), 200
+    
+    except Exception as e:
+         return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+#==============================
+#==========logs endpoints
+#==============================
+@app.route('/api/logs', methods=['GET'])
+def get_logs():
+    try:
+        payments = Payment.query.order_by(Payment.payment_date.desc()).limit(50).all()
+        renewals = Renewal.query.order_by(Renewal.renewal_date.desc()).limit(50).all()
+
+        logs = []
+
+        for payment in payments:
+            logs.append({
+                "type": "payment",
+                "subscriber_name": payment.subscriber.name if payment.subscriber else None,
+                "amount": payment.amount,
+                "date": payment.payment_date.strftime("%Y-%m-%d %H:%M:%S")
+            })
+        
+        for renewal in renewals:
+            logs.append({
+                "type": "renewal",
+                "subscriber_name": renewal.subscriber.name if renewal.subscriber else None,
+                "amount": renewal.amount,
+                "date": renewal.renewal_date.strftime("%Y-%m-%d %H:%M:%S")
+            })
+        
+        logs.sort(key=lambda x: x['date'], reverse=True)
+
+        return jsonify({
+            "status": "success",
+            "logs": logs
+        }), 200
     
     except Exception as e:
          return jsonify({

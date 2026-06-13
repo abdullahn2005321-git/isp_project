@@ -148,6 +148,13 @@
                         </div>
                     </div>
 
+                    <div class="form-check mb-3 p-3 bg-success-subtle rounded border border-success" id="cashPaymentDiv" style="display: none;">
+                        <input class="form-check-input ms-2" type="checkbox" id="isCashCheckbox">
+                        <label class="form-check-label fw-bold text-success" for="isCashCheckbox">
+                            <i class="fa-solid fa-money-bill-wave"></i> تم استلام مبلغ التجديد نقداً الآن (لا تسجل دين)
+                        </label>
+                    </div>
+
                     <div class="mb-2 bg-light p-3 rounded border border-warning-subtle">
                         <label for="promiseDate" class="form-label text-dark fw-bold"><i class="fa-solid fa-calendar-day text-warning"></i> تاريخ الوعد بالتسديد (اختياري)</label>
                         <input type="date" class="form-control" id="promiseDate">
@@ -266,6 +273,7 @@
             addSubModal = new bootstrap.Modal(document.getElementById('addSubscriberModal'));
             loadSubscribers();
             loadDailyReport();
+            loadLogs();
         });
 
         // التنقل بين المحاور
@@ -306,6 +314,43 @@
             } catch (error) {
                 alert("❌ حدث خطأ في جلب الوعود من السيرفر!");
                 console.error(error);
+            }
+        }
+
+        // دالة جلب سجل العمليات
+        async function loadLogs() {
+            try {
+                const response = await fetch(`${API_URL}/logs`);
+                const data = await response.json();
+                const tableBody = document.getElementById('logs-table-body');
+                
+                tableBody.innerHTML = '';
+
+                if (data.status === 'success') {
+                    if (data.logs.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="4" class="text-muted p-4">لا توجد عمليات مسجلة حتى الآن.</td></tr>';
+                        return;
+                    }
+
+                    // رسم كل عملية في الجدول
+                    data.logs.forEach(log => {
+                        let badgeClass = log.type === 'تسديد' ? 'bg-primary' : 'bg-success';
+                        let icon = log.type === 'تسديد' ? 'fa-hand-holding-dollar' : 'fa-wifi';
+                        
+                        let row = `
+                            <tr>
+                                <td dir="ltr" class="text-muted small">${log.date}</td>
+                                <td class="fw-bold text-dark">${log.subscriber_name}</td>
+                                <td><span class="badge ${badgeClass}"><i class="fa-solid ${icon}"></i> ${log.type}</span></td>
+                                <td class="fw-bold fs-6">${log.amount.toLocaleString()} د.ع</td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+                }
+            } catch (error) {
+                console.error("Error loading logs:", error);
+                document.getElementById('logs-table-body').innerHTML = '<tr><td colspan="4" class="text-danger p-4">❌ خطأ في الاتصال وجلب السجل</td></tr>';
             }
         }
 
@@ -368,9 +413,12 @@
             if (actionType === 'payment') {
                 titleLabel.innerHTML = '<i class="fa-solid fa-hand-holding-dollar text-primary"></i> تسديد مبلغ';
                 confirmBtn.className = 'btn btn-primary w-100 py-2 fw-bold fs-5';
+                document.getElementById('cashPaymentDiv').style.display = 'none';
             } else {
                 titleLabel.innerHTML = '<i class="fa-solid fa-wifi text-success"></i> تجديد اشتراك';
                 confirmBtn.className = 'btn btn-success w-100 py-2 fw-bold fs-5';
+                document.getElementById('cashPaymentDiv').style.display = 'block';
+                document.getElementById('isCashCheckbox').checked = false;
             }
             
             document.getElementById('modal-subscriber-name').innerText = subscriberName;
@@ -488,6 +536,7 @@
             const actionType = document.getElementById('modal-action-type').value;
             const amount = document.getElementById('amountInput').value;
             const promiseDate = document.getElementById('promiseDate').value; // التقاط تاريخ الوعد
+            const isCash = document.getElementById('isCashCheckbox').checked;
 
             if (!amount || amount <= 0) return alert("يرجى إدخال مبلغ صحيح!");
             
@@ -497,7 +546,8 @@
             const requestData = { 
                 subscriber_id: subscriberId, 
                 amount: parseFloat(amount),
-                promise_date: promiseDate // نرسلها للسيرفر (سيقوم السيرفر بفلترتها بذكاء)
+                promise_date: promiseDate, // نرسلها للسيرفر (سيقوم السيرفر بفلترتها بذكاء)
+                is_cash: isCash
             };
 
             try {
@@ -513,6 +563,7 @@
                     actionModal.hide();
                     loadSubscribers();
                     loadDailyReport();
+                    loadLogs();
                 } else {
                     // عرض رسالة الخطأ القادمة من السيرفر (مثل: "يجب تحديد موعد!")
                     alert("❌ تنبيه: " + data.message);
