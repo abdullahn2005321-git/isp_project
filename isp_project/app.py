@@ -431,7 +431,7 @@ def get_logs():
 
         for payment in payments:
             logs.append({
-                "type": "payment",
+                "type": "تسديد",
                 "subscriber_name": payment.subscriber.name if payment.subscriber else None,
                 "amount": payment.amount,
                 "date": payment.payment_date.strftime("%Y-%m-%d %H:%M:%S")
@@ -439,7 +439,7 @@ def get_logs():
         
         for renewal in renewals:
             logs.append({
-                "type": "renewal",
+                "type": "تجديد",
                 "subscriber_name": renewal.subscriber.name if renewal.subscriber else None,
                 "amount": renewal.amount,
                 "date": renewal.renewal_date.strftime("%Y-%m-%d %H:%M:%S")

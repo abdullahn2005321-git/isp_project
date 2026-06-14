@@ -107,8 +107,19 @@
 
         <div id="logs" class="section-content">
             <div class="card shadow-sm border-0">
-                <div class="card-header bg-white py-3">
-                    <h5 class="m-0 text-secondary"><i class="fa-solid fa-clock-rotate-left"></i> السجل الزمني للعمليات (التسديد والتجديد)</h5>
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
+                    <h5 class="m-0 text-secondary"><i class="fa-solid fa-clock-rotate-left"></i> السجل الزمني للعمليات</h5>
+                    
+                    <div class="btn-group shadow-sm" role="group">
+                        <input type="radio" class="btn-check" name="logFilter" id="btn-all" autocomplete="off" checked onclick="filterLogs('الكل')">
+                        <label class="btn btn-outline-secondary btn-sm fw-bold px-3" for="btn-all">الكل</label>
+
+                        <input type="radio" class="btn-check" name="logFilter" id="btn-payments" autocomplete="off" onclick="filterLogs('تسديد')">
+                        <label class="btn btn-outline-primary btn-sm fw-bold px-3" for="btn-payments">التسديدات فقط</label>
+
+                        <input type="radio" class="btn-check" name="logFilter" id="btn-renewals" autocomplete="off" onclick="filterLogs('تجديد')">
+                        <label class="btn btn-outline-success btn-sm fw-bold px-3" for="btn-renewals">التجديدات فقط</label>
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     <table class="table table-striped text-center align-middle mb-0">
@@ -121,7 +132,7 @@
                             </tr>
                         </thead>
                         <tbody id="logs-table-body">
-                            <tr><td colspan="4" class="text-muted p-4">البيانات غير متوفرة (يحتاج لربط المسار في السيرفر)</td></tr>
+                            <tr><td colspan="4" class="text-muted p-4">جاري التحميل...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -199,20 +210,35 @@
                             <span id="detail-phone" class="fw-bold" dir="ltr">-</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><i class="fa-solid fa-building text-muted"></i> الشركة الأم</span>
+                            <span id="detail-parent-company" class="fw-bold text-secondary">-</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span><i class="fa-solid fa-wallet text-muted"></i> الرصيد الحالي</span>
                             <span id="detail-balance" class="fw-bold fs-5">-</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center bg-light">
                             <span><i class="fa-solid fa-calendar-check text-warning"></i> وعد التسديد</span>
-                            <span id="detail-promise" class="fw-bold text-danger">-</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="date" class="form-control form-control-sm border-0 bg-transparent text-danger fw-bold" id="quick-detail-promise" onchange="quickUpdatePromise()">
+                            </div>
                         </li>
                     </ul>
+
+                    <div class="card bg-light border-0 shadow-sm p-3 rounded mt-3">
+                        <h6 class="fw-bold text-secondary mb-2" style="font-size: 14px;"><i class="fa-solid fa-comment-dots"></i> ملاحظات المشترك:</h6>
+                        <p id="detail-notes" class="m-0 text-dark small" style="white-space: pre-line; line-height: 1.5;">لا توجد ملاحظات مسجلة.</p>
+                    </div>
                 </div>
-                <div class="modal-footer border-0 d-flex justify-content-between">
-                    <button type="button" class="btn btn-outline-danger" id="btn-delete-sub">
-                        <i class="fa-solid fa-trash"></i> حذف المشترك
-                    </button>
-                    
+                <div class="modal-footer border-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <button type="button" class="btn btn-outline-secondary me-2" onclick="copySubscriberDetails()">
+                            <i class="fa-solid fa-copy"></i> نسخ المعلومات
+                        </button>
+                        <button type="button" class="btn btn-outline-danger" id="btn-delete-sub">
+                            <i class="fa-solid fa-trash"></i> حذف المشترك
+                        </button>
+                    </div>
                     <div>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
                         <button type="button" class="btn btn-primary" id="btn-edit-sub">
@@ -244,8 +270,10 @@
                                 <input type="text" class="form-control" id="editPhone" dir="ltr" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary">رقم المنطقة (ID)</label>
-                                <input type="number" class="form-control" id="editAreaId" required>
+                                <label class="form-label fw-bold text-secondary">المنطقة *</label>
+                                <select class="form-select" id="editAreaId" required>
+                                    <option value="" disabled selected>جاري التحميل...</option>
+                                </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold text-secondary">الشركة الأم (ID)</label>
@@ -289,8 +317,10 @@
                                 <input type="text" class="form-control" id="addPhone" dir="ltr" placeholder="07XXXXXXXXX" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary">رقم المنطقة (ID) *</label>
-                                <input type="number" class="form-control" id="addAreaId" required>
+                                <label class="form-label fw-bold text-secondary">المنطقة *</label>
+                                <select class="form-select" id="addAreaId" required>
+                                    <option value="" disabled selected>جاري التحميل...</option>
+                                </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold text-secondary">الرصيد الأولي (إن وجد)</label>
@@ -326,6 +356,7 @@
         let addSubModal;
         let editSubModal;
         let allSubscribers = []; // ذاكرة حفظ المشتركين للبحث السريع
+        let allLogs = []; // ذاكرة حفظ السجل للفلترة السريعة
         
         // متغير لحفظ دين المشترك الحالي لزر "تسديد كامل الدين"
         let currentSubscriberDebt = 0; 
@@ -337,6 +368,7 @@
             loadSubscribers();
             loadDailyReport();
             loadLogs();
+            loadAreas();
         });
 
         // التنقل بين المحاور
@@ -345,6 +377,26 @@
             document.querySelectorAll('.nav-tabs .nav-link').forEach(el => el.classList.remove('active'));
             document.getElementById(sectionName).classList.add('active');
             document.getElementById('tab-' + sectionName).classList.add('active');
+        }
+
+        // دالة جلب المناطق من السيرفر
+        async function loadAreas() {
+            try {
+                const response = await fetch(`${API_URL}/areas`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    let optionsHTML = '<option value="" disabled selected>اختر المنطقة...</option>';
+                    data.areas.forEach(area => {
+                        optionsHTML += `<option value="${area.id}">${area.name}</option>`;
+                    });
+
+                    document.getElementById('addAreaId').innerHTML = optionsHTML;
+                    document.getElementById('editAreaId').innerHTML = optionsHTML;
+                }
+            } catch (error) {
+                console.error("خطأ في جلب المناطق:", error);
+            }
         }
 
         // دالة سحب كل المشتركين
@@ -405,35 +457,51 @@
             try {
                 const response = await fetch(`${API_URL}/logs`);
                 const data = await response.json();
-                const tableBody = document.getElementById('logs-table-body');
                 
-                tableBody.innerHTML = '';
-
                 if (data.status === 'success') {
-                    if (data.logs.length === 0) {
-                        tableBody.innerHTML = '<tr><td colspan="4" class="text-muted p-4">لا توجد عمليات مسجلة حتى الآن.</td></tr>';
-                        return;
-                    }
-
-                    // رسم كل عملية في الجدول
-                    data.logs.forEach(log => {
-                        let badgeClass = log.type === 'تسديد' ? 'bg-primary' : 'bg-success';
-                        let icon = log.type === 'تسديد' ? 'fa-hand-holding-dollar' : 'fa-wifi';
-                        
-                        let row = `
-                            <tr>
-                                <td dir="ltr" class="text-muted small">${log.date}</td>
-                                <td class="fw-bold text-dark">${log.subscriber_name}</td>
-                                <td><span class="badge ${badgeClass}"><i class="fa-solid ${icon}"></i> ${log.type}</span></td>
-                                <td class="fw-bold fs-6">${log.amount.toLocaleString()} د.ع</td>
-                            </tr>
-                        `;
-                        tableBody.innerHTML += row;
-                    });
+                    allLogs = data.logs;
+                    renderLogsTable(allLogs);
+                    document.getElementById('btn-all').checked = true;
                 }
             } catch (error) {
                 console.error("Error loading logs:", error);
                 document.getElementById('logs-table-body').innerHTML = '<tr><td colspan="4" class="text-danger p-4">❌ خطأ في الاتصال وجلب السجل</td></tr>';
+            }
+        }
+
+        // دالة رسم جدول السجل
+        function renderLogsTable(logsArray) {
+            const tableBody = document.getElementById('logs-table-body');
+            tableBody.innerHTML = '';
+
+            if (logsArray.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-muted p-4">لا توجد عمليات مطابقة للعرض.</td></tr>';
+                return;
+            }
+
+            logsArray.forEach(log => {
+                let badgeClass = log.type === 'تسديد' ? 'bg-primary' : 'bg-success';
+                let icon = log.type === 'تسديد' ? 'fa-hand-holding-dollar' : 'fa-wifi';
+                
+                let row = `
+                    <tr>
+                        <td dir="ltr" class="text-muted small">${log.date}</td>
+                        <td class="fw-bold text-dark">${log.subscriber_name}</td>
+                        <td><span class="badge ${badgeClass} fs-6"><i class="fa-solid ${icon}"></i> ${log.type}</span></td>
+                        <td class="fw-bold fs-6">${log.amount.toLocaleString()} د.ع</td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        // دالة الفلترة اللحظية السريعة
+        function filterLogs(filterType) {
+            if (filterType === 'الكل') {
+                renderLogsTable(allLogs);
+            } else {
+                const filtered = allLogs.filter(log => log.type === filterType);
+                renderLogsTable(filtered);
             }
         }
 
@@ -519,8 +587,11 @@
             document.getElementById('detail-id').innerText = `ID: ${subscriberId}`;
             document.getElementById('detail-area').innerText = "-";
             document.getElementById('detail-phone').innerText = "-";
+            document.getElementById('detail-parent-company').innerText = "-";
             document.getElementById('detail-balance').innerText = "-";
-            document.getElementById('detail-promise').innerText = "-";
+            document.getElementById('quick-detail-promise').value = "";
+            document.getElementById('detail-notes').innerText = "جاري جلب الملاحظات...";
+            document.getElementById('detail-notes').className = "m-0 text-muted small fst-italic";
             
             const detailsModal = new bootstrap.Modal(document.getElementById('detailsModal'));
             detailsModal.show();
@@ -533,13 +604,32 @@
                     const sub = data.subscriber;
                     document.getElementById('detail-name').innerText = sub.name;
                     document.getElementById('detail-area').innerText = sub.area || sub.area_name || '-';
-                    document.getElementById('detail-phone').innerText = sub.phone || '-';
-                    const balanceEl = document.getElementById('detail-balance');
-                    balanceEl.innerText = `${sub.balance} د.ع`;
-                    balanceEl.className = sub.balance < 0 ? 'fw-bold fs-5 text-danger' : 'fw-bold fs-5 text-success';
-                    document.getElementById('detail-promise').innerText = sub.promise_date && sub.promise_date !== 'None' ? sub.promise_date : '-';
                     
-                    // ربط زر الحذف والتعديل بـ ID المشترك الحالي
+                    let phoneEl = document.getElementById('detail-phone');
+                    if (!sub.phone || sub.phone === "لا يوجد رقم مسجل") {
+                        phoneEl.innerHTML = '<span class="text-danger small">لا يوجد رقم مسجل</span>';
+                    } else {
+                        phoneEl.innerText = sub.phone;
+                        phoneEl.className = 'fw-bold text-dark';
+                    }
+
+                    document.getElementById('detail-parent-company').innerText = sub.parent_company_id && sub.parent_company_id !== 'None' ? sub.parent_company_id : '—';
+
+                    const balanceEl = document.getElementById('detail-balance');
+                    balanceEl.innerText = `${sub.balance.toLocaleString()} د.ع`;
+                    balanceEl.className = sub.balance < 0 ? 'fw-bold fs-5 text-danger' : 'fw-bold fs-5 text-success';
+
+                    document.getElementById('quick-detail-promise').value = (sub.promise_date && sub.promise_date !== 'None') ? sub.promise_date.substring(0, 10) : '';
+
+                    const notesEl = document.getElementById('detail-notes');
+                    if (sub.notes && sub.notes.trim() !== '' && sub.notes !== 'None') {
+                        notesEl.innerText = sub.notes;
+                        notesEl.className = 'm-0 text-dark small fw-semibold';
+                    } else {
+                        notesEl.innerText = 'لا توجد ملاحظات مسجلة لهذا المشترك.';
+                        notesEl.className = 'm-0 text-muted small fst-italic';
+                    }
+
                     document.getElementById('btn-delete-sub').onclick = () => deleteSubscriber(sub.id);
                     document.getElementById('btn-edit-sub').onclick = () => openEditModal(sub);
                 } else {
@@ -555,6 +645,55 @@
         function openAddSubscriberModal() {
             document.getElementById('addSubscriberForm').reset();
             addSubModal.show();
+        }
+
+        // دالة لتحديث تاريخ الوعد سريعاً من بطاقة المشترك
+        async function quickUpdatePromise() {
+            const idText = document.getElementById('detail-id').innerText; // "ID: 5"
+            const subId = idText.replace('ID: ', '').trim();
+            const newPromiseDate = document.getElementById('quick-detail-promise').value;
+
+            const updatedData = {
+                promise_date: newPromiseDate || null
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/subscribers/${subId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedData)
+                });
+                const data = await response.json();
+
+                if (response.ok && data.status === 'success') {
+                    loadSubscribers();
+                } else {
+                    console.error("خطأ في تحديث الوعد:", data.message);
+                }
+            } catch (error) {
+                console.error("حدث خطأ في الاتصال أثناء تحديث الوعد:", error);
+            }
+        }
+
+        async function copySubscriberDetails() {
+            try {
+                const id = document.getElementById('detail-id').innerText.replace('ID: ', '').trim();
+                const name = document.getElementById('detail-name').innerText;
+                const area = document.getElementById('detail-area').innerText;
+                const phone = document.getElementById('detail-phone').innerText;
+                const parentCompany = document.getElementById('detail-parent-company').innerText;
+                const balance = document.getElementById('detail-balance').innerText;
+                const promiseDate = document.getElementById('quick-detail-promise').value || 'لا يوجد';
+                const notes = document.getElementById('detail-notes').innerText;
+
+                const textToCopy = `ID: ${id}\nالاسم: ${name}\nالمنطقة: ${area}\nرقم الهاتف: ${phone}\nالشركة الأم: ${parentCompany}\nالرصيد الحالي: ${balance}\nوعد التسديد: ${promiseDate}\nملاحظات: ${notes}`;
+
+                await navigator.clipboard.writeText(textToCopy);
+                alert('تم نسخ معلومات المشترك إلى الحافظة.');
+            } catch (error) {
+                console.error('خطأ في نسخ المعلومات:', error);
+                alert('تعذر نسخ المعلومات. الرجاء المحاولة مرة أخرى.');
+            }
         }
 
         async function submitNewSubscriber() {
