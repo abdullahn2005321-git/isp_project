@@ -20,7 +20,7 @@
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow">
         <div class="container">
-            <a class="navbar-brand" href="#"><i class="fa-solid fa-network-wired text-primary"></i> نظام إدارة الـ 1600 مشترك</a>
+            <a class="navbar-brand" href="#"><i class="fa-solid fa-network-wired text-primary"></i> نظام إدارة الـمشتركين</a>
         </div>
     </nav>
 
@@ -51,7 +51,7 @@
                 <div class="col-md-4">
                     <div class="card text-white bg-success mb-3 shadow-sm border-0">
                         <div class="card-body">
-                            <h5 class="card-title"><i class="fa-solid fa-money-bill-wave"></i> دخل اليوم (الصافي)</h5>
+                            <h5 class="card-title"><i class="fa-solid fa-money-bill-wave"></i> دخل اليوم</h5>
                             <h2 class="card-text fw-bold" id="today-income">0 د.ع</h2>
                         </div>
                     </div>
@@ -208,8 +208,63 @@
                         </li>
                     </ul>
                 </div>
+                <div class="modal-footer border-0 d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-danger" id="btn-delete-sub">
+                        <i class="fa-solid fa-trash"></i> حذف المشترك
+                    </button>
+                    
+                    <div>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                        <button type="button" class="btn btn-primary" id="btn-edit-sub">
+                            <i class="fa-solid fa-pen-to-square"></i> تعديل البيانات
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editSubscriberModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white pb-2">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square"></i> تعديل بيانات المشترك</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body bg-light">
+                    <form id="editSubscriberForm">
+                        <input type="hidden" id="editSubId">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary">الاسم الكامل</label>
+                                <input type="text" class="form-control" id="editName" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary">رقم الهاتف</label>
+                                <input type="text" class="form-control" id="editPhone" dir="ltr" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary">رقم المنطقة (ID)</label>
+                                <input type="number" class="form-control" id="editAreaId" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary">الشركة الأم (ID)</label>
+                                <input type="text" class="form-control" id="editParentCompany">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary">وعد سداد</label>
+                                <input type="date" class="form-control" id="editPromiseDate">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-bold text-secondary">ملاحظات عامة</label>
+                                <textarea class="form-control" id="editNotes" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
                 <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">إغلاق</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary fw-bold px-4" onclick="submitEditSubscriber()">حفظ التعديلات</button>
                 </div>
             </div>
         </div>
@@ -269,6 +324,7 @@
         const API_URL = 'http://127.0.0.1:5000/api';
         let actionModal;
         let addSubModal;
+        let editSubModal;
         let allSubscribers = []; // ذاكرة حفظ المشتركين للبحث السريع
         
         // متغير لحفظ دين المشترك الحالي لزر "تسديد كامل الدين"
@@ -277,6 +333,7 @@
         document.addEventListener("DOMContentLoaded", function() {
             actionModal = new bootstrap.Modal(document.getElementById('actionModal'));
             addSubModal = new bootstrap.Modal(document.getElementById('addSubscriberModal'));
+            editSubModal = new bootstrap.Modal(document.getElementById('editSubscriberModal'));
             loadSubscribers();
             loadDailyReport();
             loadLogs();
@@ -481,6 +538,10 @@
                     balanceEl.innerText = `${sub.balance} د.ع`;
                     balanceEl.className = sub.balance < 0 ? 'fw-bold fs-5 text-danger' : 'fw-bold fs-5 text-success';
                     document.getElementById('detail-promise').innerText = sub.promise_date && sub.promise_date !== 'None' ? sub.promise_date : '-';
+                    
+                    // ربط زر الحذف والتعديل بـ ID المشترك الحالي
+                    document.getElementById('btn-delete-sub').onclick = () => deleteSubscriber(sub.id);
+                    document.getElementById('btn-edit-sub').onclick = () => openEditModal(sub);
                 } else {
                     document.getElementById('detail-name').innerText = "❌ حدث خطأ!";
                     alert(data.message);
@@ -595,6 +656,87 @@
                     alert("❌ تنبيه: " + data.message);
                 }
             } catch (error) { alert("❌ خطأ في الاتصال بالسيرفر!"); }
+        }
+
+        // دالة فتح نافذة التعديل وتعبئة البيانات تلقائياً
+        function openEditModal(sub) {
+            // إخفاء نافذة التفاصيل أولاً
+            let detailsModal = bootstrap.Modal.getInstance(document.getElementById('detailsModal'));
+            detailsModal.hide();
+
+            // تعبئة الحقول ببيانات المشترك الحالية
+            document.getElementById('editSubId').value = sub.id;
+            document.getElementById('editName').value = sub.name;
+            document.getElementById('editPhone').value = sub.phone === "لا يوجد رقم مسجل" ? "" : (sub.phone || "");
+            document.getElementById('editAreaId').value = sub.area_id;
+            document.getElementById('editParentCompany').value = sub.parent_company_id || "";
+            document.getElementById('editNotes').value = sub.notes || "";
+            document.getElementById('editPromiseDate').value = (sub.promise_date && sub.promise_date !== "لا يوجد وعد مسجل" && sub.promise_date !== "None") ? sub.promise_date : "";
+
+            // إظهار نافذة التعديل
+            editSubModal.show();
+        }
+
+        // دالة إرسال التعديلات للسيرفر (PUT)
+        async function submitEditSubscriber() {
+            const subId = document.getElementById('editSubId').value;
+            
+            // تجميع البيانات من الحقول
+            const updatedData = {
+                name: document.getElementById('editName').value,
+                phone_number: document.getElementById('editPhone').value,
+                area_id: parseInt(document.getElementById('editAreaId').value),
+                parent_company_id: document.getElementById('editParentCompany').value,
+                notes: document.getElementById('editNotes').value,
+                promise_date: document.getElementById('editPromiseDate').value || null
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/subscribers/${subId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedData)
+                });
+                const data = await response.json();
+
+                if (response.ok && data.status === 'success') {
+                    editSubModal.hide();
+                    alert("✅ " + data.message);
+                    loadSubscribers(); // تحديث الجدول فوراً
+                } else {
+                    alert("❌ خطأ: " + data.message);
+                }
+            } catch (error) {
+                alert("❌ حدث خطأ في الاتصال بالسيرفر!");
+                console.error("Error:", error);
+            }
+        }
+
+        // دالة حذف المشترك (DELETE)
+        async function deleteSubscriber(subId) {
+            // رسالة تأكيد تحذيرية قبل الحذف (حماية للموظف من الخطأ)
+            const isConfirmed = confirm("⚠️ تحذير: هل أنت متأكد أنك تريد حذف هذا المشترك نهائياً؟ لا يمكن التراجع عن هذا الإجراء!");
+            
+            if (!isConfirmed) return;
+
+            try {
+                const response = await fetch(`${API_URL}/subscribers/${subId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+
+                if (response.ok && data.status === 'success') {
+                    let detailsModal = bootstrap.Modal.getInstance(document.getElementById('detailsModal'));
+                    detailsModal.hide(); // إغلاق البطاقة
+                    alert("🗑️ " + data.message);
+                    loadSubscribers(); // تحديث الجدول فوراً بعد الحذف
+                } else {
+                    alert("❌ خطأ: " + data.message);
+                }
+            } catch (error) {
+                alert("❌ حدث خطأ في الاتصال بالسيرفر!");
+                console.error("Error:", error);
+            }
         }
     </script>
 </body>
