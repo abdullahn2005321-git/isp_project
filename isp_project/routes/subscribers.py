@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from models import db, Area, Subscriber
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import joinedload
 from datetime import date
 
 
@@ -90,10 +91,16 @@ def add_subscriber():
 @subscribers_bp.route('/api/subscribers', methods=['GET'])
 def get_subscribers():
     try:
-        subscribers = Subscriber.query.all()
+
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 50, type=int)
+
+        pagination = Subscriber.query.options(joinedload(Subscriber.area))\
+                                    .filter_by(is_active=True)\
+                                    .paginate(page=page, per_page=per_page, error_out=False)
 
         sub_list = []
-        for subscriber in subscribers:
+        for subscriber in pagination.items:
             sub_list.append({
                 "id": subscriber.id,
                 "name": subscriber.name,
@@ -108,8 +115,14 @@ def get_subscribers():
         
         return jsonify({
             "status": "success",
-            "total": len(sub_list),
-            "subscribers": sub_list
+            "subscribers": sub_list,
+            "pagination": {
+                "total_subscribers": pagination.total,
+                "current_page": pagination.page,
+                "total_pages": pagination.pages,
+                "has_next": pagination.has_next,
+                "has_prev": pagination.has_prev
+            }
         }), 200
     
     except Exception as e:
@@ -238,7 +251,7 @@ def delete_subscriber(sub_id):
         }), 404
 
     try:
-        db.session.delete(sub)
+        sub.is_active = False
         db.session.commit()
         return jsonify({
             "status": "success",

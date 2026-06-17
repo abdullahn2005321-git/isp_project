@@ -1,6 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
 
-
 db = SQLAlchemy()
 
 class Area(db.Model):
@@ -17,9 +16,10 @@ class Subscriber(db.Model):
     name = db.Column(db.String(100), nullable=False)
     phone_number = db.Column(db.String(20), nullable=False, unique=True)
     parent_company_id = db.Column(db.String(50), nullable=True)
-    balance = db.Column(db.Integer, default=0.0)
+    balance = db.Column(db.Integer, default=0)
     promise_date = db.Column(db.DateTime, nullable=True)
     notes = db.Column(db.Text, nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
     payments = db.relationship('Payment', backref='subscriber', lazy=True)
     renewals = db.relationship('Renewal', backref='subscriber', lazy=True)
 

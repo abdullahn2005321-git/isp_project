@@ -24,7 +24,15 @@ def add_payment():
             "message": "Subscriber not found."
         }), 404
     
-    payment_amount = float(data['amount'])
+    try:
+        payment_amount = float(data['amount'])
+        if payment_amount <= 999:
+            raise ValueError("المبلغ يجب ان يكون اكبر من 999 دينار")
+    except (ValueError, TypeError, KeyError):
+        return jsonify({
+            "message": "بيانات خاطئة! يرجى التأكد من إدخال مبلغ صحيح وأكبر من 999 دينار.",
+            "status": "error"
+        }) , 400
 
     new_payment = Payment(
         subscriber_id = sub.id,
@@ -70,7 +78,15 @@ def renew_subscription():
     if not sub:
         return jsonify({"status": "error", "message": "Subscriber not found."}), 404
     
-    renewal_amount = float(data['amount'])
+    try:
+        renewal_amount = float(data['amount'])
+        if renewal_amount <= 999:
+            raise ValueError("المبلغ يجب ان يكون اكبر من 999 دينار")
+    except (ValueError, TypeError, KeyError):
+        return jsonify({
+            "message": "بيانات خاطئة! يرجى التأكد من إدخال مبلغ صحيح وأكبر من 999 دينار.",
+            "status": "error"
+        }) , 400
     
     is_cash = data.get('is_cash', False)
 

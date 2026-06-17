@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_migrate import Migrate
 from models import db
 from flask_cors import CORS
 
@@ -11,13 +12,14 @@ CORS(app)
 app.json.ensure_ascii = False
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@127.0.0.1/isp_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db.init_app(app)
+
+migrate = Migrate(app, db)
 
 app.register_blueprint(subscribers_bp)
 app.register_blueprint(payments_bp)
 app.register_blueprint(logging_and_reporting_bp)
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
