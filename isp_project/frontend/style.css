@@ -1,0 +1,10 @@
+﻿body { background-color: #f8f9fa; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
+.navbar-brand { font-weight: bold; font-size: 1.5rem; }
+.nav-tabs .nav-link { font-weight: 600; color: #495057; cursor: pointer; }
+.nav-tabs .nav-link.active { color: #0d6efd; border-bottom: 3px solid #0d6efd; background-color: transparent; border-top: none; border-left: none; border-right: none; }
+.section-content { display: none; }
+.section-content.active { display: block; animation: fadeIn 0.4s; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.login-page { min-height: calc(100vh - 84px); display: flex; align-items: center; justify-content: center; padding: 2rem; }
+.login-card { width: 100%; max-width: 420px; }
+.app-container.d-none { display: none; }

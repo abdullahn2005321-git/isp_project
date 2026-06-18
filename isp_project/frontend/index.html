@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -6,135 +6,189 @@
     <title>نظام إدارة المشتركين</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .navbar-brand { font-weight: bold; font-size: 1.5rem; }
-        .nav-tabs .nav-link { font-weight: 600; color: #495057; cursor: pointer; }
-        .nav-tabs .nav-link.active { color: #0d6efd; border-bottom: 3px solid #0d6efd; background-color: transparent; border-top: none; border-left: none; border-right: none;}
-        .section-content { display: none; }
-        .section-content.active { display: block; animation: fadeIn 0.4s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    </style>
+    <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow">
-        <div class="container">
+        <div class="container d-flex justify-content-between align-items-center">
             <a class="navbar-brand" href="#"><i class="fa-solid fa-network-wired text-primary"></i> نظام إدارة الـمشتركين</a>
+            <button type="button" class="btn btn-outline-light btn-sm d-none" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button>
         </div>
     </nav>
 
-    <div class="container">
-        <ul class="nav nav-tabs mb-4" id="systemTabs">
-            <li class="nav-item">
-                <a class="nav-link active" id="tab-dashboard" onclick="switchSection('dashboard')"><i class="fa-solid fa-chart-pie"></i> الداشبورد</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" id="tab-subscribers" onclick="switchSection('subscribers')"><i class="fa-solid fa-users"></i> المشتركين</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" id="tab-logs" onclick="switchSection('logs')"><i class="fa-solid fa-clipboard-list"></i> سجل العمليات (اللوگ)</a>
-            </li>
-        </ul>
+    <div id="loginPage" class="login-page">
+        <div class="card shadow-sm border-0 mx-auto login-card">
+            <div class="card-body">
+                <h3 class="card-title text-center mb-4">تسجيل الدخول</h3>
+                <p class="text-center text-muted mb-4">استخدم بيانات المسؤول للبدء في إدارة المشتركين.</p>
+                <form id="loginForm" autocomplete="off">
+                    <div class="mb-3">
+                        <label for="loginUsername" class="form-label fw-bold">اسم المستخدم</label>
+                        <input type="text" class="form-control" id="loginUsername" placeholder="admin" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="loginPassword" class="form-label fw-bold">كلمة المرور</label>
+                        <input type="password" class="form-control" id="loginPassword" placeholder="123456" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">تسجيل الدخول</button>
+                </form>
+                <div id="loginMessage" class="text-center mt-3 text-danger"></div>
+            </div>
+        </div>
+    </div>
 
-        <div id="dashboard" class="section-content active">
-            <h4 class="mb-4 text-secondary">نظرة عامة على النظام</h4>
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="card text-white bg-primary mb-3 shadow-sm border-0">
-                        <div class="card-body">
-                            <h5 class="card-title"><i class="fa-solid fa-users"></i> إجمالي المشتركين</h5>
-                            <h2 class="card-text fw-bold" id="total-subscribers">0</h2>
+    <div id="appContainer" class="app-container d-none">
+        <div class="container">
+            <ul class="nav nav-tabs mb-4" id="systemTabs">
+                <li class="nav-item">
+                    <button type="button" class="nav-link active" id="tab-dashboard"><i class="fa-solid fa-chart-pie"></i> الداشبورد</button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link" id="tab-subscribers"><i class="fa-solid fa-users"></i> المشتركين</button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link" id="tab-areas"><i class="fa-solid fa-map-location-dot"></i> المناطق</button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link" id="tab-logs"><i class="fa-solid fa-clipboard-list"></i> سجل العمليات (اللوگ)</button>
+                </li>
+            </ul>
+
+            <div id="dashboard" class="section-content active">
+                <h4 class="mb-4 text-secondary">نظرة عامة على النظام</h4>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card text-white bg-primary mb-3 shadow-sm border-0">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fa-solid fa-users"></i> إجمالي المشتركين</h5>
+                                <h2 class="card-text fw-bold" id="total-subscribers">0</h2>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card text-white bg-success mb-3 shadow-sm border-0">
-                        <div class="card-body">
-                            <h5 class="card-title"><i class="fa-solid fa-money-bill-wave"></i> دخل اليوم</h5>
-                            <h2 class="card-text fw-bold" id="today-income">0 د.ع</h2>
+                    <div class="col-md-4">
+                        <div class="card text-white bg-success mb-3 shadow-sm border-0">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fa-solid fa-money-bill-wave"></i> دخل اليوم</h5>
+                                <h2 class="card-text fw-bold" id="today-income">0 د.ع</h2>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card text-white bg-danger mb-3 shadow-sm border-0">
-                        <div class="card-body">
-                            <h5 class="card-title"><i class="fa-solid fa-file-invoice-dollar"></i> إجمالي الديون</h5>
-                            <h2 class="card-text fw-bold" id="total-debt">0 د.ع</h2>
+                    <div class="col-md-4">
+                        <div class="card text-white bg-danger mb-3 shadow-sm border-0">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fa-solid fa-file-invoice-dollar"></i> إجمالي الديون</h5>
+                                <h2 class="card-text fw-bold" id="total-debt">0 د.ع</h2>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div id="subscribers" class="section-content">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
-                    <h5 class="m-0 text-secondary"><i class="fa-solid fa-list"></i> إدارة المشتركين</h5>
-                    
-                    <div class="flex-grow-1 mx-md-4" style="max-width: 400px;">
-                        <div class="input-group shadow-sm">
-                            <span class="input-group-text bg-white border-primary text-primary"><i class="fa-solid fa-magnifying-glass"></i></span>
-                            <input type="text" class="form-control border-primary" id="searchInput" placeholder="ابحث بالاسم أو رقم الهاتف..." oninput="filterSubscribers()">
+            <div id="subscribers" class="section-content">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
+                        <h5 class="m-0 text-secondary"><i class="fa-solid fa-list"></i> إدارة المشتركين</h5>
+                        <div class="flex-grow-1 mx-md-4" style="max-width: 400px;">
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-white border-primary text-primary"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                <input type="text" class="form-control border-primary" id="searchInput" placeholder="ابحث بالاسم أو رقم الهاتف...">
+                            </div>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-warning btn-sm fw-bold me-2 shadow-sm" id="btn-today-promises"><i class="fa-solid fa-bell"></i> وعود اليوم</button>
+                            <button type="button" class="btn btn-primary btn-sm shadow-sm" id="btn-add-subscriber"><i class="fa-solid fa-user-plus"></i> مشترك جديد</button>
                         </div>
                     </div>
-
-                    <div>
-                        <button class="btn btn-warning btn-sm fw-bold me-2 shadow-sm" onclick="loadPromisesToday()">
-                            <i class="fa-solid fa-bell"></i> وعود اليوم
-                        </button>
-                        <button class="btn btn-primary btn-sm shadow-sm" onclick="openAddSubscriberModal()"><i class="fa-solid fa-user-plus"></i> مشترك جديد</button>
+                    <div class="card-body p-0">
+                        <table class="table table-hover table-bordered text-center align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th># ID</th>
+                                    <th>اسم المشترك</th>
+                                    <th>المنطقة</th>
+                                    <th>الرصيد / الدين</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subscribers-table-body">
+                                <tr><td colspan="5" class="text-muted p-4">جاري تحميل البيانات...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                <div class="card-body p-0">
-                    <table class="table table-hover table-bordered text-center align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th># ID</th>
-                                <th>اسم المشترك</th>
-                                <th>المنطقة</th>
-                                <th>الرصيد / الدين</th>
-                                <th>الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="subscribers-table-body">
-                            <tr><td colspan="5" class="text-muted p-4">جاري تحميل البيانات...</td></tr>
-                        </tbody>
-                    </table>
+            </div>
+
+            <div id="areas" class="section-content">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
+                        <h5 class="m-0 text-secondary"><i class="fa-solid fa-map-location-dot"></i> إدارة المناطق</h5>
+                        <button type="button" class="btn btn-primary btn-sm shadow-sm" id="btn-add-area"><i class="fa-solid fa-plus"></i> إضافة منطقة</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover table-bordered text-center align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>اسم المنطقة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="areas-table-body">
+                                <tr><td colspan="2" class="text-muted p-4">جاري تحميل المناطق...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="logs" class="section-content">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
+                        <h5 class="m-0 text-secondary"><i class="fa-solid fa-clock-rotate-left"></i> السجل الزمني للعمليات</h5>
+                        <div class="btn-group shadow-sm" role="group">
+                            <input type="radio" class="btn-check" name="logFilter" id="btn-all" autocomplete="off" checked>
+                            <label class="btn btn-outline-secondary btn-sm fw-bold px-3" for="btn-all">الكل</label>
+                            <input type="radio" class="btn-check" name="logFilter" id="btn-payments" autocomplete="off">
+                            <label class="btn btn-outline-primary btn-sm fw-bold px-3" for="btn-payments">التسديدات فقط</label>
+                            <input type="radio" class="btn-check" name="logFilter" id="btn-renewals" autocomplete="off">
+                            <label class="btn btn-outline-success btn-sm fw-bold px-3" for="btn-renewals">التجديدات فقط</label>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-striped text-center align-middle mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>التاريخ والوقت</th>
+                                    <th>المشترك</th>
+                                    <th>نوع العملية</th>
+                                    <th>المبلغ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logs-table-body">
+                                <tr><td colspan="4" class="text-muted p-4">جاري التحميل...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div id="logs" class="section-content">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
-                    <h5 class="m-0 text-secondary"><i class="fa-solid fa-clock-rotate-left"></i> السجل الزمني للعمليات</h5>
-                    
-                    <div class="btn-group shadow-sm" role="group">
-                        <input type="radio" class="btn-check" name="logFilter" id="btn-all" autocomplete="off" checked onclick="filterLogs('الكل')">
-                        <label class="btn btn-outline-secondary btn-sm fw-bold px-3" for="btn-all">الكل</label>
-
-                        <input type="radio" class="btn-check" name="logFilter" id="btn-payments" autocomplete="off" onclick="filterLogs('تسديد')">
-                        <label class="btn btn-outline-primary btn-sm fw-bold px-3" for="btn-payments">التسديدات فقط</label>
-
-                        <input type="radio" class="btn-check" name="logFilter" id="btn-renewals" autocomplete="off" onclick="filterLogs('تجديد')">
-                        <label class="btn btn-outline-success btn-sm fw-bold px-3" for="btn-renewals">التجديدات فقط</label>
+    <div class="modal fade" id="addAreaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white border-0">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-plus"></i> إضافة منطقة جديدة</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="newAreaName" class="form-label fw-bold">اسم المنطقة</label>
+                        <input type="text" class="form-control" id="newAreaName" placeholder="مثال: حي الزهور" required>
                     </div>
                 </div>
-                <div class="card-body p-0">
-                    <table class="table table-striped text-center align-middle mb-0">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>التاريخ والوقت</th>
-                                <th>المشترك</th>
-                                <th>نوع العملية</th>
-                                <th>المبلغ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="logs-table-body">
-                            <tr><td colspan="4" class="text-muted p-4">جاري التحميل...</td></tr>
-                        </tbody>
-                    </table>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary fw-bold px-4" id="btn-save-area">حفظ المنطقة</button>
                 </div>
             </div>
         </div>
@@ -149,38 +203,32 @@
                 </div>
                 <div class="modal-body">
                     <h6 id="modal-subscriber-name" class="text-primary mb-4 text-center fw-bold fs-5"></h6>
-                    
                     <input type="hidden" id="modal-subscriber-id">
                     <input type="hidden" id="modal-action-type">
-                    
                     <div class="mb-4">
                         <label for="amountInput" class="form-label fw-bold text-secondary">المبلغ (دينار عراقي):</label>
                         <input type="number" class="form-control form-control-lg text-center fw-bold" id="amountInput" placeholder="0" required>
-                        
                         <div class="mt-3 d-flex justify-content-center gap-2">
-                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="setQuickAmount(35000)">35,000</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="setQuickAmount(45000)">45,000</button>
-                            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" onclick="setFullDebtAmount()" id="fullDebtBtn">تسديد كامل الدين</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-quick-amount="35000">35,000</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-quick-amount="45000">45,000</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" id="fullDebtBtn">تسديد كامل الدين</button>
                         </div>
                     </div>
-
                     <div class="form-check mb-3 p-3 bg-success-subtle rounded border border-success" id="cashPaymentDiv" style="display: none;">
                         <input class="form-check-input ms-2" type="checkbox" id="isCashCheckbox">
                         <label class="form-check-label fw-bold text-success" for="isCashCheckbox">
                             <i class="fa-solid fa-money-bill-wave"></i> تم استلام مبلغ التجديد نقداً الآن (لا تسجل دين)
                         </label>
                     </div>
-
                     <div class="mb-2 bg-light p-3 rounded border border-warning-subtle">
                         <label for="promiseDate" class="form-label text-dark fw-bold"><i class="fa-solid fa-calendar-day text-warning"></i> تاريخ الوعد بالتسديد (اختياري)</label>
                         <input type="date" class="form-control" id="promiseDate">
                         <small class="text-danger mt-1 d-block" style="font-size: 12px;">* مطلوب فقط إذا كان المشترك سيبقى مديوناً بعد العملية</small>
                     </div>
-
                 </div>
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-light w-100 mb-2" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="button" class="btn btn-success w-100 py-2 fw-bold fs-5" id="confirmBtn" onclick="submitAction()">تأكيد العملية</button>
+                    <button type="button" class="btn btn-success w-100 py-2 fw-bold fs-5" id="confirmBtn">تأكيد العملية</button>
                 </div>
             </div>
         </div>
@@ -199,7 +247,6 @@
                         <h4 id="detail-name" class="fw-bold text-primary mb-0">جاري التحميل...</h4>
                         <span id="detail-id" class="badge bg-secondary mt-1">ID: -</span>
                     </div>
-                    
                     <ul class="list-group list-group-flush shadow-sm rounded">
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span><i class="fa-solid fa-location-dot text-muted"></i> المنطقة</span>
@@ -220,11 +267,10 @@
                         <li class="list-group-item d-flex justify-content-between align-items-center bg-light">
                             <span><i class="fa-solid fa-calendar-check text-warning"></i> وعد التسديد</span>
                             <div class="d-flex align-items-center gap-2">
-                                <input type="date" class="form-control form-control-sm border-0 bg-transparent text-danger fw-bold" id="quick-detail-promise" onchange="quickUpdatePromise()">
+                                <input type="date" class="form-control form-control-sm border-0 bg-transparent text-danger fw-bold" id="quick-detail-promise">
                             </div>
                         </li>
                     </ul>
-
                     <div class="card bg-light border-0 shadow-sm p-3 rounded mt-3">
                         <h6 class="fw-bold text-secondary mb-2" style="font-size: 14px;"><i class="fa-solid fa-comment-dots"></i> ملاحظات المشترك:</h6>
                         <p id="detail-notes" class="m-0 text-dark small" style="white-space: pre-line; line-height: 1.5;">لا توجد ملاحظات مسجلة.</p>
@@ -232,7 +278,7 @@
                 </div>
                 <div class="modal-footer border-0 d-flex justify-content-between align-items-center">
                     <div>
-                        <button type="button" class="btn btn-outline-secondary me-2" onclick="copySubscriberDetails()">
+                        <button type="button" class="btn btn-outline-secondary me-2" id="btn-copy-details">
                             <i class="fa-solid fa-copy"></i> نسخ المعلومات
                         </button>
                         <button type="button" class="btn btn-outline-danger" id="btn-delete-sub">
@@ -292,7 +338,7 @@
                 </div>
                 <div class="modal-footer border-0">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="button" class="btn btn-primary fw-bold px-4" onclick="submitEditSubscriber()">حفظ التعديلات</button>
+                    <button type="button" class="btn btn-primary fw-bold px-4" id="btn-save-edit">حفظ التعديلات</button>
                 </div>
             </div>
         </div>
@@ -343,540 +389,13 @@
                 </div>
                 <div class="modal-footer border-0">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="button" class="btn btn-primary fw-bold px-4" onclick="submitNewSubscriber()">حفظ المشترك</button>
+                    <button type="button" class="btn btn-primary fw-bold px-4" id="btn-save-new">حفظ المشترك</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        const API_URL = 'http://127.0.0.1:5000/api';
-        let actionModal;
-        let addSubModal;
-        let editSubModal;
-        let allSubscribers = []; // ذاكرة حفظ المشتركين للبحث السريع
-        let allLogs = []; // ذاكرة حفظ السجل للفلترة السريعة
-        
-        // متغير لحفظ دين المشترك الحالي لزر "تسديد كامل الدين"
-        let currentSubscriberDebt = 0; 
-
-        document.addEventListener("DOMContentLoaded", function() {
-            actionModal = new bootstrap.Modal(document.getElementById('actionModal'));
-            addSubModal = new bootstrap.Modal(document.getElementById('addSubscriberModal'));
-            editSubModal = new bootstrap.Modal(document.getElementById('editSubscriberModal'));
-            loadSubscribers();
-            loadDailyReport();
-            loadLogs();
-            loadAreas();
-        });
-
-        // التنقل بين المحاور
-        function switchSection(sectionName) {
-            document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-tabs .nav-link').forEach(el => el.classList.remove('active'));
-            document.getElementById(sectionName).classList.add('active');
-            document.getElementById('tab-' + sectionName).classList.add('active');
-        }
-
-        // دالة جلب المناطق من السيرفر
-        async function loadAreas() {
-            try {
-                const response = await fetch(`${API_URL}/areas`);
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    let optionsHTML = '<option value="" disabled selected>اختر المنطقة...</option>';
-                    data.areas.forEach(area => {
-                        optionsHTML += `<option value="${area.id}">${area.name}</option>`;
-                    });
-
-                    document.getElementById('addAreaId').innerHTML = optionsHTML;
-                    document.getElementById('editAreaId').innerHTML = optionsHTML;
-                }
-            } catch (error) {
-                console.error("خطأ في جلب المناطق:", error);
-            }
-        }
-
-        // دالة سحب كل المشتركين
-        async function loadSubscribers() {
-            try {
-                const response = await fetch(`${API_URL}/subscribers`);
-                const data = await response.json(); 
-                const subscribersList = data.subscribers ? data.subscribers : data;
-                
-                // حفظ النسخة الأصلية في المتغير العالمي للبحث منها لاحقاً
-                allSubscribers = subscribersList;
-                document.getElementById('total-subscribers').innerText = allSubscribers.length;
-                renderTable(allSubscribers); // نستخدم دالة الرسم
-            } catch (error) { console.error("خطأ:", error); }
-        }
-
-        // 🔍 دالة البحث اللحظي السريع
-        function filterSubscribers() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            
-            if (query.trim() === "") {
-                renderTable(allSubscribers);
-                return;
-            }
-
-            const filteredList = allSubscribers.filter(sub => {
-                const nameMatch = sub.name && sub.name.toLowerCase().includes(query);
-                const phoneMatch = (sub.phone || sub.phone_number || "").includes(query);
-                return nameMatch || phoneMatch;
-            });
-            
-            renderTable(filteredList);
-        }
-
-        // دالة سحب الوعود اليومية فقط 🔔
-        async function loadPromisesToday() {
-            try {
-                const response = await fetch(`${API_URL}/promises_today`);
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    if (data.count === 0) {
-                        alert("لا توجد وعود مستحقة لهذا اليوم! 🎉");
-                        loadSubscribers(); // نرجع نعرض كل المشتركين
-                    } else {
-                        renderTable(data.subscribers); // نعرض المديونين فقط
-                        alert(`تم العثور على ${data.count} وعود مستحقة اليوم!`);
-                    }
-                }
-            } catch (error) {
-                alert("❌ حدث خطأ في جلب الوعود من السيرفر!");
-                console.error(error);
-            }
-        }
-
-        // دالة جلب سجل العمليات
-        async function loadLogs() {
-            try {
-                const response = await fetch(`${API_URL}/logs`);
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    allLogs = data.logs;
-                    renderLogsTable(allLogs);
-                    document.getElementById('btn-all').checked = true;
-                }
-            } catch (error) {
-                console.error("Error loading logs:", error);
-                document.getElementById('logs-table-body').innerHTML = '<tr><td colspan="4" class="text-danger p-4">❌ خطأ في الاتصال وجلب السجل</td></tr>';
-            }
-        }
-
-        // دالة رسم جدول السجل
-        function renderLogsTable(logsArray) {
-            const tableBody = document.getElementById('logs-table-body');
-            tableBody.innerHTML = '';
-
-            if (logsArray.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="4" class="text-muted p-4">لا توجد عمليات مطابقة للعرض.</td></tr>';
-                return;
-            }
-
-            logsArray.forEach(log => {
-                let badgeClass = log.type === 'تسديد' ? 'bg-primary' : 'bg-success';
-                let icon = log.type === 'تسديد' ? 'fa-hand-holding-dollar' : 'fa-wifi';
-                
-                let row = `
-                    <tr>
-                        <td dir="ltr" class="text-muted small">${log.date}</td>
-                        <td class="fw-bold text-dark">${log.subscriber_name}</td>
-                        <td><span class="badge ${badgeClass} fs-6"><i class="fa-solid ${icon}"></i> ${log.type}</span></td>
-                        <td class="fw-bold fs-6">${log.amount.toLocaleString()} د.ع</td>
-                    </tr>
-                `;
-                tableBody.innerHTML += row;
-            });
-        }
-
-        // دالة الفلترة اللحظية السريعة
-        function filterLogs(filterType) {
-            if (filterType === 'الكل') {
-                renderLogsTable(allLogs);
-            } else {
-                const filtered = allLogs.filter(log => log.type === filterType);
-                renderLogsTable(filtered);
-            }
-        }
-
-        // دالة مخصصة لرسم الجدول لكي لا نكرر الكود
-        function renderTable(list) {
-            const tableBody = document.getElementById('subscribers-table-body');
-            tableBody.innerHTML = '';
-            let totalDebt = 0; 
-
-            if(list.length === 0){
-                tableBody.innerHTML = '<tr><td colspan="5" class="text-muted p-4">لا توجد بيانات للعرض</td></tr>';
-                return;
-            }
-
-            list.forEach(sub => {
-                let balanceColor = sub.balance < 0 ? 'bg-danger' : 'bg-success';
-                if (sub.balance < 0) totalDebt += Math.abs(sub.balance);
-                
-                // لاحظ أننا نمرر sub.balance لـ openModal
-                let row = `
-                    <tr>
-                        <td>${sub.id}</td>
-                                <td class="fw-bold">
-                            <span class="text-primary text-decoration-underline" style="cursor: pointer;" onclick="showSubscriberDetails(${sub.id})">
-                                ${sub.name}
-                            </span>
-                            <br>
-                            <small class="text-muted" style="font-size:11px">${sub.promise_date && sub.promise_date !== 'None' ? '🗓️ وعد: ' + sub.promise_date : ''}</small>
-                        </td>
-                        <td><span class="text-secondary">${sub.area_name || sub.area_id || '-'}</span></td>
-                        <td dir="ltr"><span class="badge ${balanceColor} fs-6">${sub.balance}</span></td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-success me-1 fw-bold" onclick="openModal(${sub.id}, '${sub.name}', 'renewal', ${sub.balance})">تجديد</button>
-                            <button class="btn btn-sm btn-outline-primary fw-bold" onclick="openModal(${sub.id}, '${sub.name}', 'payment', ${sub.balance})">تسديد</button>
-                        </td>
-                    </tr>`;
-                tableBody.innerHTML += row;
-            });
-            document.getElementById('total-debt').innerText = totalDebt.toLocaleString() + " د.ع";
-        }
-
-        // سحب تقرير اليوم
-        async function loadDailyReport() {
-            try {
-                const response = await fetch(`${API_URL}/daily_report`);
-                const data = await response.json();
-                let netTotal = data.summary ? data.summary.net_total : 0;
-                document.getElementById('today-income').innerText = netTotal.toLocaleString() + " د.ع";
-            } catch (error) { console.error("خطأ:", error); }
-        }
-
-        // فتح النافذة المنبثقة
-        function openModal(subscriberId, subscriberName, actionType, currentBalance) {
-            const titleLabel = document.getElementById('actionModalLabel');
-            const confirmBtn = document.getElementById('confirmBtn');
-            
-            // حساب الدين الحالي للمشترك لزر التسديد الكامل
-            currentSubscriberDebt = currentBalance < 0 ? Math.abs(currentBalance) : 0;
-
-            if (actionType === 'payment') {
-                titleLabel.innerHTML = '<i class="fa-solid fa-hand-holding-dollar text-primary"></i> تسديد مبلغ';
-                confirmBtn.className = 'btn btn-primary w-100 py-2 fw-bold fs-5';
-                document.getElementById('cashPaymentDiv').style.display = 'none';
-            } else {
-                titleLabel.innerHTML = '<i class="fa-solid fa-wifi text-success"></i> تجديد اشتراك';
-                confirmBtn.className = 'btn btn-success w-100 py-2 fw-bold fs-5';
-                document.getElementById('cashPaymentDiv').style.display = 'block';
-                document.getElementById('isCashCheckbox').checked = false;
-            }
-            
-            document.getElementById('modal-subscriber-name').innerText = subscriberName;
-            document.getElementById('amountInput').value = '';
-            document.getElementById('promiseDate').value = ''; // تصفير الوعد
-            document.getElementById('modal-subscriber-id').value = subscriberId;
-            document.getElementById('modal-action-type').value = actionType;
-            
-            actionModal.show();
-        }
-
-        // دالة جلب وعرض تفاصيل المشترك
-        async function showSubscriberDetails(subscriberId) {
-            document.getElementById('detail-name').innerText = "جاري التحميل...";
-            document.getElementById('detail-id').innerText = `ID: ${subscriberId}`;
-            document.getElementById('detail-area').innerText = "-";
-            document.getElementById('detail-phone').innerText = "-";
-            document.getElementById('detail-parent-company').innerText = "-";
-            document.getElementById('detail-balance').innerText = "-";
-            document.getElementById('quick-detail-promise').value = "";
-            document.getElementById('detail-notes').innerText = "جاري جلب الملاحظات...";
-            document.getElementById('detail-notes').className = "m-0 text-muted small fst-italic";
-            
-            const detailsModal = new bootstrap.Modal(document.getElementById('detailsModal'));
-            detailsModal.show();
-
-            try {
-                const response = await fetch(`${API_URL}/subscribers/${subscriberId}`);
-                const data = await response.json();
-
-                if (data.status === 'success') {
-                    const sub = data.subscriber;
-                    document.getElementById('detail-name').innerText = sub.name;
-                    document.getElementById('detail-area').innerText = sub.area || sub.area_name || '-';
-                    
-                    let phoneEl = document.getElementById('detail-phone');
-                    if (!sub.phone || sub.phone === "لا يوجد رقم مسجل") {
-                        phoneEl.innerHTML = '<span class="text-danger small">لا يوجد رقم مسجل</span>';
-                    } else {
-                        phoneEl.innerText = sub.phone;
-                        phoneEl.className = 'fw-bold text-dark';
-                    }
-
-                    document.getElementById('detail-parent-company').innerText = sub.parent_company_id && sub.parent_company_id !== 'None' ? sub.parent_company_id : '—';
-
-                    const balanceEl = document.getElementById('detail-balance');
-                    balanceEl.innerText = `${sub.balance.toLocaleString()} د.ع`;
-                    balanceEl.className = sub.balance < 0 ? 'fw-bold fs-5 text-danger' : 'fw-bold fs-5 text-success';
-
-                    document.getElementById('quick-detail-promise').value = (sub.promise_date && sub.promise_date !== 'None') ? sub.promise_date.substring(0, 10) : '';
-
-                    const notesEl = document.getElementById('detail-notes');
-                    if (sub.notes && sub.notes.trim() !== '' && sub.notes !== 'None') {
-                        notesEl.innerText = sub.notes;
-                        notesEl.className = 'm-0 text-dark small fw-semibold';
-                    } else {
-                        notesEl.innerText = 'لا توجد ملاحظات مسجلة لهذا المشترك.';
-                        notesEl.className = 'm-0 text-muted small fst-italic';
-                    }
-
-                    document.getElementById('btn-delete-sub').onclick = () => deleteSubscriber(sub.id);
-                    document.getElementById('btn-edit-sub').onclick = () => openEditModal(sub);
-                } else {
-                    document.getElementById('detail-name').innerText = "❌ حدث خطأ!";
-                    alert(data.message);
-                }
-            } catch (error) {
-                console.error("خطأ:", error);
-                document.getElementById('detail-name').innerText = "❌ خطأ في الاتصال";
-            }
-        }
-
-        function openAddSubscriberModal() {
-            document.getElementById('addSubscriberForm').reset();
-            addSubModal.show();
-        }
-
-        // دالة لتحديث تاريخ الوعد سريعاً من بطاقة المشترك
-        async function quickUpdatePromise() {
-            const idText = document.getElementById('detail-id').innerText; // "ID: 5"
-            const subId = idText.replace('ID: ', '').trim();
-            const newPromiseDate = document.getElementById('quick-detail-promise').value;
-
-            const updatedData = {
-                promise_date: newPromiseDate || null
-            };
-
-            try {
-                const response = await fetch(`${API_URL}/subscribers/${subId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updatedData)
-                });
-                const data = await response.json();
-
-                if (response.ok && data.status === 'success') {
-                    loadSubscribers();
-                } else {
-                    console.error("خطأ في تحديث الوعد:", data.message);
-                }
-            } catch (error) {
-                console.error("حدث خطأ في الاتصال أثناء تحديث الوعد:", error);
-            }
-        }
-
-        async function copySubscriberDetails() {
-            try {
-                const id = document.getElementById('detail-id').innerText.replace('ID: ', '').trim();
-                const name = document.getElementById('detail-name').innerText;
-                const area = document.getElementById('detail-area').innerText;
-                const phone = document.getElementById('detail-phone').innerText;
-                const parentCompany = document.getElementById('detail-parent-company').innerText;
-                const balance = document.getElementById('detail-balance').innerText;
-                const promiseDate = document.getElementById('quick-detail-promise').value || 'لا يوجد';
-                const notes = document.getElementById('detail-notes').innerText;
-
-                const textToCopy = `ID: ${id}\nالاسم: ${name}\nالمنطقة: ${area}\nرقم الهاتف: ${phone}\nالشركة الأم: ${parentCompany}\nالرصيد الحالي: ${balance}\nوعد التسديد: ${promiseDate}\nملاحظات: ${notes}`;
-
-                await navigator.clipboard.writeText(textToCopy);
-                alert('تم نسخ معلومات المشترك إلى الحافظة.');
-            } catch (error) {
-                console.error('خطأ في نسخ المعلومات:', error);
-                alert('تعذر نسخ المعلومات. الرجاء المحاولة مرة أخرى.');
-            }
-        }
-
-        async function submitNewSubscriber() {
-            const name = document.getElementById('addName').value;
-            const phone = document.getElementById('addPhone').value;
-            const areaId = document.getElementById('addAreaId').value;
-            const balance = document.getElementById('addBalance').value || 0;
-            const parentCompany = document.getElementById('addParentCompany').value;
-            const promiseDate = document.getElementById('addPromiseDate').value;
-            const notes = document.getElementById('addNotes').value;
-
-            if (!name || !phone || !areaId) {
-                alert("يرجى تعبئة الحقول الإجبارية (الاسم، الهاتف، المنطقة)!");
-                return;
-            }
-
-            const newSubscriberData = {
-                name: name,
-                phone_number: phone,
-                area_id: parseInt(areaId),
-                balance: parseFloat(balance),
-                parent_company_id: parentCompany,
-                promise_date: promiseDate,
-                notes: notes
-            };
-
-            try {
-                const response = await fetch(`${API_URL}/subscribers`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newSubscriberData)
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.status === 'success') {
-                    addSubModal.hide();
-                    alert(data.message);
-                    loadSubscribers();
-                    loadDailyReport();
-                } else {
-                    alert("❌ خطأ: " + data.message);
-                }
-            } catch (error) {
-                alert("❌ حدث خطأ في الاتصال بالسيرفر!");
-                console.error("Error:", error);
-            }
-        }
-
-        // دوال أزرار الاختصارات
-        function setQuickAmount(amount) {
-            document.getElementById('amountInput').value = amount;
-        }
-
-        function setFullDebtAmount() {
-            if (currentSubscriberDebt > 0) {
-                document.getElementById('amountInput').value = currentSubscriberDebt;
-            } else {
-                alert("هذا المشترك ليس عليه دين ليتم تسديده!");
-            }
-        }
-
-        // إرسال البيانات للسيرفر
-        async function submitAction() {
-            const subscriberId = document.getElementById('modal-subscriber-id').value;
-            const actionType = document.getElementById('modal-action-type').value;
-            const amount = document.getElementById('amountInput').value;
-            const promiseDate = document.getElementById('promiseDate').value; // التقاط تاريخ الوعد
-            const isCash = document.getElementById('isCashCheckbox').checked;
-
-            if (!amount || amount <= 0) return alert("يرجى إدخال مبلغ صحيح!");
-            
-            const endpoint = actionType === 'payment' ? '/payments' : '/renewals';
-
-            // تجهيز البيانات
-            const requestData = { 
-                subscriber_id: subscriberId, 
-                amount: parseFloat(amount),
-                promise_date: promiseDate, // نرسلها للسيرفر (سيقوم السيرفر بفلترتها بذكاء)
-                is_cash: isCash
-            };
-
-            try {
-                const response = await fetch(`${API_URL}${endpoint}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestData)
-                });
-                
-                const data = await response.json();
-
-                if (response.ok) {
-                    actionModal.hide();
-                    loadSubscribers();
-                    loadDailyReport();
-                    loadLogs();
-                } else {
-                    // عرض رسالة الخطأ القادمة من السيرفر (مثل: "يجب تحديد موعد!")
-                    alert("❌ تنبيه: " + data.message);
-                }
-            } catch (error) { alert("❌ خطأ في الاتصال بالسيرفر!"); }
-        }
-
-        // دالة فتح نافذة التعديل وتعبئة البيانات تلقائياً
-        function openEditModal(sub) {
-            // إخفاء نافذة التفاصيل أولاً
-            let detailsModal = bootstrap.Modal.getInstance(document.getElementById('detailsModal'));
-            detailsModal.hide();
-
-            // تعبئة الحقول ببيانات المشترك الحالية
-            document.getElementById('editSubId').value = sub.id;
-            document.getElementById('editName').value = sub.name;
-            document.getElementById('editPhone').value = sub.phone === "لا يوجد رقم مسجل" ? "" : (sub.phone || "");
-            document.getElementById('editAreaId').value = sub.area_id;
-            document.getElementById('editParentCompany').value = sub.parent_company_id || "";
-            document.getElementById('editNotes').value = sub.notes || "";
-            document.getElementById('editPromiseDate').value = (sub.promise_date && sub.promise_date !== "لا يوجد وعد مسجل" && sub.promise_date !== "None") ? sub.promise_date : "";
-
-            // إظهار نافذة التعديل
-            editSubModal.show();
-        }
-
-        // دالة إرسال التعديلات للسيرفر (PUT)
-        async function submitEditSubscriber() {
-            const subId = document.getElementById('editSubId').value;
-            
-            // تجميع البيانات من الحقول
-            const updatedData = {
-                name: document.getElementById('editName').value,
-                phone_number: document.getElementById('editPhone').value,
-                area_id: parseInt(document.getElementById('editAreaId').value),
-                parent_company_id: document.getElementById('editParentCompany').value,
-                notes: document.getElementById('editNotes').value,
-                promise_date: document.getElementById('editPromiseDate').value || null
-            };
-
-            try {
-                const response = await fetch(`${API_URL}/subscribers/${subId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updatedData)
-                });
-                const data = await response.json();
-
-                if (response.ok && data.status === 'success') {
-                    editSubModal.hide();
-                    alert("✅ " + data.message);
-                    loadSubscribers(); // تحديث الجدول فوراً
-                } else {
-                    alert("❌ خطأ: " + data.message);
-                }
-            } catch (error) {
-                alert("❌ حدث خطأ في الاتصال بالسيرفر!");
-                console.error("Error:", error);
-            }
-        }
-
-        // دالة حذف المشترك (DELETE)
-        async function deleteSubscriber(subId) {
-            // رسالة تأكيد تحذيرية قبل الحذف (حماية للموظف من الخطأ)
-            const isConfirmed = confirm("⚠️ تحذير: هل أنت متأكد أنك تريد حذف هذا المشترك نهائياً؟ لا يمكن التراجع عن هذا الإجراء!");
-            
-            if (!isConfirmed) return;
-
-            try {
-                const response = await fetch(`${API_URL}/subscribers/${subId}`, {
-                    method: 'DELETE'
-                });
-                const data = await response.json();
-
-                if (response.ok && data.status === 'success') {
-                    let detailsModal = bootstrap.Modal.getInstance(document.getElementById('detailsModal'));
-                    detailsModal.hide(); // إغلاق البطاقة
-                    alert("🗑️ " + data.message);
-                    loadSubscribers(); // تحديث الجدول فوراً بعد الحذف
-                } else {
-                    alert("❌ خطأ: " + data.message);
-                }
-            } catch (error) {
-                alert("❌ حدث خطأ في الاتصال بالسيرفر!");
-                console.error("Error:", error);
-            }
-        }
-    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script defer src="./main.js"></script>
 </body>
 </html>
