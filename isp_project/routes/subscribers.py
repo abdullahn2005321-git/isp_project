@@ -3,7 +3,7 @@ from models import db, Area, Subscriber
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from datetime import date
-
+from flask_jwt_extended import jwt_required
 
 subscribers_bp = Blueprint('subscribers', __name__)
 
@@ -12,6 +12,7 @@ subscribers_bp = Blueprint('subscribers', __name__)
 #=============area endpoints
 #==============================
 @subscribers_bp.route('/api/areas', methods=['POST'])
+@jwt_required()
 def add_area():
     data = request.get_json()
 
@@ -46,6 +47,7 @@ def get_areas():
 #=======subscriber endpoints
 #==============================
 @subscribers_bp.route('/api/subscribers', methods=['POST'])
+@jwt_required()
 def add_subscriber():
     data = request.get_json()
 
@@ -185,6 +187,7 @@ def get_promises_today():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @subscribers_bp.route('/api/subscribers/<int:sub_id>', methods=['PUT'])
+@jwt_required()
 def update_subscriber(sub_id):
 
     sub = Subscriber.query.get(sub_id)
@@ -242,6 +245,7 @@ def update_subscriber(sub_id):
 
 
 @subscribers_bp.route('/api/subscribers/<int:sub_id>', methods=['DELETE'])
+@jwt_required()
 def delete_subscriber(sub_id):
     sub = Subscriber.query.get(sub_id)
     if not sub:

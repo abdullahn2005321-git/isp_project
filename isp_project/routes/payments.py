@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from models import db, Subscriber, Payment, Renewal
+from flask_jwt_extended import jwt_required
 
 payments_bp = Blueprint('payments', __name__)
 
@@ -7,6 +8,7 @@ payments_bp = Blueprint('payments', __name__)
 #==========payment endpoints
 #==============================
 @payments_bp.route('/api/payments', methods=['POST'])
+@jwt_required()
 def add_payment():
     data = request.get_json()
 
@@ -16,7 +18,7 @@ def add_payment():
             "message": "subscriber_id and amount are required."
         }), 400
     
-    sub = Subscriber.query.get(data['subscriber_id'])
+    sub = Subscriber.query.with_for_update().get(data['subscriber_id'])
 
     if not sub:
         return jsonify({
@@ -64,6 +66,7 @@ def add_payment():
 #==========renewal endpoints
 #==============================
 @payments_bp.route('/api/renewals', methods=['POST'])
+@jwt_required()
 def renew_subscription():
     data = request.get_json()
     
@@ -73,10 +76,13 @@ def renew_subscription():
             "message": "subscriber_id and amount are required."
         }), 400
     
-    sub = Subscriber.query.get(data['subscriber_id'])
+    sub = Subscriber.query.with_for_update().get(data['subscriber_id'])
 
     if not sub:
-        return jsonify({"status": "error", "message": "Subscriber not found."}), 404
+        return jsonify({
+            "status": "error",
+            "message": "Subscriber not found."
+        }), 404
     
     try:
         renewal_amount = float(data['amount'])
