@@ -48,6 +48,10 @@ const dom = {
     btnAddArea: document.getElementById('btn-add-area'),
     btnSaveArea: document.getElementById('btn-save-area'),
     newAreaName: document.getElementById('newAreaName'),
+    todayPayments: document.getElementById('today-payments'),
+    todayRenewals: document.getElementById('today-renewals'),
+    reportStatusBadge: document.getElementById('report-status-badge'),
+    reportStatusMessage: document.getElementById('report-status-msg'),
     btnAll: document.getElementById('btn-all'),
     btnPayments: document.getElementById('btn-payments'),
     btnRenewals: document.getElementById('btn-renewals'),
@@ -550,9 +554,19 @@ function filterLogs(filterType) {
 async function loadDailyReport() {
     try {
         const data = await apiCall('/daily_report');
-        if (!data) return;
-        const netTotal = data.summary ? data.summary.net_total : 0;
+        if (!data || data.status !== 'success') return;
+        const summary = data.summary || {};
+        const netTotal = summary.net_total || 0;
+        const totalPayments = summary.total_payments_collected || 0;
+        const totalRenewals = summary.total_renewals_value || 0;
+        const reportStatus = summary.report_status || 'neutral';
+
         dom.todayIncome.innerText = `${netTotal.toLocaleString()} د.ع`;
+        dom.todayPayments.innerText = `${totalPayments.toLocaleString()} د.ع`;
+        dom.todayRenewals.innerText = `${totalRenewals.toLocaleString()} د.ع`;
+        dom.reportStatusMessage.innerText = data.message || 'لا يوجد تقرير.';
+        dom.reportStatusBadge.innerText = reportStatus;
+        dom.reportStatusBadge.className = `badge fs-6 ${reportStatus === 'good' ? 'bg-success' : reportStatus === 'bad' ? 'bg-danger' : 'bg-secondary'}`;
     } catch (error) {
         console.error('خطأ:', error);
     }
