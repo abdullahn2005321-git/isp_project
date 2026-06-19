@@ -112,7 +112,7 @@ def get_subscribers():
                 "parent_company_id": subscriber.parent_company_id,
                 "notes": subscriber.notes,
                 "balance": subscriber.balance,
-                "promise_date": subscriber.promise_date
+                "promise_date": subscriber.promise_date.strftime("%Y-%m-%d") if subscriber.promise_date else "لا يوجد وعد مسجل"
             })
         
         return jsonify({
@@ -133,7 +133,7 @@ def get_subscribers():
 
 @subscribers_bp.route('/api/subscribers/<int:sub_id>', methods=['GET'])
 def get_subscriber(sub_id):
-    sub = Subscriber.query.get(sub_id)
+    sub = Subscriber.query.filter_by(id=sub_id, is_active=True).first()
     if not sub:
         return jsonify({
             "status": "error",
@@ -149,7 +149,7 @@ def get_subscriber(sub_id):
         "parent_company_id": sub.parent_company_id,
         "notes": sub.notes,
         "balance": sub.balance,
-        "promise_date": str(sub.promise_date) if sub.promise_date else "لا يوجد وعد مسجل"
+        "promise_date": sub.promise_date.strftime("%Y-%m-%d") if sub.promise_date else "لا يوجد وعد مسجل"
     }
     return jsonify({
         "status": "success",
@@ -161,7 +161,10 @@ def get_subscriber(sub_id):
 def get_promises_today():
     try:
         today = str(date.today())
-        subscribers = Subscriber.query.filter(db.func.date(Subscriber.promise_date) == today).all()
+        subscribers = Subscriber.query.filter(
+            db.func.date(Subscriber.promise_date) == today,
+            Subscriber.is_active == True
+        ).options(joinedload(Subscriber.area)).all()
 
         subs_list = []
         for sub in subscribers:
@@ -174,7 +177,7 @@ def get_promises_today():
                 "parent_company_id": sub.parent_company_id,
                 "notes": sub.notes,
                 "balance": sub.balance,
-                "promise_date": str(sub.promise_date) if sub.promise_date else "لا يوجد وعد مسجل"
+                "promise_date": sub.promise_date.strftime("%Y-%m-%d") if sub.promise_date else "لا يوجد وعد مسجل"
             })
         
         return jsonify({

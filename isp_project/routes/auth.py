@@ -14,7 +14,7 @@ def login():
         access_token = create_access_token(identity=username)
 
         return jsonify({
-            "status": "succeess",
+            "status": "success",
             "message": "تم تسجيل بنجاح",
             "token": access_token
         }), 200
