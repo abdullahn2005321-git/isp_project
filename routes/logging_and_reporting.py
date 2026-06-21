@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
-from models import db, Payment, Renewal
+from models import db, Payment, Renewal, Subscriber
 from datetime import date
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 logging_and_reporting_bp = Blueprint('logging_and_reporting', __name__)
 
@@ -8,13 +9,23 @@ logging_and_reporting_bp = Blueprint('logging_and_reporting', __name__)
 #==========daily report endpoint
 #==============================
 @logging_and_reporting_bp.route('/api/daily_report', methods=['GET'])
+@jwt_required()
 def daily_report():
     try:
+        current_admin = get_jwt_identity()
+        current_admin_id = current_admin.get('admin_id')
+
         target_date = request.args.get('date', str(date.today()))
 
-        payments = Payment.query.filter(db.func.date(Payment.payment_date) == target_date).all()
+        payments = Payment.query.join(Subscriber).filter(
+            db.func.date(Payment.payment_date) == target_date,
+            Subscriber.admin_id == current_admin_id
+        ).all()
 
-        renewals = Renewal.query.filter(db.func.date(Renewal.renewal_date) == target_date).all()
+        renewals = Renewal.query.join(Subscriber).filter(
+            db.func.date(Renewal.renewal_date) == target_date,
+            Subscriber.admin_id == current_admin_id
+        ).all()
 
         payments_amount = sum(payment.amount for payment in payments)
 
@@ -58,10 +69,19 @@ def daily_report():
 #==========logs endpoints
 #==============================
 @logging_and_reporting_bp.route('/api/logs', methods=['GET'])
+@jwt_required()
 def get_logs():
     try:
-        payments = Payment.query.order_by(Payment.payment_date.desc()).limit(50).all()
-        renewals = Renewal.query.order_by(Renewal.renewal_date.desc()).limit(50).all()
+        current_admin = get_jwt_identity()
+        current_admin_id = current_admin.get('admin_id')
+
+        payments = Payment.query.join(Subscriber).filter(
+            Subscriber.admin_id == current_admin_id
+        ).order_by(Payment.payment_date.desc()).limit(50).all()
+
+        renewals = Renewal.query.join(Subscriber).filter(
+            Subscriber.admin_id == current_admin_id
+        ).order_by(Renewal.renewal_date.desc()).limit(50).all()
 
         logs = []
 
@@ -85,7 +105,7 @@ def get_logs():
 
         return jsonify({
             "status": "success",
-            "logs": logs
+            "logs": logs[:50]
         }), 200
     
     except Exception as e:

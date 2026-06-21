@@ -99,14 +99,16 @@ def login():
 
         target_admin_id = user.id if user.role == 'admin' else user.parent_admin_id
 
-        token_identity = {
-            "user_id": user.id,
+        extra_data = {
             "username": user.username,
             "role": user.role,
             "admin_id": target_admin_id
         }
 
-        access_token = create_access_token(identity=token_identity)
+        access_token = create_access_token(
+            identity=str(user.id),
+            additional_claims=extra_data
+        )
 
         return jsonify({
             "status": "success",

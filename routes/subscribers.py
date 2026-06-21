@@ -3,7 +3,7 @@ from models import db, Area, Subscriber
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from datetime import date
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 
 subscribers_bp = Blueprint('subscribers', __name__)
 
@@ -14,12 +14,22 @@ subscribers_bp = Blueprint('subscribers', __name__)
 @subscribers_bp.route('/api/areas', methods=['POST'])
 @jwt_required()
 def add_area():
+    claims = get_jwt()
+    user_role = claims.get("role")
+    admin_id = claims.get("admin_id")
+
+    if user_role != "admin":
+        return jsonify({"status":"error", "message": "you must be admin"})
+    
     data = request.get_json()
 
-    if not data or 'name' not in data:
+    if not data or 'name' not in data or str(data['name']).strip() == "":
         return jsonify({"status": "error", "message": "Area name is required."}), 400
-    
-    new_area = Area(name=data['name'])
+
+    new_area = Area(
+        name=data['name'],
+        admin_id=admin_id
+    )
 
     try:
         db.session.add(new_area)
@@ -27,9 +37,12 @@ def add_area():
         return jsonify({"status": "success", "message": "Area added successfully."}), 201
     except Exception as e:
         db.session.rollback()
+        if "Duplicate entry" in str(e) or "IntegrityError" in str(e):
+             return jsonify({"status": "error", "message": "هذه المنطقة موجودة مسبقاً."}), 400
         return jsonify({"status": "error", "message": str(e)}), 500
     
 @subscribers_bp.route('/api/areas', methods=['GET'])
+@jwt_required()
 def get_areas():
     try:
         areas = Area.query.all()
@@ -49,6 +62,10 @@ def get_areas():
 @subscribers_bp.route('/api/subscribers', methods=['POST'])
 @jwt_required()
 def add_subscriber():
+
+    current_user = get_jwt_identity()
+    current_admin_id = current_user.get(data['admin_id'])
+
     data = request.get_json()
 
     required_fields = ['name', 'phone_number', 'area_id']
@@ -63,6 +80,7 @@ def add_subscriber():
         name = data['name'],
         phone_number = data['phone_number'],
         area_id = data['area_id'],
+        admin_id = current_admin_id,
         parent_company_id = data.get('parent_company_id', ''),
         balance = float(data.get('balance', 0.0)),
         promise_date = data.get('promise_date') if data.get('promise_date') and data.get('promise_date').strip() != "" else None,
@@ -91,14 +109,18 @@ def add_subscriber():
         }), 500
 
 @subscribers_bp.route('/api/subscribers', methods=['GET'])
+@jwt_required()
 def get_subscribers():
     try:
+        current_user = get_jwt_identity()
+        current_admin_id = current_user.get('admin_id')
+
 
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 50, type=int)
 
         pagination = Subscriber.query.options(joinedload(Subscriber.area))\
-                                    .filter_by(is_active=True)\
+                                    .filter_by(admin_id=current_admin_id, is_active=True)\
                                     .paginate(page=page, per_page=per_page, error_out=False)
 
         sub_list = []
@@ -132,6 +154,7 @@ def get_subscribers():
 
 
 @subscribers_bp.route('/api/subscribers/<int:sub_id>', methods=['GET'])
+@jwt_required()
 def get_subscriber(sub_id):
     sub = Subscriber.query.filter_by(id=sub_id, is_active=True).first()
     if not sub:
@@ -158,6 +181,7 @@ def get_subscriber(sub_id):
 
 
 @subscribers_bp.route('/api/promises_today', methods=['GET'])
+@jwt_required()
 def get_promises_today():
     try:
         today = str(date.today())
