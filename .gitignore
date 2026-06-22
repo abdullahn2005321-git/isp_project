@@ -1,0 +1,25 @@
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+isp/
+
+# Environment variables and secrets
+.env
+
+# VS Code settings
+.vscode/
+
+# Database files (if any)
+*.sqlite3
+*.db
+
+# Pytest cache
+.pytest_cache/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
