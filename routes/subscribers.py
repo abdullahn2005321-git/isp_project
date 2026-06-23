@@ -19,7 +19,7 @@ def add_area():
     admin_id = claims.get("admin_id")
 
     if user_role != "admin":
-        return jsonify({"status":"error", "message": "you must be admin"})
+        return jsonify({"status":"error", "message": "you must be admin"}), 403
     
     data = request.get_json()
 
@@ -66,7 +66,8 @@ def get_areas():
 @jwt_required()
 def add_subscriber():
 
-    current_user_id = get_jwt_identity()
+    claims = get_jwt()
+    admin_id = claims.get("admin_id")
 
     data = request.get_json()
 
@@ -82,7 +83,7 @@ def add_subscriber():
         name = data['name'],
         phone_number = data['phone_number'],
         area_id = data['area_id'],
-        admin_id = current_user_id,
+        admin_id = admin_id,
         parent_company_id = data.get('parent_company_id', ''),
         balance = float(data.get('balance', 0.0)),
         promise_date = data.get('promise_date') if data.get('promise_date') and data.get('promise_date').strip() != "" else None,
@@ -225,8 +226,10 @@ def get_promises_today():
 @subscribers_bp.route('/api/subscribers/<int:sub_id>', methods=['PUT'])
 @jwt_required()
 def update_subscriber(sub_id):
+    claims = get_jwt()
+    admin_id = claims.get("admin_id")
 
-    sub = Subscriber.query.get(sub_id)
+    sub = Subscriber.query.filter_by(id=sub_id, admin_id=admin_id).first()
     if not sub:
         return jsonify({
             "status": "error",
@@ -283,11 +286,22 @@ def update_subscriber(sub_id):
 @subscribers_bp.route('/api/subscribers/<int:sub_id>', methods=['DELETE'])
 @jwt_required()
 def delete_subscriber(sub_id):
-    sub = Subscriber.query.get(sub_id)
+    claims = get_jwt()
+    admin_id = claims.get("admin_id")
+    admin_role = claims.get("role")
+
+    if admin_role != "admin":
+        return jsonify({
+            "status": "error",
+            "message": "you must be admin"
+        }), 403
+    
+    sub = Subscriber.query.filter_by(id=sub_id, admin_id=admin_id).first()
+
     if not sub:
         return jsonify({
             "status": "error",
-            "message": "Subscriber not found."
+            "message": "Subscriber not found or you don't have permission to modify it."
         }), 404
 
     try:
