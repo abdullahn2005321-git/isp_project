@@ -78,6 +78,12 @@ def add_subscriber():
                 "status": "error",
                 "message": f"{field} is required."
             }), 400
+        
+    raw_balance = data.get('balance', 0.0)
+    final_balance = float(raw_balance) if raw_balance and str(raw_balance).strip() != "" else 0.0
+
+    raw_date = data.get('promise_date')
+    final_date = raw_date if raw_date and str(raw_date).strip() != "" else None
 
     new_subscriber = Subscriber(
         name = data['name'],
@@ -85,8 +91,8 @@ def add_subscriber():
         area_id = data['area_id'],
         admin_id = admin_id,
         parent_company_id = data.get('parent_company_id', ''),
-        balance = float(data.get('balance', 0.0)),
-        promise_date = data.get('promise_date') if data.get('promise_date') and data.get('promise_date').strip() != "" else None,
+        balance = final_balance,
+        promise_date = final_date,
         notes = data.get('notes', '')
     )
     try:
@@ -240,11 +246,11 @@ def update_subscriber(sub_id):
 
     if 'area_id' in data:
 
-        new_area = Area.query.get(data['area_id'])
+        new_area = Area.query.filter_by(id=data['area_id'], admin_id=admin_id).first()
         if not new_area:
             return jsonify({
                 "status": "error",
-                "message": "Area not found."
+                "message": "Area not found or access denied."
             }), 404
         sub.area_id = data['area_id']
     
@@ -261,7 +267,8 @@ def update_subscriber(sub_id):
         sub.notes = data['notes']
 
     if 'promise_date' in data:
-        sub.promise_date = data['promise_date']
+        raw_data = data['promise_data']
+        sub.promise_date = raw_data if raw_data and str(raw_data).strip() != "" else None
 
     try:
         db.session.commit()
