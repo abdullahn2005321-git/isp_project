@@ -45,7 +45,10 @@ def add_area():
 @jwt_required()
 def get_areas():
     try:
-        areas = Area.query.all()
+        claims = get_jwt()
+        admin_id = claims.get("admin_id")
+
+        areas = Area.query.filter_by(admin_id=admin_id).all()
 
         areas_list = [{"id": area.id, "name": area.name} for area in areas]
         return jsonify({
@@ -63,8 +66,7 @@ def get_areas():
 @jwt_required()
 def add_subscriber():
 
-    current_user = get_jwt_identity()
-    current_admin_id = current_user.get(data['admin_id'])
+    current_user_id = get_jwt_identity()
 
     data = request.get_json()
 
@@ -80,7 +82,7 @@ def add_subscriber():
         name = data['name'],
         phone_number = data['phone_number'],
         area_id = data['area_id'],
-        admin_id = current_admin_id,
+        admin_id = current_user_id,
         parent_company_id = data.get('parent_company_id', ''),
         balance = float(data.get('balance', 0.0)),
         promise_date = data.get('promise_date') if data.get('promise_date') and data.get('promise_date').strip() != "" else None,
@@ -112,16 +114,15 @@ def add_subscriber():
 @jwt_required()
 def get_subscribers():
     try:
-        current_user = get_jwt_identity()
-        current_admin_id = current_user.get('admin_id')
-
+        claims = get_jwt()
+        admin_id = claims.get("admin_id")
 
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 50, type=int)
 
         pagination = Subscriber.query.options(joinedload(Subscriber.area))\
-                                    .filter_by(admin_id=current_admin_id, is_active=True)\
-                                    .paginate(page=page, per_page=per_page, error_out=False)
+                                .filter_by(admin_id=admin_id, is_active=True)\
+                                .paginate(page=page, per_page=per_page, error_out=False)
 
         sub_list = []
         for subscriber in pagination.items:
@@ -156,7 +157,10 @@ def get_subscribers():
 @subscribers_bp.route('/api/subscribers/<int:sub_id>', methods=['GET'])
 @jwt_required()
 def get_subscriber(sub_id):
-    sub = Subscriber.query.filter_by(id=sub_id, is_active=True).first()
+    claims = get_jwt()
+    admin_id = claims.get("admin_id")
+
+    sub = Subscriber.query.filter_by(id=sub_id, admin_id=admin_id, is_active=True).first()
     if not sub:
         return jsonify({
             "status": "error",
@@ -169,6 +173,7 @@ def get_subscriber(sub_id):
         "phone": sub.phone_number if sub.phone_number and sub.phone_number.strip() != "" else "لا يوجد رقم مسجل",
         "area_id": sub.area_id,
         "area_name": sub.area.name if sub.area else None,
+        "admin_id": sub.admin_id,
         "parent_company_id": sub.parent_company_id,
         "notes": sub.notes,
         "balance": sub.balance,
@@ -184,10 +189,14 @@ def get_subscriber(sub_id):
 @jwt_required()
 def get_promises_today():
     try:
+        claims = get_jwt()
+        admin_id = claims.get("admin_id")
+
         today = str(date.today())
         subscribers = Subscriber.query.filter(
             db.func.date(Subscriber.promise_date) == today,
-            Subscriber.is_active == True
+            Subscriber.is_active == True,
+            Subscriber.admin_id == admin_id
         ).options(joinedload(Subscriber.area)).all()
 
         subs_list = []
