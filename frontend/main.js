@@ -20,6 +20,9 @@ let allSubscribers = [];
 let allLogs = [];
 let allAreas = [];
 let currentSubscriberDebt = 0;
+let currentSubscriberPage = 1;
+let totalSubscriberPages = 1;
+const subscribersPerPage = 50;
 
 const dom = {
     loginPage: document.getElementById('loginPage'),
@@ -78,7 +81,10 @@ const dom = {
     detailParentCompany: document.getElementById('detail-parent-company'),
     detailBalance: document.getElementById('detail-balance'),
     detailNotes: document.getElementById('detail-notes'),
-    areasTableBody: document.getElementById('areas-table-body')
+    areasTableBody: document.getElementById('areas-table-body'),
+    subscriberPageInfo: document.getElementById('subscriberPageInfo'),
+    btnPrevPage: document.getElementById('btn-prev-page'),
+    btnNextPage: document.getElementById('btn-next-page')
 };
 
 function buildUrl(endpoint) {
@@ -170,6 +176,12 @@ function registerEventListeners() {
     dom.confirmBtn.addEventListener('click', submitAction);
     dom.quickPromiseInput.addEventListener('change', quickUpdatePromise);
     dom.fullDebtBtn.addEventListener('click', setFullDebtAmount);
+    dom.btnPrevPage.addEventListener('click', () => {
+        if (currentSubscriberPage > 1) loadSubscribers(currentSubscriberPage - 1);
+    });
+    dom.btnNextPage.addEventListener('click', () => {
+        if (currentSubscriberPage < totalSubscriberPages) loadSubscribers(currentSubscriberPage + 1);
+    });
     document.querySelectorAll('[data-quick-amount]').forEach((button) => {
         button.addEventListener('click', () => setQuickAmount(parseInt(button.dataset.quickAmount, 10)));
     });
@@ -272,13 +284,18 @@ async function submitNewArea() {
     }
 }
 
-async function loadSubscribers() {
+async function loadSubscribers(page = 1) {
     try {
-        const data = await apiCall('/subscribers');
+        const data = await apiCall(`/subscribers?page=${page}&per_page=${subscribersPerPage}`);
         if (!data || data.status !== 'success') return;
         const subscribersList = data.subscribers || [];
         allSubscribers = subscribersList;
-        dom.totalSubscribers.innerText = allSubscribers.length;
+        currentSubscriberPage = page;
+        totalSubscriberPages = data.pagination?.total_pages || 1;
+        dom.totalSubscribers.innerText = data.pagination?.total_subscribers || subscribersList.length;
+        dom.subscriberPageInfo.innerText = `صفحة ${currentSubscriberPage} من ${totalSubscriberPages}`;
+        dom.btnPrevPage.disabled = currentSubscriberPage <= 1;
+        dom.btnNextPage.disabled = currentSubscriberPage >= totalSubscriberPages;
         renderTable(allSubscribers);
     } catch (error) {
         console.error('خطأ:', error);

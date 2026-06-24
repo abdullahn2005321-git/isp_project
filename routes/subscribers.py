@@ -267,7 +267,7 @@ def update_subscriber(sub_id):
         sub.notes = data['notes']
 
     if 'promise_date' in data:
-        raw_data = data['promise_data']
+        raw_data = data['promise_date']
         sub.promise_date = raw_data if raw_data and str(raw_data).strip() != "" else None
 
     try:
