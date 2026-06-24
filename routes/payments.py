@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from models import db, Subscriber, Payment, Renewal
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 
 payments_bp = Blueprint('payments', __name__)
 
@@ -10,8 +10,8 @@ payments_bp = Blueprint('payments', __name__)
 @payments_bp.route('/api/payments', methods=['POST'])
 @jwt_required()
 def add_payment():
-    current_user= get_jwt_identity()
-    current_admin_id = current_user.get('admin_id')
+    claims = get_jwt()
+    admin_id = claims.get("admin_id")
 
     data = request.get_json()
 
@@ -23,7 +23,7 @@ def add_payment():
     
     sub = Subscriber.query.with_for_update().filter_by(
         id=data['subscriber_id'],
-        admin_id=current_admin_id,
+        admin_id=admin_id,
         is_active=True
     ).first()
 
@@ -75,8 +75,8 @@ def add_payment():
 @payments_bp.route('/api/renewals', methods=['POST'])
 @jwt_required()
 def renew_subscription():
-    current_admin = get_jwt_identity()
-    current_admin_id = current_admin.get('admin_id')
+    claims = get_jwt()
+    admin_id = claims.get("admin_id")
 
     data = request.get_json()
     
@@ -88,7 +88,7 @@ def renew_subscription():
     
     sub = Subscriber.query.with_for_update().filter_by(
         id=data['subscriber_id'],
-        admin_id=current_admin_id,
+        admin_id=admin_id,
         is_active=True
     ).first()
 

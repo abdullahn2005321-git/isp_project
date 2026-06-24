@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from models import db, Payment, Renewal, Subscriber
 from datetime import date
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 
 logging_and_reporting_bp = Blueprint('logging_and_reporting', __name__)
 
@@ -12,19 +12,19 @@ logging_and_reporting_bp = Blueprint('logging_and_reporting', __name__)
 @jwt_required()
 def daily_report():
     try:
-        current_admin = get_jwt_identity()
-        current_admin_id = current_admin.get('admin_id')
+        claims = get_jwt()
+        admin_id = claims.get("admin_id")
 
         target_date = request.args.get('date', str(date.today()))
 
         payments = Payment.query.join(Subscriber).filter(
             db.func.date(Payment.payment_date) == target_date,
-            Subscriber.admin_id == current_admin_id
+            Subscriber.admin_id == admin_id
         ).all()
 
         renewals = Renewal.query.join(Subscriber).filter(
             db.func.date(Renewal.renewal_date) == target_date,
-            Subscriber.admin_id == current_admin_id
+            Subscriber.admin_id == admin_id
         ).all()
 
         payments_amount = sum(payment.amount for payment in payments)
@@ -72,15 +72,15 @@ def daily_report():
 @jwt_required()
 def get_logs():
     try:
-        current_admin = get_jwt_identity()
-        current_admin_id = current_admin.get('admin_id')
+        claims = get_jwt()
+        admin_id = claims.get("admin_id")
 
         payments = Payment.query.join(Subscriber).filter(
-            Subscriber.admin_id == current_admin_id
+            Subscriber.admin_id == admin_id
         ).order_by(Payment.payment_date.desc()).limit(50).all()
 
         renewals = Renewal.query.join(Subscriber).filter(
-            Subscriber.admin_id == current_admin_id
+            Subscriber.admin_id == admin_id
         ).order_by(Renewal.renewal_date.desc()).limit(50).all()
 
         logs = []
