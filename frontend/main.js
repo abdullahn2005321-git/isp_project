@@ -14,6 +14,7 @@ let actionModal;
 let addSubModal;
 let editSubModal;
 let addAreaModal;
+let addStaffModal;
 let selectedSubscriberId = null;
 let selectedSubscriberData = null;
 let allSubscribers = [];
@@ -138,6 +139,16 @@ function showApp() {
     dom.loginPage.classList.add('d-none');
     dom.appContainer.classList.remove('d-none');
     dom.btnLogout.classList.remove('d-none');
+    
+    // Show staff button only for admins
+    const userRole = localStorage.getItem('userRole');
+    if (dom.btnAddStaff) {
+        if (userRole === 'admin') {
+            dom.btnAddStaff.classList.remove('d-none');
+        } else {
+            dom.btnAddStaff.classList.add('d-none');
+        }
+    }
 }
 
 function initPage() {
@@ -145,6 +156,7 @@ function initPage() {
     addSubModal = new bootstrap.Modal(document.getElementById('addSubscriberModal'));
     editSubModal = new bootstrap.Modal(document.getElementById('editSubscriberModal'));
     addAreaModal = new bootstrap.Modal(document.getElementById('addAreaModal'));
+    addStaffModal = new bootstrap.Modal(document.getElementById('addStaffModal'));
     registerEventListeners();
     loadInitialState();
 }
@@ -210,6 +222,8 @@ async function handleLogin(event) {
     const response = await apiCall('/login', 'POST', { username, password });
     if (response && response.token) {
         localStorage.setItem('token', response.token);
+        localStorage.setItem('userRole', response.role);
+        localStorage.setItem('username', response.username);
         dom.loginMessage.innerText = '';
         showApp();
         loadPageData();

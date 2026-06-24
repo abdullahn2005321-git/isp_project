@@ -12,7 +12,10 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow">
         <div class="container d-flex justify-content-between align-items-center">
             <a class="navbar-brand" href="#"><i class="fa-solid fa-network-wired text-primary"></i> نظام إدارة الـمشتركين</a>
-            <button type="button" class="btn btn-outline-light btn-sm d-none" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button>
+            <div class="d-flex gap-2 align-items-center">
+                <button type="button" class="btn btn-outline-info btn-sm d-none" id="btnAddStaff" title="تسجيل موظف جديد"><i class="fa-solid fa-user-tie"></i> موظف جديد</button>
+                <button type="button" class="btn btn-outline-light btn-sm d-none" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button>
+            </div>
         </div>
     </nav>
 
@@ -431,7 +434,39 @@
         </div>
     </div>
 
+    <div id="addStaffModal" class="modal fade" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white border-0">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-user-tie"></i> تسجيل موظف جديد</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addStaffForm">
+                        <div class="mb-3">
+                            <label for="staffUsername" class="form-label fw-bold text-secondary">اسم المستخدم</label>
+                            <input type="text" class="form-control" id="staffUsername" placeholder="مثال: staff_001" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="staffPassword" class="form-label fw-bold text-secondary">كلمة المرور</label>
+                            <input type="password" class="form-control" id="staffPassword" placeholder="كلمة مرور قوية" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="staffPasswordConfirm" class="form-label fw-bold text-secondary">تأكيد كلمة المرور</label>
+                            <input type="password" class="form-control" id="staffPasswordConfirm" placeholder="أعد إدخال كلمة المرور" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-info fw-bold px-4" id="btn-save-staff">تسجيل الموظف</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script defer src="./main.js"></script>
+    <script defer src="./staff-handler.js"></script>
 </body>
 </html>
