@@ -31,4 +31,4 @@ app.register_blueprint(logging_and_reporting_bp)
 app.register_blueprint(auth_bp)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0',port=5000, debug=True)

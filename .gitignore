@@ -23,3 +23,5 @@ isp/
 build/
 dist/
 *.egg-info/
+
+notes.md

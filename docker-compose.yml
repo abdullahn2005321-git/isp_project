@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+    volumes:
+    - .:/app
+    environment:
+      - FLASK_DEBUG=1
+      
+  db:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: isp_db
+    volumes:
+      - mysql_data:/var/lib/mysql
+volumes:
+  mysql_data:
