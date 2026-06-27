@@ -1,234 +1,111 @@
-# ISP Management API
+# 🚀 ISP Subscriber Management API
 
-A subscriber management API for an ISP service built with Flask, SQLAlchemy, JWT, and Alembic.
+A robust, high-performance RESTful API built to manage Internet Service Provider (ISP) subscribers, financial records (debts/payments), and automated daily reporting. Built with Python, Flask, SQLAlchemy, and MySQL, and fully containerized using Docker.
 
-## Features
+## 🔥 Technical Engineering & Skills Highlighted
 
-- Admin and staff registration and login
-- Area management
-- Subscriber management
-- Payment processing and subscription renewal
-- Daily reports and activity logs
-- CORS support and ready-to-use Flask application
+As a Backend Developer, I built this project to demonstrate my ability to architect scalable business solutions using industry best practices:
 
-## Project Structure
+- **Clean Architecture:** Code is modularized using **Flask Blueprints** (`auth`, `subscribers`, `payments`, `reports`), ensuring scalability and easy maintenance.
+- **Advanced Database Design:** - Migrated from SQLite to **MySQL** for production readiness.
+  - Implemented **Soft Deletion** (`is_active` flag) to prevent the accidental loss of critical financial records.
+  - Used precise data types (e.g., `Integer` for currency) to prevent floating-point calculation errors.
+- **Multi-Tenancy & Security:** Implemented Role-Based Access Control (RBAC) using **JWT tokens**. The system isolates data so that branch managers/staff can only access their specific subscribers.
+- **DevOps & Containerization:** The entire application and database are containerized using **Docker** and **Docker Compose**, utilizing `volumes` for hot-reloading during development.
+- **Performance & Load Testing:** The database schema and SQLAlchemy queries (using `joinedload` to prevent N+1 query issues) were optimized and successfully stress-tested with **100,000+ mock subscribers** generated via a custom `Faker` script, ensuring fast data retrieval and stable memory usage.
+- **Automated Testing:** Integration testing implemented using **Pytest** to ensure API endpoints reliability and prevent regressions.
 
-- `app.py` - Application entry point and Flask setup
-- `models.py` - Database models definition
-- `routes/` - API blueprints: `auth`, `subscribers`, `payments`, `logging_and_reporting`
-- `frontend/` - Static frontend files
-- `migrations/` - Alembic migration history
-- `requirements.txt` - Project dependencies
-- `.gitignore` - Git ignore rules for environment and cache files
+## 🛠️ Tech Stack
+- **Backend:** Python 3.12, Flask, Flask-RESTful
+- **Database:** MySQL 8.0, SQLAlchemy (ORM), Alembic (Flask-Migrate)
+- **Security:** JWT (JSON Web Tokens), Flask-Bcrypt (Password Hashing)
+- **DevOps:** Docker, Docker Compose
+- **Testing:** Pytest
 
-## Requirements
+---
 
-- Python 3.10 or newer
-- Local virtual environment `isp/`
-- MySQL or MariaDB database
+## 🐳 Quick Setup (Docker - Recommended)
 
-## Setup
+The easiest way to run this project is using Docker. No local Python installation is required!
 
-1. Activate the virtual environment:
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/abdullahn2005321-git/isp_project.git](https://github.com/abdullahn2005321-git/isp_project.git)
+   cd isp_project
+Build and spin up the containers:
 
-   ```powershell
-   .\isp\Scripts\activate
-   ```
+Bash
+docker-compose up -d --build
+Apply Database Migrations:
 
-2. Install dependencies:
+Bash
+docker-compose exec web flask db upgrade
+Run Automated Tests (Optional):
 
-   ```powershell
-   pip install -r requirements.txt
-   ```
+Bash
+docker-compose exec -e PYTHONPATH=/app web pytest
+The API is now live at: http://127.0.0.1:5000
 
-3. Create a `.env` file in the project root with the following values:
+💻 Local Setup (Without Docker)
+If you prefer to run it locally using a virtual environment:
 
-   ```env
-   DATABASE_URL=mysql+pymysql://root:@127.0.0.1/isp_db
-   SECRET_KEY=your_secret_key_here
-   ```
+Activate the virtual environment:
 
-   > Replace the database connection and `SECRET_KEY` values with your own configuration.
+PowerShell
+.\isp\Scripts\activate
+Install dependencies:
 
-4. Apply database migrations:
+PowerShell
+pip install -r requirements.txt
+Configure Environment Variables:
+Create a .env file in the root directory:
 
-   ```powershell
-   set FLASK_APP=app.py
-   set FLASK_ENV=development
-   flask db upgrade
-   ```
+Code snippet
+DATABASE_URL=mysql+pymysql://root:@127.0.0.1/isp_db
+SECRET_KEY=your_secure_secret_key
+Run migrations and start the server:
 
-   To create a new migration from scratch:
-
-   ```powershell
-   flask db revision --autogenerate -m "Initial migration"
-   flask db upgrade
-   ```
-
-## Running the Application
-
-```powershell
+PowerShell
+flask db upgrade
 python app.py
-```
+📚 API Endpoints Documentation
+Note: All endpoints except /login and /register require an Authorization: Bearer <token> header.
 
-Then open the browser at:
+🔐 Authentication
+POST /api/register - Register a new admin user.
 
-```
-http://127.0.0.1:5000
-```
+POST /api/login - Authenticate and receive a JWT access token.
 
-## API Documentation
+POST /api/register-staff - Create a new staff user under the current admin.
 
-### Authentication
+🌍 Areas
+POST /api/areas - Add a new service area.
 
-#### POST `/api/register`
-- Description: Register a new admin user.
-- Request JSON:
-  - `username` (string, required)
-  - `password` (string, required)
-- Success response: `201`
-- Error responses: `400` for missing or duplicate username, `500` for server error.
+GET /api/areas - List all areas owned by the current admin.
 
-#### POST `/api/login`
-- Description: Authenticate a user and receive a JWT access token.
-- Request JSON:
-  - `username` (string, required)
-  - `password` (string, required)
-- Success response: `200` with fields:
-  - `token` (JWT token)
-  - `role` (`admin` or `staff`)
-  - `username`
-- Error response: `400` for missing credentials, `401` for invalid login.
+👥 Subscribers
+POST /api/subscribers - Create a new subscriber record.
 
-#### POST `/api/register-staff`
-- Description: Create a new staff user. Requires an admin JWT token.
-- Authorization: `Bearer <token>`
-- Request JSON:
-  - `username` (string, required)
-  - `password` (string, required)
-- Success response: `201`
-- Error responses: `400` for missing data or duplicate username, `403` for insufficient permissions.
+GET /api/subscribers - Retrieve active subscribers (Supports Pagination).
 
-### Areas
+GET /api/subscribers/<id> - Retrieve a single active subscriber.
 
-#### POST `/api/areas`
-- Description: Add a new service area for the current admin.
-- Authorization: `Bearer <token>`
-- Request JSON:
-  - `name` (string, required)
-- Success response: `201`
-- Error responses: `400` for missing name or duplicate area, `403` for non-admin user.
+PUT /api/subscribers/<id> - Update subscriber details.
 
-#### GET `/api/areas`
-- Description: List all areas owned by the current admin.
-- Authorization: `Bearer <token>`
-- Success response: `200` with:
-  - `areas`: array of area objects `{ id, name }`
+DELETE /api/subscribers/<id> - Soft-delete a subscriber.
 
-### Subscribers
+GET /api/promises_today - List subscribers with a payment promise date equal to today.
 
-#### POST `/api/subscribers`
-- Description: Create a new subscriber record.
-- Authorization: `Bearer <token>`
-- Request JSON:
-  - `name` (string, required)
-  - `phone_number` (string, required)
-  - `area_id` (integer, required)
-  - `parent_company_id` (string, optional)
-  - `balance` (number, optional)
-  - `promise_date` (string date, optional)
-  - `notes` (string, optional)
-- Success response: `201` with `subscriber_id`.
-- Error responses: `400` for missing fields or duplicate phone number.
+💰 Payments and Renewals
+POST /api/payments - Record a payment and reduce subscriber debt.
 
-#### GET `/api/subscribers`
-- Description: Retrieve active subscribers for the current admin.
-- Authorization: `Bearer <token>`
-- Query parameters:
-  - `page` (integer, optional, default `1`)
-  - `per_page` (integer, optional, default `50`)
-- Success response: `200` with subscriber list and pagination metadata.
+POST /api/renewals - Record a monthly renewal (handles cash or debt logic dynamically).
 
-#### GET `/api/subscribers/<id>`
-- Description: Retrieve a single active subscriber by ID.
-- Authorization: `Bearer <token>`
-- Success response: `200` with subscriber details.
-- Error response: `404` if not found.
+📊 Reports and Logs
+GET /api/daily_report - Get a daily financial summary of net totals and statuses. Supports historical checks via ?date=YYYY-MM-DD.
 
-#### PUT `/api/subscribers/<id>`
-- Description: Update subscriber fields.
-- Authorization: `Bearer <token>`
-- Request JSON may include any of:
-  - `name`
-  - `phone_number`
-  - `area_id`
-  - `parent_company_id`
-  - `notes`
-  - `promise_date`
-- Success response: `200`.
-- Error responses: `404` if subscriber or area not found, `400` for duplicate phone.
+GET /api/logs - Fetch the latest 50 activity log entries.
 
-#### DELETE `/api/subscribers/<id>`
-- Description: Soft-delete a subscriber by marking `is_active` false.
-- Authorization: `Bearer <token>` (admin only)
-- Success response: `200`.
-- Error responses: `403` for non-admin, `404` if subscriber not found.
-
-#### GET `/api/promises_today`
-- Description: List active subscribers with a payment promise date equal to today.
-- Authorization: `Bearer <token>`
-- Success response: `200` with subscriber list and count.
-
-### Payments and Renewals
-
-#### POST `/api/payments`
-- Description: Record a payment and increase subscriber balance.
-- Authorization: `Bearer <token>`
-- Request JSON:
-  - `subscriber_id` (integer, required)
-  - `amount` (number, required, must be greater than `999`)
-- Success response: `201` with updated balance and payment timestamp.
-- Error responses: `400` for invalid amount, `404` if subscriber not found.
-
-#### POST `/api/renewals`
-- Description: Record a renewal and update debt or cash payment state.
-- Authorization: `Bearer <token>`
-- Request JSON:
-  - `subscriber_id` (integer, required)
-  - `amount` (number, required, must be greater than `999`)
-  - `is_cash` (boolean, optional)
-  - `promise_date` (string date, required only when balance becomes negative)
-- Behavior:
-  - If `is_cash` is `true`, the amount is also recorded as a payment and promise date is cleared when the balance is non-negative.
-  - If `is_cash` is `false` and balance becomes negative, `promise_date` must be provided.
-- Success response: `201` with updated balance.
-- Error responses: `400` for invalid amount or missing promise date, `404` if subscriber not found.
-
-### Reports and Logs
-
-#### GET `/api/daily_report`
-- Description: Get a daily summary report for payments and renewals.
-- Authorization: `Bearer <token>`
-- Query parameters:
-  - `date` (string, optional, format `YYYY-MM-DD`, defaults to today)
-- Success response: `200` with summary totals and report status.
-
-#### GET `/api/logs`
-- Description: Get the latest activity log entries for payments and renewals.
-- Authorization: `Bearer <token>`
-- Success response: `200` with up to 50 log records.
-
-### Authorization Header
-
-All protected routes require the JWT token in the request header:
-
-```http
-Authorization: Bearer <token>
-```
-
-## Notes
-
-- Make sure the `isp_db` database exists before running the app.
-- Include `migrations/` in the repository because it stores the database schema history.
-- Do not include the `isp/` virtual environment folder in your GitHub repository.
-
+👨‍💻 Author
+Abdullah - Backend Engineer
+Passionate about building scalable backend systems, clean architecture, and solving complex business problems.
