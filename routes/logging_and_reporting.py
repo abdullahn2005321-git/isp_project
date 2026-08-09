@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
-from models import db, Payment, Renewal, Subscriber
+from models import db, Subscriber, Transaction
 from datetime import date
-from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from flask_jwt_extended import jwt_required, get_jwt
 
 logging_and_reporting_bp = Blueprint('logging_and_reporting', __name__)
 
@@ -17,18 +17,15 @@ def daily_report():
 
         target_date = request.args.get('date', str(date.today()))
 
-        payments = Payment.query.join(Subscriber).filter(
-            db.func.date(Payment.payment_date) == target_date,
+        transaction = Transaction.query.join(Subscriber).filter(
+            db.func.date(Transaction.transaction_date) == target_date,
             Subscriber.admin_id == admin_id
         ).all()
 
-        renewals = Renewal.query.join(Subscriber).filter(
-            db.func.date(Renewal.renewal_date) == target_date,
-            Subscriber.admin_id == admin_id
-        ).all()
+        payments = [t for t in transaction if t.transaction_type == 'payment']
+        renewals = [t for t in transaction if t.transaction_type == 'renewal']
 
         payments_amount = sum(payment.amount for payment in payments)
-
         renewals_amount = sum(renewal.amount for renewal in renewals)
 
         total = payments_amount - renewals_amount
@@ -75,33 +72,24 @@ def get_logs():
         claims = get_jwt()
         admin_id = claims.get("admin_id")
 
-        payments = Payment.query.join(Subscriber).filter(
-            Subscriber.admin_id == admin_id
-        ).order_by(Payment.payment_date.desc()).limit(50).all()
+        transaction = Transaction.query.join(Subscriber).filter(
+            Subscriber.admin_id == admin_id,
+            Transaction.transaction_type == 'payment'
+        ).order_by(Transaction.transaction_date.desc()).limit(50).all()
 
-        renewals = Renewal.query.join(Subscriber).filter(
-            Subscriber.admin_id == admin_id
-        ).order_by(Renewal.renewal_date.desc()).limit(50).all()
 
         logs = []
+        for t in transaction:
 
-        for payment in payments:
+            t_type_arabic = "تسديد" if t.transaction_type == 'payment' else "تجديد"
+
             logs.append({
-                "type": "تسديد",
-                "subscriber_name": payment.subscriber.name if payment.subscriber else None,
-                "amount": payment.amount,
-                "date": payment.payment_date.strftime("%Y-%m-%d %H:%M:%S")
+                "type": t_type_arabic,
+                "subscriber_name": t.subscriber.name if t.subscriber else None,
+                "amount": t.amount,
+                "date": t.transaction_date.strftime("%Y-%m-%d %H:%M:%S")
             })
-        
-        for renewal in renewals:
-            logs.append({
-                "type": "تجديد",
-                "subscriber_name": renewal.subscriber.name if renewal.subscriber else None,
-                "amount": renewal.amount,
-                "date": renewal.renewal_date.strftime("%Y-%m-%d %H:%M:%S")
-            })
-        
-        logs.sort(key=lambda x: x['date'], reverse=True)
+
 
         return jsonify({
             "status": "success",

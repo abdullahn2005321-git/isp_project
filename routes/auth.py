@@ -1,5 +1,5 @@
 from flask import Blueprint,request, jsonify
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import create_access_token, get_jwt, jwt_required, get_jwt_identity
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User
 
@@ -41,9 +41,9 @@ def register_admin():
 @auth_bp.route('/api/register-staff', methods=['POST'])
 @jwt_required()
 def register_staff():
-    current_user = get_jwt_identity()
+    extra_claims = get_jwt()
 
-    if current_user.get('role') != 'admin':
+    if extra_claims.get('role') != 'admin':
         return jsonify({
             "status": "error",
             "message": "صلاحية غير كافية, يجب ان تكون ادمن لتوظيف الموظفين"
@@ -61,13 +61,15 @@ def register_staff():
         return jsonify({
             "status": "error",
             "message": "الاسم مأخوذ بالفعل"
-        })
+        }), 400
+    
+    current_admin_id = get_jwt_identity()
 
     new_staff = User(
         username=data['username'],
         password_hash=generate_password_hash(data['password']),
         role='staff',
-        parent_admin_id=current_user.get('user_id')
+        parent_admin_id=current_admin_id
     )
     try:
         db.session.add(new_staff)

@@ -1,17 +1,18 @@
 from flask import Blueprint, request, jsonify
-from models import db, Subscriber, Payment, Renewal
+from models import db, Subscriber, Transaction
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 
-payments_bp = Blueprint('payments', __name__)
+transactions_bp = Blueprint('transactions', __name__)
 
 #==============================
 #==========payment endpoints
 #==============================
-@payments_bp.route('/api/payments', methods=['POST'])
+@transactions_bp.route('/api/payments', methods=['POST'])
 @jwt_required()
 def add_payment():
     claims = get_jwt()
     admin_id = claims.get("admin_id")
+    user_id = get_jwt_identity()
 
     data = request.get_json()
 
@@ -43,8 +44,10 @@ def add_payment():
             "status": "error"
         }) , 400
 
-    new_payment = Payment(
+    new_transaction = Transaction(
         subscriber_id = sub.id,
+        user_id = user_id,
+        transaction_type = 'payment',
         amount = payment_amount
     )
 
@@ -54,13 +57,13 @@ def add_payment():
         sub.promise_date = None
 
     try:
-        db.session.add(new_payment)
+        db.session.add(new_transaction)
         db.session.commit()
         return jsonify({
             "status": "success",
             "message": f"Payment of {payment_amount} added for subscriber '{sub.name}'.",
             "new_balance": sub.balance,
-            "payment_date": new_payment.payment_date.strftime("%Y-%m-%d %H:%M:%S")
+            "payment_date": new_transaction.transaction_date.strftime("%Y-%m-%d %H:%M:%S")
         }), 201
     except Exception as e:
         db.session.rollback()
@@ -72,11 +75,12 @@ def add_payment():
 #==============================
 #==========renewal endpoints
 #==============================
-@payments_bp.route('/api/renewals', methods=['POST'])
+@transactions_bp.route('/api/renewals', methods=['POST'])
 @jwt_required()
 def renew_subscription():
     claims = get_jwt()
     admin_id = claims.get("admin_id")
+    user_id = get_jwt_identity()
 
     data = request.get_json()
     
@@ -99,7 +103,7 @@ def renew_subscription():
         }), 404
     
     try:
-        renewal_amount = float(data['amount'])
+        renewal_amount = int(data['amount'])
         if renewal_amount <= 999:
             raise ValueError("المبلغ يجب ان يكون اكبر من 999 دينار")
     except (ValueError, TypeError, KeyError):
@@ -112,14 +116,25 @@ def renew_subscription():
 
     sub.balance -= renewal_amount
     
-    new_renewal = Renewal(subscriber_id=sub.id, amount=renewal_amount)
-    db.session.add(new_renewal)
+    renewal_trans = Transaction(
+        subscriber_id=sub.id,
+        user_id=user_id,
+        transaction_type='renewal',
+        amount=renewal_amount
+    )
+    db.session.add(renewal_trans)
 
     if is_cash:
-        new_payment = Payment(subscriber_id=sub.id, amount=renewal_amount)
-        db.session.add(new_payment)
-        
+        payment_trans = Transaction(
+            subscriber_id=sub.id,
+            user_id=user_id,
+            transaction_type='payment',
+            amount=renewal_amount
+        )
+
         sub.balance += renewal_amount
+
+        db.session.add(payment_trans)
         
         if sub.balance >= 0:
             sub.promise_date = None
@@ -143,6 +158,7 @@ def renew_subscription():
         return jsonify({
             "status": "success",
             "message": f"تم تجديد اشتراك '{sub.name}' بنجاح ({msg_type}).",
+            "renewal_date": renewal_trans.transaction_date.strftime("%Y-%m-%d %H:%M:%S"),
             "new_balance": sub.balance
         }), 201
         

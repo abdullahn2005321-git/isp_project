@@ -36,7 +36,7 @@ class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     subscriber_id = db.Column(db.Integer, db.ForeignKey('subscribers.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    transactions_type = db.Column(db.String(20), nullable=False)  # 'payment' or 'renewal'
+    transaction_type = db.Column(db.String(20), nullable=False)  # 'payment' or 'renewal'
     amount = db.Column(db.Integer, nullable=False)
     transaction_date = db.Column(db.DateTime, default=db.func.now())
     processed_by = db.relationship('User', backref='processed_transactions', lazy=True)

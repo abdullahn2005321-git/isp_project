@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager
 
 from routes.subscribers import subscribers_bp
-from routes.payments import payments_bp
+from routes.transactions import transactions_bp
 from routes.logging_and_reporting import logging_and_reporting_bp
 from routes.auth import auth_bp
 
@@ -26,7 +26,7 @@ db.init_app(app)
 migrate = Migrate(app, db)
 
 app.register_blueprint(subscribers_bp)
-app.register_blueprint(payments_bp)
+app.register_blueprint(transactions_bp)
 app.register_blueprint(logging_and_reporting_bp)
 app.register_blueprint(auth_bp)
 

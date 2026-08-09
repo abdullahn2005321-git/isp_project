@@ -79,20 +79,14 @@ def add_subscriber():
                 "message": f"{field} is required."
             }), 400
         
-    raw_balance = data.get('balance', 0.0)
-    final_balance = float(raw_balance) if raw_balance and str(raw_balance).strip() != "" else 0.0
-
-    raw_date = data.get('promise_date')
-    final_date = raw_date if raw_date and str(raw_date).strip() != "" else None
-
     new_subscriber = Subscriber(
         name = data['name'],
         phone_number = data['phone_number'],
         area_id = data['area_id'],
         admin_id = admin_id,
         parent_company_id = data.get('parent_company_id', ''),
-        balance = final_balance,
-        promise_date = final_date,
+        balance = float(data.get('balance'), 0.0),
+        promise_date = data.get('promise_date', None),
         notes = data.get('notes', '')
     )
     try:
