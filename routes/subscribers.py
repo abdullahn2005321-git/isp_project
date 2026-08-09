@@ -78,14 +78,19 @@ def add_subscriber():
                 "status": "error",
                 "message": f"{field} is required."
             }), 400
-        
+
+    area = Area.query.filter_by(id=data['area_id'], admin_id=admin_id).first()
+    if not area:
+        return jsonify({
+            "status": "error",
+            "message": "Area not found or unauthorized."
+        }), 403
+    
     new_subscriber = Subscriber(
         name = data['name'],
         phone_number = data['phone_number'],
         area_id = data['area_id'],
-        admin_id = admin_id,
-        parent_company_id = data.get('parent_company_id', ''),
-        balance = float(data.get('balance'), 0.0),
+        balance = float(data.get('balance', 0.0)),
         promise_date = data.get('promise_date', None),
         notes = data.get('notes', '')
     )
@@ -121,9 +126,9 @@ def get_subscribers():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 50, type=int)
 
-        pagination = Subscriber.query.options(joinedload(Subscriber.area))\
-                                .filter_by(admin_id=admin_id, is_active=True)\
-                                .paginate(page=page, per_page=per_page, error_out=False)
+        pagination = Subscriber.query.join(Area).options(joinedload(Subscriber.area))\
+                                     .filter(Area.admin_id == admin_id, Subscriber.is_active == True)\
+                                     .paginate(page=page, per_page=per_page, error_out=False)
 
         sub_list = []
         for subscriber in pagination.items:
@@ -133,7 +138,6 @@ def get_subscribers():
                 "phone_number": subscriber.phone_number,
                 "area_id": subscriber.area_id,
                 "area_name": subscriber.area.name if subscriber.area else None,
-                "parent_company_id": subscriber.parent_company_id,
                 "notes": subscriber.notes,
                 "balance": subscriber.balance,
                 "promise_date": subscriber.promise_date.strftime("%Y-%m-%d") if subscriber.promise_date else "لا يوجد وعد مسجل"
@@ -161,7 +165,12 @@ def get_subscriber(sub_id):
     claims = get_jwt()
     admin_id = claims.get("admin_id")
 
-    sub = Subscriber.query.filter_by(id=sub_id, admin_id=admin_id, is_active=True).first()
+    sub = Subscriber.query.join(Area).filter(
+            Subscriber.id == sub_id,
+            Area.admin_id == admin_id,
+            Subscriber.is_active == True
+        ).first()
+    
     if not sub:
         return jsonify({
             "status": "error",
@@ -174,8 +183,6 @@ def get_subscriber(sub_id):
         "phone": sub.phone_number if sub.phone_number and sub.phone_number.strip() != "" else "لا يوجد رقم مسجل",
         "area_id": sub.area_id,
         "area_name": sub.area.name if sub.area else None,
-        "admin_id": sub.admin_id,
-        "parent_company_id": sub.parent_company_id,
         "notes": sub.notes,
         "balance": sub.balance,
         "promise_date": sub.promise_date.strftime("%Y-%m-%d") if sub.promise_date else "لا يوجد وعد مسجل"
@@ -194,10 +201,10 @@ def get_promises_today():
         admin_id = claims.get("admin_id")
 
         today = str(date.today())
-        subscribers = Subscriber.query.filter(
+        subscribers = Subscriber.query.join(Area).filter(
             db.func.date(Subscriber.promise_date) == today,
             Subscriber.is_active == True,
-            Subscriber.admin_id == admin_id
+            Area.admin_id == admin_id
         ).options(joinedload(Subscriber.area)).all()
 
         subs_list = []
@@ -208,7 +215,6 @@ def get_promises_today():
                 "phone": sub.phone_number if sub.phone_number and sub.phone_number.strip() != "" else "لا يوجد رقم مسجل",
                 "area_id": sub.area_id,
                 "area_name": sub.area.name if sub.area else None,
-                "parent_company_id": sub.parent_company_id,
                 "notes": sub.notes,
                 "balance": sub.balance,
                 "promise_date": sub.promise_date.strftime("%Y-%m-%d") if sub.promise_date else "لا يوجد وعد مسجل"
@@ -229,7 +235,11 @@ def update_subscriber(sub_id):
     claims = get_jwt()
     admin_id = claims.get("admin_id")
 
-    sub = Subscriber.query.filter_by(id=sub_id, admin_id=admin_id).first()
+    sub = Subscriber.query.join(Area).filter(
+        Subscriber.id == sub_id,
+        Area.admin_id == admin_id
+    ).first()
+
     if not sub:
         return jsonify({
             "status": "error",
@@ -253,10 +263,7 @@ def update_subscriber(sub_id):
     
     if 'name' in data:
         sub.name = data['name']
-    
-    if 'parent_company_id' in data:
-        sub.parent_company_id = data['parent_company_id']
-    
+     
     if 'notes' in data:
         sub.notes = data['notes']
 
@@ -297,7 +304,7 @@ def delete_subscriber(sub_id):
             "message": "you must be admin"
         }), 403
     
-    sub = Subscriber.query.filter_by(id=sub_id, admin_id=admin_id).first()
+    sub = Subscriber.query.join(Area).filter(Subscriber.id == sub_id, Area.admin_id == admin_id).first()
 
     if not sub:
         return jsonify({

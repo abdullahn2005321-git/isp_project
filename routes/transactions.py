@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from models import db, Subscriber, Transaction
+from models import db, Subscriber, Transaction, Area
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 
 transactions_bp = Blueprint('transactions', __name__)
@@ -7,7 +7,7 @@ transactions_bp = Blueprint('transactions', __name__)
 #==============================
 #==========payment endpoints
 #==============================
-@transactions_bp.route('/api/payments', methods=['POST'])
+@transactions_bp.route('/api/transactions/payment', methods=['POST'])
 @jwt_required()
 def add_payment():
     claims = get_jwt()
@@ -22,10 +22,10 @@ def add_payment():
             "message": "subscriber_id and amount are required."
         }), 400
     
-    sub = Subscriber.query.with_for_update().filter_by(
-        id=data['subscriber_id'],
-        admin_id=admin_id,
-        is_active=True
+    sub = Subscriber.query.join(Area).with_for_update().filter(
+        Subscriber.id == data['subscriber_id'],
+        Area.admin_id == admin_id,
+        Subscriber.is_active == True
     ).first()
 
     if not sub:
@@ -75,7 +75,7 @@ def add_payment():
 #==============================
 #==========renewal endpoints
 #==============================
-@transactions_bp.route('/api/renewals', methods=['POST'])
+@transactions_bp.route('/api/transactions/renewal', methods=['POST'])
 @jwt_required()
 def renew_subscription():
     claims = get_jwt()
@@ -90,10 +90,10 @@ def renew_subscription():
             "message": "subscriber_id and amount are required."
         }), 400
     
-    sub = Subscriber.query.with_for_update().filter_by(
-        id=data['subscriber_id'],
-        admin_id=admin_id,
-        is_active=True
+    sub = Subscriber.query.join(Area).with_for_update().filter(
+        Subscriber.id == data['subscriber_id'],
+        Area.admin_id == admin_id,
+        Subscriber.is_active == True
     ).first()
 
     if not sub:

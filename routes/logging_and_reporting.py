@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from models import db, Subscriber, Transaction
+from models import db, Subscriber, Transaction, Area
 from datetime import date
 from flask_jwt_extended import jwt_required, get_jwt
 
@@ -17,9 +17,9 @@ def daily_report():
 
         target_date = request.args.get('date', str(date.today()))
 
-        transaction = Transaction.query.join(Subscriber).filter(
+        transaction = Transaction.query.join(Subscriber).join(Area).filter(
             db.func.date(Transaction.transaction_date) == target_date,
-            Subscriber.admin_id == admin_id
+            Area.admin_id == admin_id
         ).all()
 
         payments = [t for t in transaction if t.transaction_type == 'payment']
@@ -72,9 +72,8 @@ def get_logs():
         claims = get_jwt()
         admin_id = claims.get("admin_id")
 
-        transaction = Transaction.query.join(Subscriber).filter(
-            Subscriber.admin_id == admin_id,
-            Transaction.transaction_type == 'payment'
+        transaction = Transaction.query.join(Subscriber).join(Area).filter(
+            Area.admin_id == admin_id,
         ).order_by(Transaction.transaction_date.desc()).limit(50).all()
 
 
@@ -93,7 +92,7 @@ def get_logs():
 
         return jsonify({
             "status": "success",
-            "logs": logs[:50]
+            "logs": logs
         }), 200
     
     except Exception as e:
