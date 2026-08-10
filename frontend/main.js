@@ -15,6 +15,7 @@ let addSubModal;
 let editSubModal;
 let addAreaModal;
 let addStaffModal;
+let logFilterModal;
 let selectedSubscriberId = null;
 let selectedSubscriberData = null;
 let allSubscribers = [];
@@ -23,6 +24,9 @@ let allAreas = [];
 let currentSubscriberDebt = 0;
 let currentSubscriberPage = 1;
 let totalSubscriberPages = 1;
+let currentLogFilter = 'الكل';
+let logFilterStartDate = '';
+let logFilterEndDate = '';
 const subscribersPerPage = 50;
 
 const dom = {
@@ -33,6 +37,12 @@ const dom = {
     loginPassword: document.getElementById('loginPassword'),
     loginMessage: document.getElementById('loginMessage'),
     btnLogout: document.getElementById('btnLogout'),
+    btnProfileInfo: document.getElementById('btnProfileInfo'),
+    profileInfoCard: document.getElementById('profileInfoCard'),
+    profileUsername: document.getElementById('profileUsername'),
+    profileRole: document.getElementById('profileRole'),
+    profileAreasCount: document.getElementById('profileAreasCount'),
+    btnProfileAreas: document.getElementById('btnProfileAreas'),
     totalSubscribers: document.getElementById('total-subscribers'),
     todayIncome: document.getElementById('today-income'),
     totalDebt: document.getElementById('total-debt'),
@@ -41,7 +51,6 @@ const dom = {
     logsTableBody: document.getElementById('logs-table-body'),
     tabDashboard: document.getElementById('tab-dashboard'),
     tabSubscribers: document.getElementById('tab-subscribers'),
-    tabAreas: document.getElementById('tab-areas'),
     tabLogs: document.getElementById('tab-logs'),
     dashboardSection: document.getElementById('dashboard'),
     subscribersSection: document.getElementById('subscribers'),
@@ -56,9 +65,8 @@ const dom = {
     todayRenewals: document.getElementById('today-renewals'),
     reportStatusBadge: document.getElementById('report-status-badge'),
     reportStatusMessage: document.getElementById('report-status-msg'),
-    btnAll: document.getElementById('btn-all'),
-    btnPayments: document.getElementById('btn-payments'),
-    btnRenewals: document.getElementById('btn-renewals'),
+    btnOpenLogFilter: document.getElementById('btn-open-log-filter'),
+    btnApplyLogFilter: document.getElementById('btnApplyLogFilter'),
     btnCopyDetails: document.getElementById('btn-copy-details'),
     btnDeleteSub: document.getElementById('btn-delete-sub'),
     btnEditSub: document.getElementById('btn-edit-sub'),
@@ -92,6 +100,20 @@ function buildUrl(endpoint) {
     const trimmed = endpoint.trim();
     const normalized = trimmed.startsWith('/api') ? trimmed.slice(4) : trimmed;
     return normalized.startsWith('/') ? `${API_URL}${normalized}` : `${API_URL}/${normalized}`;
+}
+
+function normalizeSubscriber(sub) {
+    if (!sub || typeof sub !== 'object') return sub;
+
+    return {
+        ...sub,
+        phone_number: sub.phone_number ?? sub.phone ?? '',
+        phone: sub.phone ?? sub.phone_number ?? '',
+        area_name: sub.area_name ?? sub.area ?? '',
+        area: sub.area ?? sub.area_name ?? '',
+        promise_date: sub.promise_date ?? '',
+        notes: sub.notes ?? ''
+    };
 }
 
 function requestOptions(method = 'GET', body = null) {
@@ -130,6 +152,8 @@ function showAlert(message) {
 function showLogin() {
     dom.loginPage.classList.remove('d-none');
     dom.appContainer.classList.add('d-none');
+    dom.btnProfileInfo.classList.add('d-none');
+    dom.profileInfoCard.classList.add('d-none');
     dom.btnLogout.classList.add('d-none');
     dom.loginMessage.innerText = '';
     dom.loginForm.reset();
@@ -138,10 +162,15 @@ function showLogin() {
 function showApp() {
     dom.loginPage.classList.add('d-none');
     dom.appContainer.classList.remove('d-none');
+    dom.btnProfileInfo.classList.remove('d-none');
     dom.btnLogout.classList.remove('d-none');
     
-    // Show staff button only for admins
     const userRole = localStorage.getItem('userRole');
+    const username = localStorage.getItem('username') || 'غير معروف';
+    dom.profileUsername.innerText = username;
+    dom.profileRole.innerText = userRole === 'admin' ? 'مدير' : 'موظف';
+    dom.profileAreasCount.innerText = Array.isArray(allAreas) ? allAreas.length : 0;
+
     if (dom.btnAddStaff) {
         if (userRole === 'admin') {
             dom.btnAddStaff.classList.remove('d-none');
@@ -157,25 +186,61 @@ function initPage() {
     editSubModal = new bootstrap.Modal(document.getElementById('editSubscriberModal'));
     addAreaModal = new bootstrap.Modal(document.getElementById('addAreaModal'));
     addStaffModal = new bootstrap.Modal(document.getElementById('addStaffModal'));
+    logFilterModal = new bootstrap.Modal(document.getElementById('logFilterModal'));
     registerEventListeners();
     loadInitialState();
 }
 
 function registerEventListeners() {
     dom.loginForm.addEventListener('submit', handleLogin);
+    dom.btnProfileInfo.addEventListener('click', (event) => {
+        event.stopPropagation();
+        dom.profileInfoCard.classList.toggle('d-none');
+    });
+    document.addEventListener('click', (event) => {
+        const clickedInsideProfile = dom.profileInfoCard.contains(event.target) || dom.btnProfileInfo.contains(event.target);
+        if (!clickedInsideProfile) {
+            dom.profileInfoCard.classList.add('d-none');
+        }
+    });
+    dom.btnProfileAreas.addEventListener('click', () => {
+        dom.profileInfoCard.classList.add('d-none');
+        switchSection('areas');
+        if (addAreaModal) addAreaModal.show();
+    });
     dom.btnLogout.addEventListener('click', logoutUser);
     dom.tabDashboard.addEventListener('click', () => switchSection('dashboard'));
     dom.tabSubscribers.addEventListener('click', () => switchSection('subscribers'));
-    dom.tabAreas.addEventListener('click', () => switchSection('areas'));
     dom.tabLogs.addEventListener('click', () => switchSection('logs'));
     dom.searchInput.addEventListener('input', filterSubscribers);
     dom.btnTodayPromises.addEventListener('click', loadPromisesToday);
     dom.btnAddSubscriber.addEventListener('click', openAddSubscriberModal);
     dom.btnAddArea.addEventListener('click', () => addAreaModal.show());
     dom.btnSaveArea.addEventListener('click', submitNewArea);
-    dom.btnAll.addEventListener('click', () => filterLogs('الكل'));
-    dom.btnPayments.addEventListener('click', () => filterLogs('تسديد'));
-    dom.btnRenewals.addEventListener('click', () => filterLogs('تجديد'));
+    if (dom.btnOpenLogFilter) {
+        dom.btnOpenLogFilter.addEventListener('click', () => logFilterModal.show());
+    }
+    if (dom.btnApplyLogFilter) {
+        dom.btnApplyLogFilter.addEventListener('click', () => {
+            const startDate = document.getElementById('logFilterStartDate').value;
+            const endDate = document.getElementById('logFilterEndDate').value;
+            logFilterStartDate = startDate;
+            logFilterEndDate = endDate;
+            filterLogs(currentLogFilter);
+            logFilterModal.hide();
+        });
+    }
+    document.querySelectorAll('[data-log-filter]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const filterType = button.dataset.logFilter;
+            const startDate = document.getElementById('logFilterStartDate').value;
+            const endDate = document.getElementById('logFilterEndDate').value;
+            logFilterStartDate = startDate;
+            logFilterEndDate = endDate;
+            filterLogs(filterType);
+            logFilterModal.hide();
+        });
+    });
     dom.btnCopyDetails.addEventListener('click', copySubscriberDetails);
     dom.btnDeleteSub.addEventListener('click', () => {
         if (selectedSubscriberId !== null) deleteSubscriber(selectedSubscriberId);
@@ -234,14 +299,16 @@ async function handleLogin(event) {
 
 function logoutUser() {
     localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('username');
+    dom.profileInfoCard.classList.add('d-none');
     showLogin();
 }
 
 function loadPageData() {
     loadSubscribers();
-    loadDailyReport();
-    loadLogs();
     loadAreas();
+    loadLogs();
 }
 
 async function loadAreas() {
@@ -251,6 +318,10 @@ async function loadAreas() {
         allAreas = data.areas;
         renderAreaOptions(allAreas);
         renderAreasTable(allAreas);
+        if (dom.profileAreasCount) {
+            dom.profileAreasCount.innerText = Array.isArray(allAreas) ? allAreas.length : 0;
+        }
+        updateDashboardSummary();
     } catch (error) {
         console.error('خطأ في جلب المناطق:', error);
     }
@@ -302,15 +373,17 @@ async function loadSubscribers(page = 1) {
     try {
         const data = await apiCall(`/subscribers?page=${page}&per_page=${subscribersPerPage}`);
         if (!data || data.status !== 'success') return;
-        const subscribersList = data.subscribers || [];
+        const subscribersList = (data.subscribers || []).map(normalizeSubscriber);
         allSubscribers = subscribersList;
         currentSubscriberPage = page;
         totalSubscriberPages = data.pagination?.total_pages || 1;
         dom.totalSubscribers.innerText = data.pagination?.total_subscribers || subscribersList.length;
+        dom.totalSubscribers.dataset.total = data.pagination?.total_subscribers || subscribersList.length;
         dom.subscriberPageInfo.innerText = `صفحة ${currentSubscriberPage} من ${totalSubscriberPages}`;
         dom.btnPrevPage.disabled = currentSubscriberPage <= 1;
         dom.btnNextPage.disabled = currentSubscriberPage >= totalSubscriberPages;
         renderTable(allSubscribers);
+        updateDashboardSummary();
     } catch (error) {
         console.error('خطأ:', error);
     }
@@ -361,17 +434,13 @@ function createSubscriberRow(sub) {
 
 function renderTable(list) {
     dom.subscribersTableBody.innerHTML = '';
-    let totalDebt = 0;
     if (!list.length) {
         dom.subscribersTableBody.innerHTML = '<tr><td colspan="5" class="text-muted p-4">لا توجد بيانات للعرض</td></tr>';
-        dom.totalDebt.innerText = '0 د.ع';
         return;
     }
     list.forEach((sub) => {
-        if (sub.balance < 0) totalDebt += Math.abs(sub.balance);
         dom.subscribersTableBody.appendChild(createSubscriberRow(sub));
     });
-    dom.totalDebt.innerText = `${totalDebt.toLocaleString()} د.ع`;
 }
 
 function openAddSubscriberModal() {
@@ -396,8 +465,7 @@ async function submitNewSubscriber() {
         phone_number: phone,
         area_id: parseInt(areaId, 10),
         balance: parseFloat(balance),
-        parent_company_id: parentCompany,
-        promise_date: promiseDate,
+        promise_date: promiseDate || null,
         notes
     };
     try {
@@ -437,11 +505,11 @@ async function showSubscriberDetails(subscriberId) {
             showAlert(data ? data.message : 'تعذر جلب تفاصيل المشترك.');
             return;
         }
-        const sub = data.subscriber;
+        const sub = normalizeSubscriber(data.subscriber);
         selectedSubscriberData = sub;
         dom.detailName.innerText = sub.name;
-        dom.detailArea.innerText = sub.area || sub.area_name || '-';
-        dom.detailParentCompany.innerText = sub.parent_company_id && sub.parent_company_id !== 'None' ? sub.parent_company_id : '—';
+        dom.detailArea.innerText = sub.area_name || sub.area || '-';
+        dom.detailParentCompany.innerText = '—';
         dom.detailBalance.innerText = `${sub.balance.toLocaleString()} د.ع`;
         dom.detailBalance.className = sub.balance < 0 ? 'fw-bold fs-5 text-danger' : 'fw-bold fs-5 text-success';
         dom.quickPromiseInput.value = sub.promise_date && sub.promise_date !== 'None' ? sub.promise_date.substring(0, 10) : '';
@@ -467,12 +535,12 @@ async function showSubscriberDetails(subscriberId) {
 function openEditModal(sub) {
     const detailsModal = bootstrap.Modal.getInstance(document.getElementById('detailsModal'));
     if (detailsModal) detailsModal.hide();
-    document.getElementById('editSubId').value = sub.id;
-    document.getElementById('editName').value = sub.name;
-    document.getElementById('editPhone').value = sub.phone === 'لا يوجد رقم مسجل' ? '' : sub.phone || '';
-    dom.editAreaId.value = sub.area_id;
-    document.getElementById('editParentCompany').value = sub.parent_company_id || '';
-    document.getElementById('editNotes').value = sub.notes || '';
+    const normalizedSub = normalizeSubscriber(sub);
+    document.getElementById('editSubId').value = normalizedSub.id;
+    document.getElementById('editName').value = normalizedSub.name;
+    document.getElementById('editPhone').value = normalizedSub.phone === 'لا يوجد رقم مسجل' ? '' : normalizedSub.phone || '';
+    dom.editAreaId.value = normalizedSub.area_id;
+    document.getElementById('editNotes').value = normalizedSub.notes || '';
     document.getElementById('editPromiseDate').value = sub.promise_date && sub.promise_date !== 'None' && sub.promise_date !== 'لا يوجد وعد مسجل' ? sub.promise_date : '';
     editSubModal.show();
 }
@@ -483,7 +551,6 @@ async function submitEditSubscriber() {
         name: document.getElementById('editName').value.trim(),
         phone_number: document.getElementById('editPhone').value.trim(),
         area_id: parseInt(dom.editAreaId.value, 10),
-        parent_company_id: document.getElementById('editParentCompany').value.trim(),
         notes: document.getElementById('editNotes').value.trim(),
         promise_date: document.getElementById('editPromiseDate').value || null
     };
@@ -545,8 +612,10 @@ async function loadLogs() {
         if (!data) return;
         if (data.status === 'success') {
             allLogs = data.logs;
+            currentLogFilter = 'الكل';
+            updateLogFilterButtonLabel();
             renderLogsTable(allLogs);
-            dom.btnAll.checked = true;
+            updateDashboardSummary();
         }
     } catch (error) {
         console.error('Error loading logs:', error);
@@ -574,32 +643,40 @@ function renderLogsTable(logsArray) {
     });
 }
 
-function filterLogs(filterType) {
-    if (filterType === 'الكل') {
-        renderLogsTable(allLogs);
-    } else {
-        renderLogsTable(allLogs.filter((log) => log.type === filterType));
+function updateLogFilterButtonLabel() {
+    if (dom.btnOpenLogFilter) {
+        dom.btnOpenLogFilter.innerText = currentLogFilter === 'الكل' ? 'تصفية' : `تصفية: ${currentLogFilter}`;
     }
 }
 
-async function loadDailyReport() {
-    try {
-        const data = await apiCall('/daily_report');
-        if (!data || data.status !== 'success') return;
-        const summary = data.summary || {};
-        const netTotal = summary.net_total || 0;
-        const totalPayments = summary.total_payments_collected || 0;
-        const totalRenewals = summary.total_renewals_value || 0;
-        const reportStatus = summary.report_status || 'neutral';
+function filterLogs(filterType) {
+    currentLogFilter = filterType;
+    updateLogFilterButtonLabel();
 
-        dom.todayIncome.innerText = `${netTotal.toLocaleString()} د.ع`;
-        dom.todayPayments.innerText = `${totalPayments.toLocaleString()} د.ع`;
-        dom.todayRenewals.innerText = `${totalRenewals.toLocaleString()} د.ع`;
-        dom.reportStatusMessage.innerText = data.message || 'لا يوجد تقرير.';
-        dom.reportStatusBadge.innerText = reportStatus;
-        dom.reportStatusBadge.className = `badge fs-6 ${reportStatus === 'good' ? 'bg-success' : reportStatus === 'bad' ? 'bg-danger' : 'bg-secondary'}`;
-    } catch (error) {
-        console.error('خطأ:', error);
+    const filteredLogs = allLogs.filter((log) => {
+        const logDate = log.date ? log.date.split(' ')[0] : '';
+        const matchesType = filterType === 'الكل' || log.type === filterType;
+        const matchesStart = !logFilterStartDate || logDate >= logFilterStartDate;
+        const matchesEnd = !logFilterEndDate || logDate <= logFilterEndDate;
+        return matchesType && matchesStart && matchesEnd;
+    });
+
+    renderLogsTable(filteredLogs);
+}
+
+function updateDashboardSummary() {
+    const totalSubscribersCount = Number(dom.totalSubscribers?.dataset?.total || allSubscribers.length || 0);
+    const totalAreasCount = Array.isArray(allAreas) ? allAreas.length : 0;
+    const totalDebt = allSubscribers.reduce((sum, sub) => sum + (sub.balance < 0 ? Math.abs(sub.balance) : 0), 0);
+
+    if (dom.totalSubscribers) {
+        dom.totalSubscribers.innerText = totalSubscribersCount.toLocaleString();
+    }
+    if (dom.profileAreasCount) {
+        dom.profileAreasCount.innerText = totalAreasCount.toLocaleString();
+    }
+    if (dom.totalDebt) {
+        dom.totalDebt.innerText = `${totalDebt.toLocaleString()} د.ع`;
     }
 }
 
@@ -612,10 +689,10 @@ async function submitAction() {
     if (!amount || Number(amount) <= 0) {
         return showAlert('يرجى إدخال مبلغ صحيح!');
     }
-    const endpoint = actionType === 'payment' ? '/payments' : '/renewals';
+    const endpoint = actionType === 'payment' ? '/transactions/payment' : '/transactions/renewal';
     const requestData = {
         subscriber_id: parseInt(subscriberId, 10),
-        amount: parseFloat(amount),
+        amount: parseInt(amount, 10),
         promise_date: promiseDate,
         is_cash: isCash
     };
@@ -624,7 +701,6 @@ async function submitAction() {
         if (data && data.status === 'success') {
             actionModal.hide();
             loadSubscribers();
-            loadDailyReport();
             loadLogs();
         } else {
             showAlert(`❌ تنبيه: ${data ? data.message : 'تعذر تنفيذ العملية.'}`);
