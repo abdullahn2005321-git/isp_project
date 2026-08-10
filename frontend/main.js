@@ -43,6 +43,9 @@ const dom = {
     profileRole: document.getElementById('profileRole'),
     profileAreasCount: document.getElementById('profileAreasCount'),
     btnProfileAreas: document.getElementById('btnProfileAreas'),
+    btnMyTeam: document.getElementById('btnMyTeam'),
+    btnAddStaffProfile: document.getElementById('btnAddStaffProfile'),
+    teamAddStaffWrapper: document.getElementById('teamAddStaffWrapper'),
     totalSubscribers: document.getElementById('total-subscribers'),
     todayIncome: document.getElementById('today-income'),
     totalDebt: document.getElementById('total-debt'),
@@ -178,6 +181,14 @@ function showApp() {
             dom.btnAddStaff.classList.add('d-none');
         }
     }
+
+    if (dom.teamAddStaffWrapper) {
+        if (userRole === 'admin') {
+            dom.teamAddStaffWrapper.classList.remove('d-none');
+        } else {
+            dom.teamAddStaffWrapper.classList.add('d-none');
+        }
+    }
 }
 
 function initPage() {
@@ -208,6 +219,12 @@ function registerEventListeners() {
         switchSection('areas');
         if (addAreaModal) addAreaModal.show();
     });
+    if (dom.btnMyTeam) {
+        dom.btnMyTeam.addEventListener('click', (event) => {
+            event.stopPropagation();
+            openTeamModal();
+        });
+    }
     dom.btnLogout.addEventListener('click', logoutUser);
     dom.tabDashboard.addEventListener('click', () => switchSection('dashboard'));
     dom.tabSubscribers.addEventListener('click', () => switchSection('subscribers'));
@@ -446,6 +463,55 @@ function renderTable(list) {
 function openAddSubscriberModal() {
     dom.addSubscriberForm.reset();
     addSubModal.show();
+}
+
+async function openTeamModal() {
+    dom.profileInfoCard.classList.add('d-none');
+    const teamModalEl = document.getElementById('teamModal');
+    const teamModalBody = document.getElementById('teamModalBody');
+    if (!teamModalEl || !teamModalBody) return;
+
+    teamModalBody.innerHTML = '<div class="text-center text-muted">جاري التحميل...</div>';
+    const modal = bootstrap.Modal.getOrCreateInstance(teamModalEl);
+    modal.show();
+
+    try {
+        const data = await apiCall('/my-team');
+        if (!data || data.status !== 'success') {
+            teamModalBody.innerHTML = '<div class="text-danger">تعذر جلب بيانات الفريق.</div>';
+            return;
+        }
+
+        const manager = data.manager || {};
+        const members = Array.isArray(data.members) ? data.members : [];
+        const roleLabel = (role) => role === 'admin' ? 'مدير' : 'موظف';
+        const userRole = localStorage.getItem('userRole');
+        if (dom.teamAddStaffWrapper) {
+            dom.teamAddStaffWrapper.classList.toggle('d-none', userRole !== 'admin');
+        }
+
+        teamModalBody.innerHTML = `
+            <div class="mb-3">
+                <div class="fw-bold text-primary mb-2"><i class="fa-solid fa-user-shield"></i> المدير</div>
+                <div class="border rounded p-2 bg-light">
+                    <div class="fw-semibold">${manager.username || '—'}</div>
+                    <div class="small text-muted">${roleLabel(manager.role || 'admin')}</div>
+                </div>
+            </div>
+            <div>
+                <div class="fw-bold text-secondary mb-2"><i class="fa-solid fa-users"></i> الموظفون</div>
+                ${members.length ? members.map((member) => `
+                    <div class="border rounded p-2 mb-2">
+                        <div class="fw-semibold">${member.username || '—'}</div>
+                        <div class="small text-muted">${roleLabel(member.role || 'staff')}</div>
+                    </div>
+                `).join('') : '<div class="text-muted">لا يوجد موظفون مسجلون حتى الآن.</div>'}
+            </div>
+        `;
+    } catch (error) {
+        console.error('خطأ في تحميل فريق العمل:', error);
+        teamModalBody.innerHTML = '<div class="text-danger">حدث خطأ أثناء تحميل بيانات الفريق.</div>';
+    }
 }
 
 async function submitNewSubscriber() {

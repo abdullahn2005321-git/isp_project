@@ -85,6 +85,45 @@ def register_staff():
             "message": str(e)
         }), 500
 
+@auth_bp.route('/api/my-team', methods=['GET'])
+@jwt_required()
+def my_team():
+    user_id = get_jwt_identity()
+    user = User.query.get(int(user_id))
+
+    if not user:
+        return jsonify({"status": "error", "message": "المستخدم غير موجود"}), 404
+
+    if user.role == 'admin':
+        manager = {
+            "id": user.id,
+            "username": user.username,
+            "role": user.role
+        }
+        members = [
+            {
+                "id": staff.id,
+                "username": staff.username,
+                "role": staff.role
+            }
+            for staff in user.staff_members
+        ]
+    else:
+        manager = None
+        if user.manager:
+            manager = {
+                "id": user.manager.id,
+                "username": user.manager.username,
+                "role": user.manager.role
+            }
+        members = []
+
+    return jsonify({
+        "status": "success",
+        "manager": manager,
+        "members": members
+    }), 200
+
 @auth_bp.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()

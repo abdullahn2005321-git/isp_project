@@ -31,6 +31,7 @@
                                 <div class="small text-muted">عدد المناطق: <span id="profileAreasCount">0</span></div>
                                 <button type="button" class="btn btn-sm btn-outline-primary w-100 mt-2" id="btnProfileAreas"><i class="fa-solid fa-plus"></i> إضافة منطقة</button>
                             </div>
+                            <button type="button" class="btn btn-outline-secondary btn-sm w-100 mb-2" id="btnMyTeam"><i class="fa-solid fa-users-rectangle"></i> فريقي</button>
                             <button type="button" class="btn btn-outline-danger btn-sm w-100" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button>
                         </div>
                     </div>
@@ -242,6 +243,23 @@
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-light w-100 mb-2" data-bs-dismiss="modal">إلغاء</button>
                     <button type="button" class="btn btn-success w-100 py-2 fw-bold fs-5" id="confirmBtn">تأكيد العملية</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="teamModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold text-secondary"><i class="fa-solid fa-users-rectangle"></i> فريق العمل</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="teamModalBody" class="small text-muted">جاري التحميل...</div>
+                    <div class="mt-3 d-none" id="teamAddStaffWrapper">
+                        <button type="button" class="btn btn-outline-info btn-sm w-100" id="btnAddStaffProfile"><i class="fa-solid fa-user-tie"></i> إضافة موظف</button>
+                    </div>
                 </div>
             </div>
         </div>

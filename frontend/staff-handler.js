@@ -39,15 +39,22 @@ async function submitNewStaff() {
 // Initialize staff modal and event listeners
 document.addEventListener('DOMContentLoaded', function() {
     const btnAddStaff = document.getElementById('btnAddStaff');
+    const btnAddStaffProfile = document.getElementById('btnAddStaffProfile');
     const btnSaveStaff = document.getElementById('btn-save-staff');
     const addStaffForm = document.getElementById('addStaffForm');
+
+    function openStaffModal() {
+        if (addStaffForm) addStaffForm.reset();
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addStaffModal'));
+        if (modal) modal.show();
+    }
     
     if (btnAddStaff) {
-        btnAddStaff.addEventListener('click', function() {
-            if (addStaffForm) addStaffForm.reset();
-            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addStaffModal'));
-            if (modal) modal.show();
-        });
+        btnAddStaff.addEventListener('click', openStaffModal);
+    }
+
+    if (btnAddStaffProfile) {
+        btnAddStaffProfile.addEventListener('click', openStaffModal);
     }
     
     if (btnSaveStaff) {
