@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, send_from_directory
 from flask_migrate import Migrate
 from models import db
 from flask_cors import CORS
@@ -29,6 +29,21 @@ app.register_blueprint(subscribers_bp)
 app.register_blueprint(transactions_bp)
 app.register_blueprint(logging_and_reporting_bp)
 app.register_blueprint(auth_bp)
+
+# ==========================================
+# مسارات تشغيل الواجهة الأمامية (Frontend)
+# ==========================================
+
+# 1. مسار الرابط الرئيسي (عرض صفحة الدخول)
+@app.route('/')
+def serve_frontend():
+    # سيقوم السيرفر بفتح مجلد frontend وعرض ملف index.html
+    return send_from_directory('frontend', 'index.html')
+
+# 2. مسار لجلب باقي الملفات (CSS, JavaScript, الصور) لكي تعمل الواجهة بشكل سليم
+@app.route('/<path:filename>')
+def serve_static_files(filename):
+    return send_from_directory('frontend', filename)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
