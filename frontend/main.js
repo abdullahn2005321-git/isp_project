@@ -138,7 +138,7 @@ async function apiCall(endpoint, method = 'GET', body = null) {
         if (response.status === 401) {
             localStorage.removeItem('token');
             showLogin();
-            alert('لا تملك صلاحية للوصول! يرجى تسجيل الدخول أولاً.');
+            showAlert('لا تملك صلاحية للوصول! يرجى تسجيل الدخول أولاً.');
             return null;
         }
         return await response.json();
@@ -148,8 +148,87 @@ async function apiCall(endpoint, method = 'GET', body = null) {
     }
 }
 
-function showAlert(message) {
-    alert(message);
+function ensureToastContainer() {
+    let container = document.getElementById('appToastContainer');
+    if (container) return container;
+
+    container = document.createElement('div');
+    container.id = 'appToastContainer';
+    container.className = 'toast-container position-fixed top-0 start-50 translate-middle-x p-3';
+    container.style.zIndex = '2000';
+    document.body.appendChild(container);
+    return container;
+}
+
+function restoreModalFocus() {
+    const activeModal = document.querySelector('.modal.show');
+    if (!activeModal) return;
+
+    const firstInput = activeModal.querySelector('input, select, textarea, button');
+    if (firstInput && typeof firstInput.focus === 'function') {
+        firstInput.focus({ preventScroll: true });
+    }
+}
+
+function showAlert(message, type = 'danger') {
+    const container = ensureToastContainer();
+    const tone = ['success', 'warning', 'info', 'danger'].includes(type) ? type : 'danger';
+    const toastEl = document.createElement('div');
+
+    toastEl.className = `toast align-items-center text-bg-${tone} border-0`;
+    toastEl.setAttribute('role', 'alert');
+    toastEl.setAttribute('aria-live', 'assertive');
+    toastEl.setAttribute('aria-atomic', 'true');
+    toastEl.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    `;
+
+    container.appendChild(toastEl);
+    const toast = new bootstrap.Toast(toastEl, { delay: 3500 });
+
+    toastEl.addEventListener('hidden.bs.toast', () => {
+        toastEl.remove();
+    }, { once: true });
+
+    toast.show();
+    setTimeout(restoreModalFocus, 30);
+}
+
+function normalizeRole(role) {
+    return typeof role === 'string' ? role.trim().toLowerCase() : '';
+}
+
+function decodeJwtRole(token) {
+    if (!token) return '';
+    try {
+        const payload = token.split('.')[1];
+        if (!payload) return '';
+        const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+        const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+        return JSON.parse(atob(padded))?.role || '';
+    } catch (error) {
+        console.warn('Unable to decode JWT role:', error);
+        return '';
+    }
+}
+
+function getCurrentRole() {
+    const storedRole = localStorage.getItem('userRole');
+    const token = localStorage.getItem('token');
+    const decodedRole = decodeJwtRole(token);
+    return normalizeRole(decodedRole || storedRole || 'staff');
+}
+
+function redirectForRole(role) {
+    const normalizedRole = normalizeRole(role);
+    if (normalizedRole === 'super_admin') {
+        window.location.href = './super_dashboard.html';
+        return true;
+    }
+    return false;
 }
 
 function showLogin() {
@@ -167,15 +246,18 @@ function showApp() {
     dom.appContainer.classList.remove('d-none');
     dom.btnProfileInfo.classList.remove('d-none');
     dom.btnLogout.classList.remove('d-none');
-    
-    const userRole = localStorage.getItem('userRole');
+
+    const userRole = getCurrentRole();
+    localStorage.setItem('userRole', userRole);
     const username = localStorage.getItem('username') || 'غير معروف';
     dom.profileUsername.innerText = username;
-    dom.profileRole.innerText = userRole === 'admin' ? 'مدير' : 'موظف';
+    dom.profileRole.innerText = userRole === 'super_admin' ? 'مدير عام' : userRole === 'admin' ? 'مدير' : 'موظف';
     dom.profileAreasCount.innerText = Array.isArray(allAreas) ? allAreas.length : 0;
 
+    const canManageStaff = userRole === 'admin' || userRole === 'super_admin';
+
     if (dom.btnAddStaff) {
-        if (userRole === 'admin') {
+        if (canManageStaff) {
             dom.btnAddStaff.classList.remove('d-none');
         } else {
             dom.btnAddStaff.classList.add('d-none');
@@ -183,7 +265,7 @@ function showApp() {
     }
 
     if (dom.teamAddStaffWrapper) {
-        if (userRole === 'admin') {
+        if (canManageStaff) {
             dom.teamAddStaffWrapper.classList.remove('d-none');
         } else {
             dom.teamAddStaffWrapper.classList.add('d-none');
@@ -284,6 +366,10 @@ function registerEventListeners() {
 function loadInitialState() {
     const token = localStorage.getItem('token');
     if (token) {
+        const role = getCurrentRole();
+        if (redirectForRole(role)) {
+            return;
+        }
         showApp();
         loadPageData();
     } else {
@@ -303,10 +389,14 @@ async function handleLogin(event) {
 
     const response = await apiCall('/login', 'POST', { username, password });
     if (response && response.token) {
+        const resolvedRole = normalizeRole(response.role || decodeJwtRole(response.token) || 'staff');
         localStorage.setItem('token', response.token);
-        localStorage.setItem('userRole', response.role);
-        localStorage.setItem('username', response.username);
+        localStorage.setItem('userRole', resolvedRole);
+        localStorage.setItem('username', response.username || username);
         dom.loginMessage.innerText = '';
+        if (redirectForRole(resolvedRole)) {
+            return;
+        }
         showApp();
         loadPageData();
     } else {

@@ -6,7 +6,15 @@ from models import db, User
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/api/register', methods=['POST'])
+@jwt_required()
 def register_admin():
+    extra_claims = get_jwt()
+    if extra_claims.get('role') != 'super_admin':
+            return jsonify({
+                "status": "error",
+                "message": "صلاحية غير كافية, يجب ان تكون سوبر ادمن لتسجيل الادمن"
+            }), 403
+
     data = request.get_json()
     if not data or 'username' not in data or 'password' not in data:
         return jsonify({
@@ -124,6 +132,39 @@ def my_team():
         "members": members
     }), 200
 
+
+@auth_bp.route('/api/admins', methods=['POST'])
+@jwt_required()
+def get_admins():
+    try:
+        extra_claims = get_jwt()
+        if extra_claims.get('role') != 'super_admin':
+            return jsonify({
+                "status": "error",
+                "message": "صلاحية غير كافية, يجب ان تكون سوبر ادمن لرؤية الادمنز"
+            }), 403
+
+        admins = User.query.filter_by(role='admin').all()
+        admins_list = []
+        for admin in admins:
+            admins_list.append({
+                "id": admin.id,
+                "username": admin.username
+            })
+            
+        return jsonify({
+            "status": "success",
+            "count": len(admins_list),
+            "admins": admins_list
+        }), 200
+    
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+
 @auth_bp.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -138,11 +179,15 @@ def login():
 
     if user and check_password_hash(user.password_hash, data['password']):
 
-        target_admin_id = user.id if user.role == 'admin' else user.parent_admin_id
+        user_role = user.role
+        if user_role != 'super_admin' and user_role != 'admin' and user_role != 'staff':
+            user_role = 'staff'
+
+        target_admin_id = user.id if user_role == 'admin' else user.parent_admin_id
 
         extra_data = {
             "username": user.username,
-            "role": user.role,
+            "role": user_role,
             "admin_id": target_admin_id
         }
 
@@ -155,7 +200,7 @@ def login():
             "status": "success",
             "message": "تم تسجيل بنجاح",
             "token": access_token,
-            "role": user.role,
+            "role": user_role,
             "username": user.username
         }), 200
     

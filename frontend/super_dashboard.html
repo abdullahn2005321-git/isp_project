@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم سوبر</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; font-family: Tahoma, sans-serif; }
+        .card { background: rgba(255,255,255,0.95); color: #111827; border: 0; }
+        .header-bar { background: rgba(255,255,255,0.08); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="header-bar rounded-4 p-4 mb-4 shadow">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-1"><i class="fa-solid fa-shield-halved text-warning"></i> لوحة التحكم السيادية</h2>
+                    <p class="mb-0 text-light-emphasis">عرض مدراء الشبكات وإدارتهم من مكان واحد</p>
+                </div>
+                <button class="btn btn-outline-light" onclick="logoutSuper()"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="card shadow rounded-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0"><i class="fa-solid fa-network-wired"></i> مدراء الشبكات</h5>
+                            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addManagerModal"><i class="fa-solid fa-plus"></i> إضافة مدير جديد</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>اسم المدير</th>
+                                        <th>الدور</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="managersTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">لا توجد بيانات بعد</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card shadow rounded-4">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3"><i class="fa-solid fa-user-shield"></i> معلومات السوبر</h5>
+                        <p class="mb-2"><strong>اسم الحساب:</strong> <span id="superUsername">super_admin</span></p>
+                        <p class="mb-2"><strong>الدور:</strong> سوبر أدمن</p>
+                        <p class="mb-0"><strong>الحالة:</strong> <span class="badge bg-success">متصل</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addManagerModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">إضافة مدير جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addManagerForm">
+                        <div class="mb-3">
+                            <label class="form-label">اسم المستخدم</label>
+                            <input type="text" class="form-control" id="managerUsername" placeholder="أدخل اسم المستخدم" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">كلمة المرور</label>
+                            <input type="password" class="form-control" id="managerPassword" placeholder="أدخل كلمة المرور" required>
+                        </div>
+                        <div id="managerMessage" class="small"></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                    <button type="submit" form="addManagerForm" class="btn btn-primary">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function logoutSuper() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('username');
+            window.location.href = './index.html';
+        }
+
+        function buildApiUrl(endpoint) {
+            const trimmed = endpoint.trim();
+            if (/^https?:\/\//i.test(trimmed)) {
+                return trimmed;
+            }
+
+            const normalized = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+            if (window.location.protocol.startsWith('http')) {
+                const host = window.location.hostname;
+                const port = window.location.port ? `:${window.location.port}` : '';
+                return `${window.location.protocol}//${host}${port}/api${normalized}`;
+            }
+
+            return `http://127.0.0.1:5000/api${normalized}`;
+        }
+
+        async function createManager(event) {
+            event.preventDefault();
+            const username = document.getElementById('managerUsername').value.trim();
+            const password = document.getElementById('managerPassword').value;
+            const messageBox = document.getElementById('managerMessage');
+
+            if (!username || !password) {
+                messageBox.textContent = 'يرجى إدخال اسم المستخدم وكلمة المرور.';
+                return;
+            }
+
+            messageBox.className = 'small';
+
+            try {
+                const response = await fetch(buildApiUrl('/register'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                let result = null;
+                try {
+                    result = await response.json();
+                } catch (parseError) {
+                    result = { message: 'استجابة غير صالحة من الخادم.' };
+                }
+
+                if (!response.ok) {
+                    messageBox.classList.add('text-danger');
+                    messageBox.textContent = result?.message || 'فشل إنشاء المدير.';
+                    return;
+                }
+
+                messageBox.classList.remove('text-danger');
+                messageBox.classList.add('text-success');
+                messageBox.textContent = result?.message || 'تم إنشاء المدير بنجاح';
+
+                document.getElementById('addManagerForm').reset();
+                await loadManagers();
+            } catch (error) {
+                messageBox.classList.add('text-danger');
+                messageBox.textContent = 'حدث خطأ في الاتصال بالسيرفر.';
+            }
+        }
+
+        function renderManagers(managers) {
+            const tbody = document.getElementById('managersTableBody');
+            tbody.innerHTML = '';
+
+            if (!Array.isArray(managers) || managers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">لا توجد بيانات بعد</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            managers.forEach((manager, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${manager.username || '-'}</td>
+                    <td>admin</td>
+                    <td><span class="badge bg-success">نشط</span></td>
+                    <td><button class="btn btn-sm btn-outline-primary" disabled>إدارة</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function loadManagers() {
+            const tbody = document.getElementById('managersTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center text-muted">جاري تحميل البيانات...</td>
+                </tr>
+            `;
+
+            try {
+                const response = await fetch(buildApiUrl('/admins'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+                    }
+                });
+
+                let result = null;
+                try {
+                    result = await response.json();
+                } catch (parseError) {
+                    result = { status: 'error', message: 'استجابة غير صالحة من الخادم.' };
+                }
+
+                if (!response.ok || result?.status !== 'success') {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center text-danger">${result?.message || 'تعذر جلب قائمة المدراء.'}</td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                renderManagers(result.admins || []);
+            } catch (error) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center text-danger">حدث خطأ في الاتصال بالسيرفر.</td>
+                    </tr>
+                `;
+            }
+        }
+
+        function resetAddManagerModal() {
+            const form = document.getElementById('addManagerForm');
+            form.reset();
+            const messageBox = document.getElementById('managerMessage');
+            messageBox.textContent = '';
+            messageBox.className = 'small';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const username = localStorage.getItem('username') || 'super_admin';
+            document.getElementById('superUsername').textContent = username;
+            document.getElementById('addManagerForm').addEventListener('submit', createManager);
+            loadManagers();
+
+            const modal = document.getElementById('addManagerModal');
+            modal.addEventListener('show.bs.modal', resetAddManagerModal);
+        });
+    </script>
+</body>
+</html>
