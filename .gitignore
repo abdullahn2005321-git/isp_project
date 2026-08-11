@@ -25,5 +25,3 @@ dist/
 *.egg-info/
 
 notes.md
-
-create_super_admin.py
