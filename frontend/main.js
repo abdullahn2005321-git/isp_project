@@ -553,24 +553,40 @@ function createSubscriberRow(sub) {
         <td class="sub-id"></td>
         <td class="fw-bold">
             <span class="text-primary text-decoration-underline subscriber-name" style="cursor: pointer;"></span><br>
-            <small class="text-muted promise-date" style="font-size:11px;"></small>
+            <small class="text-muted subscriber-phone" style="font-size:11px;"></small>
         </td>
         <td><span class="text-secondary area-name"></span></td>
-        <td dir="ltr"><span class="badge balance-badge fs-6"></span></td>
+        <td dir="ltr">
+            <span class="badge balance-badge fs-6 d-inline-block mb-1"></span><br>
+            <small class="text-muted promise-date" style="font-size:11px;"></small>
+        </td>
         <td>
             <button type="button" class="btn btn-sm btn-outline-success me-1 fw-bold renew-btn">تجديد</button>
             <button type="button" class="btn btn-sm btn-outline-primary fw-bold payment-btn">تسديد</button>
         </td>
     `;
+
     tr.querySelector('.sub-id').textContent = sub.id;
+
     const nameEl = tr.querySelector('.subscriber-name');
     nameEl.textContent = sub.name || '-';
     nameEl.addEventListener('click', () => showSubscriberDetails(sub.id));
-    tr.querySelector('.promise-date').textContent = sub.promise_date && sub.promise_date !== 'None' ? `🗓️ وعد: ${sub.promise_date}` : '';
+
+    const phoneEl = tr.querySelector('.subscriber-phone');
+    const phone = sub.phone_number || sub.phone || 'لا يوجد رقم';
+    phoneEl.textContent = `📞 ${phone}`;
+
     tr.querySelector('.area-name').textContent = sub.area_name || sub.area_id || '-';
+
     const balanceBadge = tr.querySelector('.balance-badge');
-    balanceBadge.textContent = sub.balance.toLocaleString();
-    balanceBadge.classList.add(sub.balance < 0 ? 'bg-danger' : 'bg-success');
+    const balanceValue = Number(sub.balance || 0);
+    const balanceLabel = balanceValue < 0 ? 'دين' : 'رصيد';
+    balanceBadge.textContent = `${balanceLabel}: ${balanceValue.toLocaleString()}`;
+    balanceBadge.classList.add(balanceValue < 0 ? 'bg-danger' : 'bg-success');
+
+    const promiseDateEl = tr.querySelector('.promise-date');
+    promiseDateEl.textContent = sub.promise_date && sub.promise_date !== 'None' ? `🗓️ وعد: ${sub.promise_date}` : '🗓️ لا يوجد وعد';
+
     tr.querySelector('.renew-btn').addEventListener('click', () => openModal(sub.id, sub.name, 'renewal', sub.balance));
     tr.querySelector('.payment-btn').addEventListener('click', () => openModal(sub.id, sub.name, 'payment', sub.balance));
     return tr;
