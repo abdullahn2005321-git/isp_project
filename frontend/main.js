@@ -618,6 +618,8 @@ function createSubscriberRow(sub) {
     const phoneEl = card.querySelector('.subscriber-phone');
     phoneEl.textContent = `📞 ${phone}`;
     phoneEl.style.cursor = 'pointer';
+    phoneEl.style.color = '#0d6efd';
+    phoneEl.style.fontWeight = '600';
     phoneEl.title = 'انقر لنسخ الرقم';
     phoneEl.addEventListener('click', async () => {
         const copied = await copyPhoneToClipboard(phone);

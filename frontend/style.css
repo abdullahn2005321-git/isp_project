@@ -3,8 +3,37 @@
 #profileInfoCard { top: 100%; }
 #profileInfoCard.d-none { display: none !important; }
 #profileInfoCard .card-body { background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%); }
-.nav-tabs .nav-link { font-weight: 600; color: #495057; cursor: pointer; }
-.nav-tabs .nav-link.active { color: #0d6efd; border-bottom: 3px solid #0d6efd; background-color: transparent; border-top: none; border-left: none; border-right: none; }
+
+.side-tabs {
+    display: flex;
+    flex-direction: column;
+    width: 78px;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.side-tabs .nav-item { width: 100%; }
+.side-tabs .nav-link {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 48px;
+    padding: 0.7rem 0.4rem;
+    font-weight: 600;
+    color: #495057;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: #fff;
+}
+.side-tabs .nav-link.active {
+    color: #0d6efd;
+    background-color: #eef5ff;
+    border-color: #d7e8ff;
+    box-shadow: 0 0 0 1px rgba(13, 110, 253, 0.08);
+}
+
 .section-content { display: none; }
 .section-content.active { display: block; animation: fadeIn 0.4s; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
