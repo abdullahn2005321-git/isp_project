@@ -548,54 +548,60 @@ function filterSubscribers() {
 }
 
 function createSubscriberRow(sub) {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-        <td class="sub-id"></td>
-        <td class="fw-bold">
-            <span class="text-primary text-decoration-underline subscriber-name" style="cursor: pointer;"></span><br>
-            <small class="text-muted subscriber-phone" style="font-size:11px;"></small>
-        </td>
-        <td><span class="text-secondary area-name"></span></td>
-        <td dir="ltr">
-            <span class="badge balance-badge fs-6 d-inline-block mb-1"></span><br>
-            <small class="text-muted promise-date" style="font-size:11px;"></small>
-        </td>
-        <td>
-            <button type="button" class="btn btn-sm btn-outline-success me-1 fw-bold renew-btn">تجديد</button>
-            <button type="button" class="btn btn-sm btn-outline-primary fw-bold payment-btn">تسديد</button>
-        </td>
+    const card = document.createElement('div');
+    card.className = 'col-lg-6 col-xl-4';
+
+    const balanceValue = Number(sub.balance || 0);
+    const isDebt = balanceValue < 0;
+    const phone = sub.phone_number || sub.phone || 'لا يوجد رقم';
+    const area = sub.area_name || sub.area_id || 'غير محدد';
+    const promiseText = sub.promise_date && sub.promise_date !== 'None' ? `🗓️ ${sub.promise_date}` : '🗓️ لا يوجد وعد';
+
+    card.innerHTML = `
+        <div class="card h-100 shadow-sm border-0 rounded-4">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <div class="text-primary fw-bold subscriber-name" style="cursor: pointer; font-size: 1.05rem;"></div>
+                        <small class="text-muted subscriber-phone d-block mt-1"></small>
+                    </div>
+                    <span class="badge rounded-pill balance-badge px-2 py-2"></span>
+                </div>
+
+                <div class="small text-secondary mb-2">
+                    <i class="fa-solid fa-location-dot me-1"></i>
+                    <span class="area-name"></span>
+                </div>
+
+                <div class="small text-muted mb-3 promise-date"></div>
+
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-success flex-fill fw-bold renew-btn">تجديد</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary flex-fill fw-bold payment-btn">تسديد</button>
+                </div>
+            </div>
+        </div>
     `;
 
-    tr.querySelector('.sub-id').textContent = sub.id;
+    card.querySelector('.subscriber-name').textContent = sub.name || '-';
+    card.querySelector('.subscriber-name').addEventListener('click', () => showSubscriberDetails(sub.id));
+    card.querySelector('.subscriber-phone').textContent = `📞 ${phone}`;
+    card.querySelector('.area-name').textContent = area;
 
-    const nameEl = tr.querySelector('.subscriber-name');
-    nameEl.textContent = sub.name || '-';
-    nameEl.addEventListener('click', () => showSubscriberDetails(sub.id));
+    const balanceBadge = card.querySelector('.balance-badge');
+    balanceBadge.textContent = isDebt ? `دين ${Math.abs(balanceValue).toLocaleString()}` : `رصيد ${balanceValue.toLocaleString()}`;
+    balanceBadge.classList.add(isDebt ? 'bg-danger' : 'bg-success');
 
-    const phoneEl = tr.querySelector('.subscriber-phone');
-    const phone = sub.phone_number || sub.phone || 'لا يوجد رقم';
-    phoneEl.textContent = `📞 ${phone}`;
-
-    tr.querySelector('.area-name').textContent = sub.area_name || sub.area_id || '-';
-
-    const balanceBadge = tr.querySelector('.balance-badge');
-    const balanceValue = Number(sub.balance || 0);
-    const balanceLabel = balanceValue < 0 ? 'دين' : 'رصيد';
-    balanceBadge.textContent = `${balanceLabel}: ${balanceValue.toLocaleString()}`;
-    balanceBadge.classList.add(balanceValue < 0 ? 'bg-danger' : 'bg-success');
-
-    const promiseDateEl = tr.querySelector('.promise-date');
-    promiseDateEl.textContent = sub.promise_date && sub.promise_date !== 'None' ? `🗓️ وعد: ${sub.promise_date}` : '🗓️ لا يوجد وعد';
-
-    tr.querySelector('.renew-btn').addEventListener('click', () => openModal(sub.id, sub.name, 'renewal', sub.balance));
-    tr.querySelector('.payment-btn').addEventListener('click', () => openModal(sub.id, sub.name, 'payment', sub.balance));
-    return tr;
+    card.querySelector('.promise-date').textContent = promiseText;
+    card.querySelector('.renew-btn').addEventListener('click', () => openModal(sub.id, sub.name, 'renewal', sub.balance));
+    card.querySelector('.payment-btn').addEventListener('click', () => openModal(sub.id, sub.name, 'payment', sub.balance));
+    return card;
 }
 
 function renderTable(list) {
     dom.subscribersTableBody.innerHTML = '';
     if (!list.length) {
-        dom.subscribersTableBody.innerHTML = '<tr><td colspan="5" class="text-muted p-4">لا توجد بيانات للعرض</td></tr>';
+        dom.subscribersTableBody.innerHTML = '<div class="col-12 text-muted p-4 text-center">لا توجد بيانات للعرض</div>';
         return;
     }
     list.forEach((sub) => {
