@@ -227,6 +227,36 @@ function normalizeRole(role) {
     return typeof role === 'string' ? role.trim().toLowerCase() : '';
 }
 
+async function copyPhoneToClipboard(phone) {
+    if (!phone || phone === 'لا يوجد رقم') return false;
+
+    const cleanPhone = String(phone).trim();
+
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(cleanPhone);
+        } else {
+            const tempInput = document.createElement('textarea');
+            tempInput.value = cleanPhone;
+            tempInput.setAttribute('readonly', '');
+            tempInput.style.position = 'fixed';
+            tempInput.style.left = '-9999px';
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+        }
+
+        if (window.matchMedia('(pointer: coarse)').matches) {
+            window.location.href = `tel:${cleanPhone}`;
+        }
+        return true;
+    } catch (error) {
+        console.error('Copy phone failed:', error);
+        return false;
+    }
+}
+
 function decodeJwtRole(token) {
     if (!token) return '';
     try {
@@ -556,6 +586,7 @@ function createSubscriberRow(sub) {
     const phone = sub.phone_number || sub.phone || 'لا يوجد رقم';
     const area = sub.area_name || sub.area_id || 'غير محدد';
     const promiseText = sub.promise_date && sub.promise_date !== 'None' ? `🗓️ ${sub.promise_date}` : '🗓️ لا يوجد وعد';
+    const notes = sub.notes && String(sub.notes).trim() ? String(sub.notes).trim() : 'لا توجد ملاحظات';
 
     card.innerHTML = `
         <div class="card h-100 shadow-sm border-0 rounded-4">
@@ -573,7 +604,8 @@ function createSubscriberRow(sub) {
                     <span class="area-name"></span>
                 </div>
 
-                <div class="small text-muted mb-3 promise-date"></div>
+                <div class="small text-muted mb-2 promise-date"></div>
+                <div class="small text-warning mb-3 subscriber-notes"></div>
 
                 <div class="d-flex gap-2">
                     <button type="button" class="btn btn-sm btn-outline-success flex-fill fw-bold renew-btn">تجديد</button>
@@ -583,9 +615,17 @@ function createSubscriberRow(sub) {
         </div>
     `;
 
+    const phoneEl = card.querySelector('.subscriber-phone');
+    phoneEl.textContent = `📞 ${phone}`;
+    phoneEl.style.cursor = 'pointer';
+    phoneEl.title = 'انقر لنسخ الرقم';
+    phoneEl.addEventListener('click', async () => {
+        const copied = await copyPhoneToClipboard(phone);
+        showAlert(copied ? 'تم نسخ رقم الهاتف بنجاح' : 'لا يمكن نسخ الرقم الآن', copied ? 'success' : 'warning');
+    });
+
     card.querySelector('.subscriber-name').textContent = sub.name || '-';
     card.querySelector('.subscriber-name').addEventListener('click', () => showSubscriberDetails(sub.id));
-    card.querySelector('.subscriber-phone').textContent = `📞 ${phone}`;
     card.querySelector('.area-name').textContent = area;
 
     const balanceBadge = card.querySelector('.balance-badge');
@@ -593,6 +633,7 @@ function createSubscriberRow(sub) {
     balanceBadge.classList.add(isDebt ? 'bg-danger' : 'bg-success');
 
     card.querySelector('.promise-date').textContent = promiseText;
+    card.querySelector('.subscriber-notes').textContent = `📝 ${notes}`;
     card.querySelector('.renew-btn').addEventListener('click', () => openModal(sub.id, sub.name, 'renewal', sub.balance));
     card.querySelector('.payment-btn').addEventListener('click', () => openModal(sub.id, sub.name, 'payment', sub.balance));
     return card;
