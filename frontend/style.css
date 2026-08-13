@@ -6,30 +6,32 @@
 
 .side-tabs {
     display: flex;
-    flex-direction: column;
-    width: 86px;
-    gap: 0.8rem;
+    flex-direction: row;
+    width: auto;
+    gap: 0.5rem;
     margin-bottom: 1rem;
-    padding-top: 0.5rem;
-    min-height: 420px;
+    padding-top: 0.2rem;
+    min-height: auto;
     justify-content: flex-start;
+    flex-wrap: wrap;
 }
 
-.side-tabs .nav-item { width: 100%; }
+.side-tabs .nav-item { width: auto; }
 .side-tabs .nav-link {
-    width: 100%;
+    width: auto;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 64px;
-    padding: 0.9rem 0.5rem;
+    min-height: 44px;
+    min-width: 52px;
+    padding: 0.7rem 0.9rem;
     font-weight: 600;
     color: #495057;
     cursor: pointer;
     border: 1px solid transparent;
-    border-radius: 14px;
+    border-radius: 12px;
     background: #fff;
-    font-size: 1.4rem;
+    font-size: 1.25rem;
 }
 .side-tabs .nav-link.active {
     color: #0d6efd;
