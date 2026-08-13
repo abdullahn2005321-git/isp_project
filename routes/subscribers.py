@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from models import db, Area, Subscriber
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from datetime import date
@@ -125,10 +126,21 @@ def get_subscribers():
 
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 50, type=int)
+        search = request.args.get('search', '', type=str)
 
-        pagination = Subscriber.query.join(Area).options(joinedload(Subscriber.area))\
-                                     .filter(Area.admin_id == admin_id, Subscriber.is_active == True)\
-                                     .paginate(page=page, per_page=per_page, error_out=False)
+        query = Subscriber.query.join(Area).options(joinedload(Subscriber.area))\
+                                     .filter(Area.admin_id == admin_id, Subscriber.is_active == True)
+
+        if search and search.strip():
+            search_term = f"%{search.strip()}%"
+            query = query.filter(
+                or_(
+                    Subscriber.name.ilike(search_term),
+                    Subscriber.phone_number.ilike(search_term)
+                )
+            )
+
+        pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
         sub_list = []
         for subscriber in pagination.items:

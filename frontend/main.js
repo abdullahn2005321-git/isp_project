@@ -379,10 +379,10 @@ function registerEventListeners() {
     dom.quickPromiseInput.addEventListener('change', quickUpdatePromise);
     dom.fullDebtBtn.addEventListener('click', setFullDebtAmount);
     dom.btnPrevPage.addEventListener('click', () => {
-        if (currentSubscriberPage > 1) loadSubscribers(currentSubscriberPage - 1);
+        if (currentSubscriberPage > 1) loadSubscribers(currentSubscriberPage - 1, dom.searchInput.value.trim());
     });
     dom.btnNextPage.addEventListener('click', () => {
-        if (currentSubscriberPage < totalSubscriberPages) loadSubscribers(currentSubscriberPage + 1);
+        if (currentSubscriberPage < totalSubscriberPages) loadSubscribers(currentSubscriberPage + 1, dom.searchInput.value.trim());
     });
     if (dom.btnPrevLogsPage) {
         dom.btnPrevLogsPage.addEventListener('click', () => {
@@ -512,9 +512,19 @@ async function submitNewArea() {
     }
 }
 
-async function loadSubscribers(page = 1) {
+async function loadSubscribers(page = 1, searchQuery = '') {
     try {
-        const data = await apiCall(`/subscribers?page=${page}&per_page=${subscribersPerPage}`);
+        const params = new URLSearchParams({
+            page: String(page),
+            per_page: String(subscribersPerPage)
+        });
+
+        const trimmedQuery = (searchQuery || '').trim();
+        if (trimmedQuery) {
+            params.set('search', trimmedQuery);
+        }
+
+        const data = await apiCall(`/subscribers?${params.toString()}`);
         if (!data || data.status !== 'success') return;
         const subscribersList = (data.subscribers || []).map(normalizeSubscriber);
         allSubscribers = subscribersList;
@@ -533,17 +543,8 @@ async function loadSubscribers(page = 1) {
 }
 
 function filterSubscribers() {
-    const query = dom.searchInput.value.toLowerCase().trim();
-    if (!query) {
-        renderTable(allSubscribers);
-        return;
-    }
-    const filtered = allSubscribers.filter((sub) => {
-        const nameMatch = sub.name && sub.name.toLowerCase().includes(query);
-        const phoneMatch = (sub.phone_number || '').includes(query);
-        return nameMatch || phoneMatch;
-    });
-    renderTable(filtered);
+    const query = dom.searchInput.value.trim();
+    loadSubscribers(1, query);
 }
 
 function createSubscriberRow(sub) {
