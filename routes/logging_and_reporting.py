@@ -72,9 +72,14 @@ def get_logs():
         claims = get_jwt()
         admin_id = claims.get("admin_id")
 
-        transaction = Transaction.query.join(Subscriber).join(Area).filter(
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 100, type=int)
+
+        paginated_transactions = Transaction.query.join(Subscriber).join(Area).filter(
             Area.admin_id == admin_id,
-        ).order_by(Transaction.transaction_date.desc()).limit(50).all()
+        ).order_by(Transaction.transaction_date.desc()).paginate(page=page, per_page=per_page, error_out=False)
+
+        transaction = paginated_transactions.items
 
 
         logs = []
@@ -92,7 +97,15 @@ def get_logs():
 
         return jsonify({
             "status": "success",
-            "logs": logs
+            "logs": logs,
+            "pagination": {
+                "current_page": paginated_transactions.page,
+                "per_page": paginated_transactions.per_page,
+                "total_items": paginated_transactions.total,
+                "total_pages": paginated_transactions.pages,
+                "has_next": paginated_transactions.has_next,
+                "has_prev": paginated_transactions.has_prev
+            }
         }), 200
     
     except Exception as e:

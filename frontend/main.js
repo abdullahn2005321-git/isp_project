@@ -24,10 +24,13 @@ let allAreas = [];
 let currentSubscriberDebt = 0;
 let currentSubscriberPage = 1;
 let totalSubscriberPages = 1;
+let currentLogsPage = 1;
+let totalLogsPages = 1;
 let currentLogFilter = 'الكل';
 let logFilterStartDate = '';
 let logFilterEndDate = '';
 const subscribersPerPage = 50;
+const logsPerPage = 100;
 
 const dom = {
     loginPage: document.getElementById('loginPage'),
@@ -96,7 +99,10 @@ const dom = {
     areasTableBody: document.getElementById('areas-table-body'),
     subscriberPageInfo: document.getElementById('subscriberPageInfo'),
     btnPrevPage: document.getElementById('btn-prev-page'),
-    btnNextPage: document.getElementById('btn-next-page')
+    btnNextPage: document.getElementById('btn-next-page'),
+    logsPageInfo: document.getElementById('logsPageInfo'),
+    btnPrevLogsPage: document.getElementById('btn-prev-logs-page'),
+    btnNextLogsPage: document.getElementById('btn-next-logs-page')
 };
 
 function buildUrl(endpoint) {
@@ -116,6 +122,26 @@ function normalizeSubscriber(sub) {
         area: sub.area ?? sub.area_name ?? '',
         promise_date: sub.promise_date ?? '',
         notes: sub.notes ?? ''
+    };
+}
+
+function normalizeLog(log) {
+    if (!log || typeof log !== 'object') return null;
+
+    const rawType = String(log.type ?? log.transaction_type ?? '').toLowerCase();
+    const normalizedType = rawType === 'payment' || rawType === 'تسديد'
+        ? 'تسديد'
+        : rawType === 'renewal' || rawType === 'تجديد'
+            ? 'تجديد'
+            : (log.type || 'غير معروف');
+
+    const amountValue = Number(log.amount ?? log.value ?? 0);
+
+    return {
+        type: normalizedType,
+        subscriber_name: log.subscriber_name ?? log.subscriber ?? log.name ?? 'غير معروف',
+        amount: Number.isFinite(amountValue) ? amountValue : 0,
+        date: log.date ?? log.transaction_date ?? ''
     };
 }
 
@@ -358,6 +384,16 @@ function registerEventListeners() {
     dom.btnNextPage.addEventListener('click', () => {
         if (currentSubscriberPage < totalSubscriberPages) loadSubscribers(currentSubscriberPage + 1);
     });
+    if (dom.btnPrevLogsPage) {
+        dom.btnPrevLogsPage.addEventListener('click', () => {
+            if (currentLogsPage > 1) loadLogs(currentLogsPage - 1);
+        });
+    }
+    if (dom.btnNextLogsPage) {
+        dom.btnNextLogsPage.addEventListener('click', () => {
+            if (currentLogsPage < totalLogsPages) loadLogs(currentLogsPage + 1);
+        });
+    }
     document.querySelectorAll('[data-quick-amount]').forEach((button) => {
         button.addEventListener('click', () => setQuickAmount(parseInt(button.dataset.quickAmount, 10)));
     });
@@ -762,12 +798,31 @@ async function loadPromisesToday() {
     }
 }
 
-async function loadLogs() {
+async function loadLogs(page = 1) {
     try {
-        const data = await apiCall('/logs');
+        const data = await apiCall(`/logs?page=${page}&per_page=${logsPerPage}`);
         if (!data) return;
         if (data.status === 'success') {
-            allLogs = data.logs;
+            const rawLogs = Array.isArray(data.logs)
+                ? data.logs
+                : (Array.isArray(data.items) ? data.items : []);
+
+            allLogs = rawLogs
+                .map(normalizeLog)
+                .filter((log) => log !== null);
+
+            currentLogsPage = data.pagination?.current_page || page;
+            totalLogsPages = data.pagination?.total_pages || 1;
+            if (dom.logsPageInfo) {
+                dom.logsPageInfo.innerText = `صفحة ${currentLogsPage} من ${totalLogsPages}`;
+            }
+            if (dom.btnPrevLogsPage) {
+                dom.btnPrevLogsPage.disabled = currentLogsPage <= 1;
+            }
+            if (dom.btnNextLogsPage) {
+                dom.btnNextLogsPage.disabled = currentLogsPage >= totalLogsPages;
+            }
+
             currentLogFilter = 'الكل';
             updateLogFilterButtonLabel();
             renderLogsTable(allLogs);
@@ -786,14 +841,15 @@ function renderLogsTable(logsArray) {
         return;
     }
     logsArray.forEach((log) => {
-        const badgeClass = log.type === 'تسديد' ? 'bg-primary' : 'bg-success';
-        const icon = log.type === 'تسديد' ? 'fa-hand-holding-dollar' : 'fa-wifi';
+        const badgeClass = log.type === 'تسديد' ? 'bg-primary' : (log.type === 'تجديد' ? 'bg-success' : 'bg-secondary');
+        const icon = log.type === 'تسديد' ? 'fa-hand-holding-dollar' : (log.type === 'تجديد' ? 'fa-wifi' : 'fa-circle-info');
+        const displayDate = String(log.date || '').replace('T', ' ').slice(0, 19);
         dom.logsTableBody.innerHTML += `
             <tr>
-                <td dir="ltr" class="text-muted small">${log.date}</td>
+                <td dir="ltr" class="text-muted small">${displayDate}</td>
                 <td class="fw-bold text-dark">${log.subscriber_name}</td>
                 <td><span class="badge ${badgeClass} fs-6"><i class="fa-solid ${icon}"></i> ${log.type}</span></td>
-                <td class="fw-bold fs-6">${log.amount.toLocaleString()} د.ع</td>
+                <td class="fw-bold fs-6">${Number(log.amount || 0).toLocaleString()} د.ع</td>
             </tr>
         `;
     });
@@ -810,7 +866,8 @@ function filterLogs(filterType) {
     updateLogFilterButtonLabel();
 
     const filteredLogs = allLogs.filter((log) => {
-        const logDate = log.date ? log.date.split(' ')[0] : '';
+        const dateText = String(log.date || '');
+        const logDate = dateText.includes('T') ? dateText.split('T')[0] : dateText.split(' ')[0];
         const matchesType = filterType === 'الكل' || log.type === filterType;
         const matchesStart = !logFilterStartDate || logDate >= logFilterStartDate;
         const matchesEnd = !logFilterEndDate || logDate <= logFilterEndDate;
