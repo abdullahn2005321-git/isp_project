@@ -7,9 +7,12 @@
 .side-tabs {
     display: flex;
     flex-direction: column;
-    width: 78px;
-    gap: 0.5rem;
+    width: 86px;
+    gap: 0.8rem;
     margin-bottom: 1rem;
+    padding-top: 0.5rem;
+    min-height: 420px;
+    justify-content: flex-start;
 }
 
 .side-tabs .nav-item { width: 100%; }
@@ -18,14 +21,15 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 48px;
-    padding: 0.7rem 0.4rem;
+    min-height: 64px;
+    padding: 0.9rem 0.5rem;
     font-weight: 600;
     color: #495057;
     cursor: pointer;
     border: 1px solid transparent;
-    border-radius: 12px;
+    border-radius: 14px;
     background: #fff;
+    font-size: 1.4rem;
 }
 .side-tabs .nav-link.active {
     color: #0d6efd;
