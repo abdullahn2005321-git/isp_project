@@ -103,7 +103,6 @@
                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
                         <h5 class="m-0 text-secondary"><i class="fa-solid fa-list"></i> إدارة المشتركين</h5>
                         <div>
-                            <button type="button" class="btn btn-warning btn-sm fw-bold me-2 shadow-sm" id="btn-today-promises"><i class="fa-solid fa-bell"></i> وعود اليوم</button>
                             <button type="button" class="btn btn-primary btn-sm shadow-sm" id="btn-add-subscriber"><i class="fa-solid fa-user-plus"></i> مشترك جديد</button>
                         </div>
                     </div>
@@ -336,10 +335,6 @@
                             <span id="detail-phone" class="fw-bold" dir="ltr">-</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span><i class="fa-solid fa-building text-muted"></i> الشركة الأم</span>
-                            <span id="detail-parent-company" class="fw-bold text-secondary">-</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span><i class="fa-solid fa-wallet text-muted"></i> الرصيد الحالي</span>
                             <span id="detail-balance" class="fw-bold fs-5">-</span>
                         </li>
@@ -401,10 +396,6 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary">الشركة الأم (ID)</label>
-                                <input type="text" class="form-control" id="editParentCompany">
-                            </div>
-                            <div class="col-md-6">
                                 <label class="form-label fw-bold text-secondary">وعد سداد</label>
                                 <input type="date" class="form-control" id="editPromiseDate">
                             </div>
@@ -446,18 +437,6 @@
                                 <select class="form-select" id="addAreaId" required>
                                     <option value="" disabled selected>جاري التحميل...</option>
                                 </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary">الرصيد الأولي (إن وجد)</label>
-                                <input type="number" class="form-control" id="addBalance" value="0" placeholder="ديون أو رصيد مدفوع">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary">الشركة الأم (ID)</label>
-                                <input type="text" class="form-control" id="addParentCompany">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary">وعد سداد (إن كان مديوناً)</label>
-                                <input type="date" class="form-control" id="addPromiseDate">
                             </div>
                             <div class="col-12">
                                 <label class="form-label fw-bold text-secondary">ملاحظات عامة</label>

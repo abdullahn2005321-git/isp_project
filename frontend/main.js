@@ -105,7 +105,6 @@ const dom = {
     detailId: document.getElementById('detail-id'),
     detailArea: document.getElementById('detail-area'),
     detailPhone: document.getElementById('detail-phone'),
-    detailParentCompany: document.getElementById('detail-parent-company'),
     detailBalance: document.getElementById('detail-balance'),
     detailNotes: document.getElementById('detail-notes'),
     areasTableBody: document.getElementById('areas-table-body'),
@@ -457,7 +456,9 @@ function registerEventListeners() {
     if (dom.btnResetSubscriberFilters) {
         dom.btnResetSubscriberFilters.addEventListener('click', resetSubscriberFilters);
     }
-    dom.btnTodayPromises.addEventListener('click', loadPromisesToday);
+    if (dom.btnTodayPromises) {
+        dom.btnTodayPromises.addEventListener('click', loadPromisesToday);
+    }
     dom.btnAddSubscriber.addEventListener('click', openAddSubscriberModal);
     dom.btnAddArea.addEventListener('click', () => addAreaModal.show());
     dom.btnSaveArea.addEventListener('click', submitNewArea);
@@ -490,7 +491,9 @@ function registerEventListeners() {
         if (selectedSubscriberId !== null) deleteSubscriber(selectedSubscriberId);
     });
     dom.btnEditSub.addEventListener('click', () => {
-        if (selectedSubscriberData) openEditModal(selectedSubscriberData);
+            if (selectedSubscriberData || selectedSubscriberId !== null) {
+                openSubscriberEditor(selectedSubscriberId, selectedSubscriberData);
+            }
     });
     dom.btnSaveEdit.addEventListener('click', submitEditSubscriber);
     dom.btnSaveNew.addEventListener('click', submitNewSubscriber);
@@ -728,8 +731,10 @@ function createSubscriberRow(sub) {
         showAlert(copied ? 'تم نسخ رقم الهاتف بنجاح' : 'لا يمكن نسخ الرقم الآن', copied ? 'success' : 'warning');
     });
 
-    card.querySelector('.subscriber-name').textContent = sub.name || '-';
-    card.querySelector('.subscriber-name').addEventListener('click', () => showSubscriberDetails(sub.id));
+    const subscriberNameEl = card.querySelector('.subscriber-name');
+    subscriberNameEl.textContent = sub.name || '-';
+    subscriberNameEl.title = 'انقر لتعديل بيانات المشترك';
+    subscriberNameEl.addEventListener('click', () => openSubscriberEditor(sub.id, sub));
     card.querySelector('.area-name').textContent = area;
     card.querySelector('.last-renewal-date').textContent = lastRenewalText;
 
@@ -813,9 +818,6 @@ async function submitNewSubscriber() {
     const name = document.getElementById('addName').value.trim();
     const phone = document.getElementById('addPhone').value.trim();
     const areaId = dom.addAreaId.value;
-    const balance = document.getElementById('addBalance').value || 0;
-    const parentCompany = document.getElementById('addParentCompany').value.trim();
-    const promiseDate = document.getElementById('addPromiseDate').value;
     const notes = document.getElementById('addNotes').value.trim();
     if (!name || !phone || !areaId) {
         showAlert('يرجى تعبئة الحقول الإجبارية (الاسم، الهاتف، المنطقة)!');
@@ -825,8 +827,6 @@ async function submitNewSubscriber() {
         name,
         phone_number: phone,
         area_id: parseInt(areaId, 10),
-        balance: parseFloat(balance),
-        promise_date: promiseDate || null,
         notes
     };
     try {
@@ -852,7 +852,6 @@ async function showSubscriberDetails(subscriberId) {
     dom.detailId.innerText = `ID: ${subscriberId}`;
     dom.detailArea.innerText = '-';
     dom.detailPhone.innerText = '-';
-    dom.detailParentCompany.innerText = '-';
     dom.detailBalance.innerText = '-';
     dom.quickPromiseInput.value = '';
     dom.detailNotes.innerText = 'جاري جلب الملاحظات...';
@@ -870,7 +869,6 @@ async function showSubscriberDetails(subscriberId) {
         selectedSubscriberData = sub;
         dom.detailName.innerText = sub.name;
         dom.detailArea.innerText = sub.area_name || sub.area || '-';
-        dom.detailParentCompany.innerText = '—';
         dom.detailBalance.innerText = `${sub.balance.toLocaleString()} د.ع`;
         dom.detailBalance.className = sub.balance < 0 ? 'fw-bold fs-5 text-danger' : 'fw-bold fs-5 text-success';
         dom.quickPromiseInput.value = sub.promise_date && sub.promise_date !== 'None' ? sub.promise_date.substring(0, 10) : '';
@@ -890,6 +888,42 @@ async function showSubscriberDetails(subscriberId) {
     } catch (error) {
         console.error('خطأ:', error);
         dom.detailName.innerText = '❌ خطأ في الاتصال';
+    }
+}
+
+async function openSubscriberEditor(subscriberId, fallbackSub = null) {
+    const fallbackNormalized = fallbackSub ? normalizeSubscriber(fallbackSub) : null;
+
+    if (!subscriberId && fallbackNormalized) {
+        openEditModal(fallbackNormalized);
+        return;
+    }
+
+    try {
+        const data = await apiCall(`/subscribers/${subscriberId}`);
+        if (!data || data.status !== 'success') {
+            if (fallbackNormalized) {
+                openEditModal(fallbackNormalized);
+                return;
+            }
+
+            showAlert(data ? data.message : 'تعذر جلب بيانات المشترك للتعديل.');
+            return;
+        }
+
+        const normalizedSub = normalizeSubscriber(data.subscriber);
+        selectedSubscriberId = normalizedSub.id;
+        selectedSubscriberData = normalizedSub;
+        openEditModal(normalizedSub);
+    } catch (error) {
+        console.error('خطأ في فتح نموذج التعديل:', error);
+
+        if (fallbackNormalized) {
+            openEditModal(fallbackNormalized);
+            return;
+        }
+
+        showAlert('تعذر فتح نموذج التعديل حالياً.');
     }
 }
 
@@ -1153,11 +1187,10 @@ function copySubscriberDetails() {
     const name = dom.detailName.innerText;
     const area = dom.detailArea.innerText;
     const phone = dom.detailPhone.innerText;
-    const parentCompany = dom.detailParentCompany.innerText;
     const balance = dom.detailBalance.innerText;
     const promiseDate = dom.quickPromiseInput.value || 'لا يوجد';
     const notes = dom.detailNotes.innerText;
-    const textToCopy = `ID: ${id}\nالاسم: ${name}\nالمنطقة: ${area}\nرقم الهاتف: ${phone}\nالشركة الأم: ${parentCompany}\nالرصيد الحالي: ${balance}\nوعد التسديد: ${promiseDate}\nملاحظات: ${notes}`;
+    const textToCopy = `ID: ${id}\nالاسم: ${name}\nالمنطقة: ${area}\nرقم الهاتف: ${phone}\nالرصيد الحالي: ${balance}\nوعد التسديد: ${promiseDate}\nملاحظات: ${notes}`;
     navigator.clipboard.writeText(textToCopy)
         .then(() => showAlert('تم نسخ معلومات المشترك إلى الحافظة.'))
         .catch((error) => {
