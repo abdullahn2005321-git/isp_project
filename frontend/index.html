@@ -316,39 +316,68 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-light pb-2">
-                    <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-id-card text-primary"></i> بطاقة المشترك</h5>
+                    <h5 class="modal-title fw-bold text-dark" id="detailModalTitle"><i class="fa-solid fa-id-card text-primary"></i> بطاقة المشترك</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="text-center mb-4">
-                        <div class="display-1 text-secondary mb-2"><i class="fa-solid fa-circle-user"></i></div>
-                        <h4 id="detail-name" class="fw-bold text-primary mb-0">جاري التحميل...</h4>
-                        <span id="detail-id" class="badge bg-secondary mt-1">ID: -</span>
-                    </div>
-                    <ul class="list-group list-group-flush shadow-sm rounded">
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span><i class="fa-solid fa-location-dot text-muted"></i> المنطقة</span>
-                            <span id="detail-area" class="fw-bold">-</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span><i class="fa-solid fa-phone text-muted"></i> رقم الهاتف</span>
-                            <span id="detail-phone" class="fw-bold" dir="ltr">-</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span><i class="fa-solid fa-wallet text-muted"></i> الرصيد الحالي</span>
-                            <span id="detail-balance" class="fw-bold fs-5">-</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center bg-light">
-                            <span><i class="fa-solid fa-calendar-check text-warning"></i> وعد التسديد</span>
-                            <div class="d-flex align-items-center gap-2">
-                                <input type="date" class="form-control form-control-sm border-0 bg-transparent text-danger fw-bold" id="quick-detail-promise">
+                        <div id="subscriberDetailView">
+                            <div class="text-center mb-4">
+                                <div class="display-1 text-secondary mb-2"><i class="fa-solid fa-circle-user"></i></div>
+                                <h4 id="detail-name" class="fw-bold text-primary mb-0">جاري التحميل...</h4>
+                                <span id="detail-id" class="badge bg-secondary mt-1">ID: -</span>
                             </div>
-                        </li>
-                    </ul>
-                    <div class="card bg-light border-0 shadow-sm p-3 rounded mt-3">
-                        <h6 class="fw-bold text-secondary mb-2" style="font-size: 14px;"><i class="fa-solid fa-comment-dots"></i> ملاحظات المشترك:</h6>
-                        <p id="detail-notes" class="m-0 text-dark small" style="white-space: pre-line; line-height: 1.5;">لا توجد ملاحظات مسجلة.</p>
-                    </div>
+                            <ul class="list-group list-group-flush shadow-sm rounded">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="fa-solid fa-location-dot text-muted"></i> المنطقة</span>
+                                    <span id="detail-area" class="fw-bold">-</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="fa-solid fa-phone text-muted"></i> رقم الهاتف</span>
+                                    <span id="detail-phone" class="fw-bold" dir="ltr">-</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="fa-solid fa-wallet text-muted"></i> الرصيد الحالي</span>
+                                    <span id="detail-balance" class="fw-bold fs-5">-</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center bg-light">
+                                    <span><i class="fa-solid fa-calendar-check text-warning"></i> وعد التسديد</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="date" class="form-control form-control-sm border-0 bg-transparent text-danger fw-bold" id="quick-detail-promise">
+                                    </div>
+                                </li>
+                            </ul>
+                            <div class="card bg-light border-0 shadow-sm p-3 rounded mt-3">
+                                <h6 class="fw-bold text-secondary mb-2" style="font-size: 14px;"><i class="fa-solid fa-comment-dots"></i> ملاحظات المشترك:</h6>
+                                <p id="detail-notes" class="m-0 text-dark small" style="white-space: pre-line; line-height: 1.5;">لا توجد ملاحظات مسجلة.</p>
+                            </div>
+                        </div>
+                        <form id="editSubscriberForm" class="d-none">
+                            <input type="hidden" id="editSubId">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-secondary">الاسم الكامل</label>
+                                    <input type="text" class="form-control" id="editName" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-secondary">رقم الهاتف</label>
+                                    <input type="text" class="form-control" id="editPhone" dir="ltr" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-secondary">المنطقة *</label>
+                                    <select class="form-select" id="editAreaId" required>
+                                        <option value="" disabled selected>جاري التحميل...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-secondary">وعد سداد</label>
+                                    <input type="date" class="form-control" id="editPromiseDate">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold text-secondary">ملاحظات عامة</label>
+                                    <textarea class="form-control" id="editNotes" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </form>
                 </div>
                 <div class="modal-footer border-0 d-flex justify-content-between align-items-center">
                     <div>
@@ -360,55 +389,13 @@
                         </button>
                     </div>
                     <div>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                        <button type="button" class="btn btn-secondary" id="btn-close-details" data-bs-dismiss="modal">إغلاق</button>
+                        <button type="button" class="btn btn-outline-secondary d-none" id="btn-cancel-inline-edit">إلغاء</button>
+                        <button type="button" class="btn btn-primary fw-bold px-4 d-none" id="btn-save-edit">حفظ التعديلات</button>
                         <button type="button" class="btn btn-primary" id="btn-edit-sub">
                             <i class="fa-solid fa-pen-to-square"></i> تعديل البيانات
                         </button>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="editSubscriberModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white pb-2">
-                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square"></i> تعديل بيانات المشترك</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body bg-light">
-                    <form id="editSubscriberForm">
-                        <input type="hidden" id="editSubId">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary">الاسم الكامل</label>
-                                <input type="text" class="form-control" id="editName" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary">رقم الهاتف</label>
-                                <input type="text" class="form-control" id="editPhone" dir="ltr" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary">المنطقة *</label>
-                                <select class="form-select" id="editAreaId" required>
-                                    <option value="" disabled selected>جاري التحميل...</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary">وعد سداد</label>
-                                <input type="date" class="form-control" id="editPromiseDate">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label fw-bold text-secondary">ملاحظات عامة</label>
-                                <textarea class="form-control" id="editNotes" rows="2"></textarea>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="button" class="btn btn-primary fw-bold px-4" id="btn-save-edit">حفظ التعديلات</button>
                 </div>
             </div>
         </div>

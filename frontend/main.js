@@ -12,12 +12,12 @@ const API_URL = (() => {
 
 let actionModal;
 let addSubModal;
-let editSubModal;
 let addAreaModal;
 let addStaffModal;
 let logFilterModal;
 let selectedSubscriberId = null;
 let selectedSubscriberData = null;
+let isInlineEditingSubscriber = false;
 let allSubscribers = [];
 let allLogs = [];
 let allAreas = [];
@@ -88,6 +88,8 @@ const dom = {
     btnCopyDetails: document.getElementById('btn-copy-details'),
     btnDeleteSub: document.getElementById('btn-delete-sub'),
     btnEditSub: document.getElementById('btn-edit-sub'),
+    btnCloseDetails: document.getElementById('btn-close-details'),
+    btnCancelInlineEdit: document.getElementById('btn-cancel-inline-edit'),
     btnSaveEdit: document.getElementById('btn-save-edit'),
     btnSaveNew: document.getElementById('btn-save-new'),
     confirmBtn: document.getElementById('confirmBtn'),
@@ -101,6 +103,9 @@ const dom = {
     editSubscriberForm: document.getElementById('editSubscriberForm'),
     addAreaId: document.getElementById('addAreaId'),
     editAreaId: document.getElementById('editAreaId'),
+    subscriberDetailView: document.getElementById('subscriberDetailView'),
+    detailModalTitle: document.getElementById('detailModalTitle'),
+    detailsModalContent: document.querySelector('#detailsModal .modal-content'),
     detailName: document.getElementById('detail-name'),
     detailId: document.getElementById('detail-id'),
     detailArea: document.getElementById('detail-area'),
@@ -344,12 +349,23 @@ function showApp() {
 function initPage() {
     actionModal = new bootstrap.Modal(document.getElementById('actionModal'));
     addSubModal = new bootstrap.Modal(document.getElementById('addSubscriberModal'));
-    editSubModal = new bootstrap.Modal(document.getElementById('editSubscriberModal'));
     addAreaModal = new bootstrap.Modal(document.getElementById('addAreaModal'));
     addStaffModal = new bootstrap.Modal(document.getElementById('addStaffModal'));
     logFilterModal = new bootstrap.Modal(document.getElementById('logFilterModal'));
     registerEventListeners();
     loadInitialState();
+}
+
+function setDetailsModalMode(isEditing) {
+    if (dom.detailsModalContent) {
+        dom.detailsModalContent.classList.toggle('is-editing', Boolean(isEditing));
+    }
+
+    if (dom.detailModalTitle) {
+        dom.detailModalTitle.innerHTML = isEditing
+            ? '<i class="fa-solid fa-pen-to-square text-primary"></i> تعديل بيانات المشترك'
+            : '<i class="fa-solid fa-id-card text-primary"></i> بطاقة المشترك';
+    }
 }
 
 function syncSubscriberFiltersFromDom() {
@@ -491,10 +507,17 @@ function registerEventListeners() {
         if (selectedSubscriberId !== null) deleteSubscriber(selectedSubscriberId);
     });
     dom.btnEditSub.addEventListener('click', () => {
-            if (selectedSubscriberData || selectedSubscriberId !== null) {
-                openSubscriberEditor(selectedSubscriberId, selectedSubscriberData);
-            }
+        if (selectedSubscriberData) {
+            enterInlineEditMode(selectedSubscriberData);
+        }
     });
+    if (dom.btnCancelInlineEdit) {
+        dom.btnCancelInlineEdit.addEventListener('click', exitInlineEditMode);
+    }
+    const detailsModalEl = document.getElementById('detailsModal');
+    if (detailsModalEl) {
+        detailsModalEl.addEventListener('hidden.bs.modal', () => exitInlineEditMode({ preserveSelection: true }));
+    }
     dom.btnSaveEdit.addEventListener('click', submitEditSubscriber);
     dom.btnSaveNew.addEventListener('click', submitNewSubscriber);
     dom.confirmBtn.addEventListener('click', submitAction);
@@ -733,8 +756,8 @@ function createSubscriberRow(sub) {
 
     const subscriberNameEl = card.querySelector('.subscriber-name');
     subscriberNameEl.textContent = sub.name || '-';
-    subscriberNameEl.title = 'انقر لتعديل بيانات المشترك';
-    subscriberNameEl.addEventListener('click', () => openSubscriberEditor(sub.id, sub));
+    subscriberNameEl.title = 'انقر لعرض بطاقة المشترك';
+    subscriberNameEl.addEventListener('click', () => showSubscriberDetails(sub.id));
     card.querySelector('.area-name').textContent = area;
     card.querySelector('.last-renewal-date').textContent = lastRenewalText;
 
@@ -848,6 +871,7 @@ async function submitNewSubscriber() {
 async function showSubscriberDetails(subscriberId) {
     selectedSubscriberId = subscriberId;
     selectedSubscriberData = null;
+    exitInlineEditMode({ preserveSelection: true });
     dom.detailName.innerText = 'جاري التحميل...';
     dom.detailId.innerText = `ID: ${subscriberId}`;
     dom.detailArea.innerText = '-';
@@ -893,51 +917,56 @@ async function showSubscriberDetails(subscriberId) {
 
 async function openSubscriberEditor(subscriberId, fallbackSub = null) {
     const fallbackNormalized = fallbackSub ? normalizeSubscriber(fallbackSub) : null;
-
-    if (!subscriberId && fallbackNormalized) {
-        openEditModal(fallbackNormalized);
+    if (fallbackNormalized) {
+        selectedSubscriberId = fallbackNormalized.id;
+        selectedSubscriberData = fallbackNormalized;
+        enterInlineEditMode(fallbackNormalized);
         return;
     }
 
-    try {
-        const data = await apiCall(`/subscribers/${subscriberId}`);
-        if (!data || data.status !== 'success') {
-            if (fallbackNormalized) {
-                openEditModal(fallbackNormalized);
-                return;
-            }
-
-            showAlert(data ? data.message : 'تعذر جلب بيانات المشترك للتعديل.');
-            return;
+    if (subscriberId) {
+        await showSubscriberDetails(subscriberId);
+        if (selectedSubscriberData) {
+            enterInlineEditMode(selectedSubscriberData);
         }
-
-        const normalizedSub = normalizeSubscriber(data.subscriber);
-        selectedSubscriberId = normalizedSub.id;
-        selectedSubscriberData = normalizedSub;
-        openEditModal(normalizedSub);
-    } catch (error) {
-        console.error('خطأ في فتح نموذج التعديل:', error);
-
-        if (fallbackNormalized) {
-            openEditModal(fallbackNormalized);
-            return;
-        }
-
-        showAlert('تعذر فتح نموذج التعديل حالياً.');
     }
 }
 
-function openEditModal(sub) {
-    const detailsModal = bootstrap.Modal.getInstance(document.getElementById('detailsModal'));
-    if (detailsModal) detailsModal.hide();
+function enterInlineEditMode(sub) {
     const normalizedSub = normalizeSubscriber(sub);
+    isInlineEditingSubscriber = true;
+    dom.subscriberDetailView.classList.add('d-none');
+    dom.editSubscriberForm.classList.remove('d-none');
+    dom.btnEditSub.classList.add('d-none');
+    dom.btnCopyDetails.classList.add('d-none');
+    dom.btnCloseDetails.classList.add('d-none');
+    dom.btnCancelInlineEdit.classList.remove('d-none');
+    dom.btnSaveEdit.classList.remove('d-none');
+    setDetailsModalMode(true);
+
     document.getElementById('editSubId').value = normalizedSub.id;
-    document.getElementById('editName').value = normalizedSub.name;
+    document.getElementById('editName').value = normalizedSub.name || '';
     document.getElementById('editPhone').value = normalizedSub.phone === 'لا يوجد رقم مسجل' ? '' : normalizedSub.phone || '';
-    dom.editAreaId.value = normalizedSub.area_id;
+    dom.editAreaId.value = normalizedSub.area_id || '';
     document.getElementById('editNotes').value = normalizedSub.notes || '';
-    document.getElementById('editPromiseDate').value = sub.promise_date && sub.promise_date !== 'None' && sub.promise_date !== 'لا يوجد وعد مسجل' ? sub.promise_date : '';
-    editSubModal.show();
+    document.getElementById('editPromiseDate').value = normalizedSub.promise_date && normalizedSub.promise_date !== 'None' && normalizedSub.promise_date !== 'لا يوجد وعد مسجل' ? normalizedSub.promise_date : '';
+}
+
+function exitInlineEditMode(options = {}) {
+    const preserveSelection = Boolean(options.preserveSelection);
+    isInlineEditingSubscriber = false;
+    dom.subscriberDetailView.classList.remove('d-none');
+    dom.editSubscriberForm.classList.add('d-none');
+    dom.btnEditSub.classList.remove('d-none');
+    dom.btnCopyDetails.classList.remove('d-none');
+    dom.btnCloseDetails.classList.remove('d-none');
+    dom.btnCancelInlineEdit.classList.add('d-none');
+    dom.btnSaveEdit.classList.add('d-none');
+    setDetailsModalMode(false);
+
+    if (!preserveSelection) {
+        dom.editSubscriberForm.reset();
+    }
 }
 
 async function submitEditSubscriber() {
@@ -952,8 +981,8 @@ async function submitEditSubscriber() {
     try {
         const data = await apiCall(`/subscribers/${subId}`, 'PUT', updatedData);
         if (data && data.status === 'success') {
-            editSubModal.hide();
             showAlert(`✅ ${data.message}`);
+            await showSubscriberDetails(Number(subId));
             loadSubscribers();
         } else {
             showAlert(`❌ خطأ: ${data ? data.message : 'تعذر حفظ التعديلات.'}`);
