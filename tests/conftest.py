@@ -1,4 +1,8 @@
 import pytest
+import os
+
+os.environ['DATABASE_URL'] = 'sqlite:///:memory:'
+os.environ['SECRET_KEY'] = 'test-secret'
 
 from app import app, db
 
@@ -8,6 +12,7 @@ def client():
 
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['JWT_SECRET_KEY'] = 'test-secret'
 
     with app.test_client() as client:
 

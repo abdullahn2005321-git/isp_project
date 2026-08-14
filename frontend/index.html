@@ -102,18 +102,45 @@
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
                         <h5 class="m-0 text-secondary"><i class="fa-solid fa-list"></i> إدارة المشتركين</h5>
-                        <div class="flex-grow-1 mx-md-4" style="max-width: 400px;">
-                            <div class="input-group shadow-sm">
-                                <span class="input-group-text bg-white border-primary text-primary"><i class="fa-solid fa-magnifying-glass"></i></span>
-                                <input type="text" class="form-control border-primary" id="searchInput" placeholder="ابحث بالاسم أو رقم الهاتف...">
-                            </div>
-                        </div>
                         <div>
                             <button type="button" class="btn btn-warning btn-sm fw-bold me-2 shadow-sm" id="btn-today-promises"><i class="fa-solid fa-bell"></i> وعود اليوم</button>
                             <button type="button" class="btn btn-primary btn-sm shadow-sm" id="btn-add-subscriber"><i class="fa-solid fa-user-plus"></i> مشترك جديد</button>
                         </div>
                     </div>
                     <div class="card-body p-3">
+                        <div class="subscriber-filter-panel mb-3">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-12 col-lg-4">
+                                    <label for="searchInput" class="form-label fw-bold small text-secondary">البحث</label>
+                                    <div class="input-group shadow-sm">
+                                        <span class="input-group-text bg-white border-primary text-primary"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                        <input type="text" class="form-control border-primary" id="searchInput" placeholder="ابحث بالاسم أو رقم الهاتف...">
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-2">
+                                    <label class="form-label fw-bold small text-secondary d-block">الحالة المالية</label>
+                                    <div class="form-check form-switch subscriber-filter-switch bg-light border rounded-3 px-3 py-2">
+                                        <input class="form-check-input" type="checkbox" id="debtOnlyFilter">
+                                        <label class="form-check-label fw-semibold" for="debtOnlyFilter">المديونون فقط</label>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-2">
+                                    <label for="renewalFromFilter" class="form-label fw-bold small text-secondary">آخر اشتراك من</label>
+                                    <input type="date" class="form-control" id="renewalFromFilter">
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-2">
+                                    <label for="renewalToFilter" class="form-label fw-bold small text-secondary">آخر اشتراك إلى</label>
+                                    <input type="date" class="form-control" id="renewalToFilter">
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-2">
+                                    <div class="d-grid gap-2">
+                                        <button type="button" class="btn btn-primary btn-sm fw-bold" id="btnApplySubscriberFilters">تطبيق الفلاتر</button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnResetSubscriberFilters">مسح الفلاتر</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="subscriberFiltersSummary" class="small text-muted mt-3">الفلاتر الحالية: الكل</div>
+                        </div>
                         <div id="subscribers-table-body" class="row g-3"></div>
                     </div>
                     <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center">

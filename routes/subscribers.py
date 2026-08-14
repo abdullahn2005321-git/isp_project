@@ -1,9 +1,9 @@
 from flask import Blueprint, request, jsonify
-from models import db, Area, Subscriber
+from models import db, Area, Subscriber, Transaction
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
-from datetime import date
+from datetime import date, datetime
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 
 subscribers_bp = Blueprint('subscribers', __name__)
@@ -127,9 +127,61 @@ def get_subscribers():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 50, type=int)
         search = request.args.get('search', '', type=str)
+        debt_only = str(request.args.get('debt_only', 'false')).strip().lower() in ('1', 'true', 'yes', 'on')
+        renewal_from_raw = request.args.get('renewal_from', '', type=str).strip()
+        renewal_to_raw = request.args.get('renewal_to', '', type=str).strip()
 
-        query = Subscriber.query.join(Area).options(joinedload(Subscriber.area))\
-                                     .filter(Area.admin_id == admin_id, Subscriber.is_active == True)
+        renewal_from = None
+        renewal_to = None
+
+        if renewal_from_raw:
+            try:
+                renewal_from = datetime.strptime(renewal_from_raw, "%Y-%m-%d").date()
+            except ValueError:
+                return jsonify({
+                    "status": "error",
+                    "message": "صيغة تاريخ البداية غير صحيحة. استخدم YYYY-MM-DD."
+                }), 400
+
+        if renewal_to_raw:
+            try:
+                renewal_to = datetime.strptime(renewal_to_raw, "%Y-%m-%d").date()
+            except ValueError:
+                return jsonify({
+                    "status": "error",
+                    "message": "صيغة تاريخ النهاية غير صحيحة. استخدم YYYY-MM-DD."
+                }), 400
+
+        if renewal_from and renewal_to and renewal_from > renewal_to:
+            return jsonify({
+                "status": "error",
+                "message": "تاريخ البداية يجب أن يكون أقدم أو يساوي تاريخ النهاية."
+            }), 400
+
+        last_renewal_subquery = db.session.query(
+            Transaction.subscriber_id.label('subscriber_id'),
+            db.func.max(Transaction.transaction_date).label('last_renewal_date')
+        ).filter(
+            Transaction.transaction_type == 'renewal'
+        ).group_by(
+            Transaction.subscriber_id
+        ).subquery()
+
+        query = db.session.query(
+            Subscriber,
+            last_renewal_subquery.c.last_renewal_date.label('last_renewal_date')
+        ).join(
+            Area,
+            Subscriber.area_id == Area.id
+        ).outerjoin(
+            last_renewal_subquery,
+            last_renewal_subquery.c.subscriber_id == Subscriber.id
+        ).options(
+            joinedload(Subscriber.area)
+        ).filter(
+            Area.admin_id == admin_id,
+            Subscriber.is_active == True
+        )
 
         if search and search.strip():
             search_term = f"%{search.strip()}%"
@@ -140,10 +192,24 @@ def get_subscribers():
                 )
             )
 
+        if debt_only:
+            query = query.filter(Subscriber.balance < 0)
+
+        if renewal_from:
+            query = query.filter(db.func.date(last_renewal_subquery.c.last_renewal_date) >= renewal_from)
+
+        if renewal_to:
+            query = query.filter(db.func.date(last_renewal_subquery.c.last_renewal_date) <= renewal_to)
+
+        if renewal_from or renewal_to:
+            query = query.order_by(last_renewal_subquery.c.last_renewal_date.asc(), Subscriber.id.asc())
+        else:
+            query = query.order_by(Subscriber.id.desc())
+
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
         sub_list = []
-        for subscriber in pagination.items:
+        for subscriber, last_renewal_date in pagination.items:
             sub_list.append({
                 "id": subscriber.id,
                 "name": subscriber.name,
@@ -152,7 +218,8 @@ def get_subscribers():
                 "area_name": subscriber.area.name if subscriber.area else None,
                 "notes": subscriber.notes,
                 "balance": subscriber.balance,
-                "promise_date": subscriber.promise_date.strftime("%Y-%m-%d") if subscriber.promise_date else "لا يوجد وعد مسجل"
+                "promise_date": subscriber.promise_date.strftime("%Y-%m-%d") if subscriber.promise_date else "لا يوجد وعد مسجل",
+                "last_renewal_date": last_renewal_date.strftime("%Y-%m-%d") if last_renewal_date else None
             })
         
         return jsonify({

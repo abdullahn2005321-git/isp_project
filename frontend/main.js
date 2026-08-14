@@ -29,6 +29,12 @@ let totalLogsPages = 1;
 let currentLogFilter = 'الكل';
 let logFilterStartDate = '';
 let logFilterEndDate = '';
+let subscriberFilters = {
+    search: '',
+    debtOnly: false,
+    renewalFrom: '',
+    renewalTo: ''
+};
 const subscribersPerPage = 50;
 const logsPerPage = 100;
 
@@ -53,6 +59,12 @@ const dom = {
     todayIncome: document.getElementById('today-income'),
     totalDebt: document.getElementById('total-debt'),
     searchInput: document.getElementById('searchInput'),
+    debtOnlyFilter: document.getElementById('debtOnlyFilter'),
+    renewalFromFilter: document.getElementById('renewalFromFilter'),
+    renewalToFilter: document.getElementById('renewalToFilter'),
+    btnApplySubscriberFilters: document.getElementById('btnApplySubscriberFilters'),
+    btnResetSubscriberFilters: document.getElementById('btnResetSubscriberFilters'),
+    subscriberFiltersSummary: document.getElementById('subscriberFiltersSummary'),
     subscribersTableBody: document.getElementById('subscribers-table-body'),
     logsTableBody: document.getElementById('logs-table-body'),
     tabDashboard: document.getElementById('tab-dashboard'),
@@ -120,6 +132,7 @@ function normalizeSubscriber(sub) {
         phone: sub.phone ?? sub.phone_number ?? '',
         area_name: sub.area_name ?? sub.area ?? '',
         area: sub.area ?? sub.area_name ?? '',
+        last_renewal_date: sub.last_renewal_date ?? '',
         promise_date: sub.promise_date ?? '',
         notes: sub.notes ?? ''
     };
@@ -340,6 +353,73 @@ function initPage() {
     loadInitialState();
 }
 
+function syncSubscriberFiltersFromDom() {
+    subscriberFilters = {
+        search: dom.searchInput?.value.trim() || '',
+        debtOnly: Boolean(dom.debtOnlyFilter?.checked),
+        renewalFrom: dom.renewalFromFilter?.value || '',
+        renewalTo: dom.renewalToFilter?.value || ''
+    };
+}
+
+function updateSubscriberFilterSummary() {
+    if (!dom.subscriberFiltersSummary) return;
+
+    const summaryParts = [];
+
+    if (subscriberFilters.search) {
+        summaryParts.push(`بحث: ${subscriberFilters.search}`);
+    }
+
+    if (subscriberFilters.debtOnly) {
+        summaryParts.push('المديونون فقط');
+    }
+
+    if (subscriberFilters.renewalFrom || subscriberFilters.renewalTo) {
+        const fromLabel = subscriberFilters.renewalFrom || 'البداية';
+        const toLabel = subscriberFilters.renewalTo || 'الآن';
+        summaryParts.push(`آخر اشتراك من ${fromLabel} إلى ${toLabel}`);
+    }
+
+    dom.subscriberFiltersSummary.innerText = summaryParts.length
+        ? `الفلاتر الحالية: ${summaryParts.join(' | ')}`
+        : 'الفلاتر الحالية: الكل';
+}
+
+function hasValidSubscriberDateRange() {
+    const { renewalFrom, renewalTo } = subscriberFilters;
+    if (renewalFrom && renewalTo && renewalFrom > renewalTo) {
+        showAlert('تاريخ البداية يجب أن يكون أقدم أو يساوي تاريخ النهاية.', 'warning');
+        return false;
+    }
+    return true;
+}
+
+function buildSubscriberQueryParams(page = 1) {
+    const params = new URLSearchParams({
+        page: String(page),
+        per_page: String(subscribersPerPage)
+    });
+
+    if (subscriberFilters.search) {
+        params.set('search', subscriberFilters.search);
+    }
+
+    if (subscriberFilters.debtOnly) {
+        params.set('debt_only', 'true');
+    }
+
+    if (subscriberFilters.renewalFrom) {
+        params.set('renewal_from', subscriberFilters.renewalFrom);
+    }
+
+    if (subscriberFilters.renewalTo) {
+        params.set('renewal_to', subscriberFilters.renewalTo);
+    }
+
+    return params;
+}
+
 function registerEventListeners() {
     dom.loginForm.addEventListener('submit', handleLogin);
     dom.btnProfileInfo.addEventListener('click', (event) => {
@@ -368,6 +448,15 @@ function registerEventListeners() {
     dom.tabSubscribers.addEventListener('click', () => switchSection('subscribers'));
     dom.tabLogs.addEventListener('click', () => switchSection('logs'));
     dom.searchInput.addEventListener('input', filterSubscribers);
+    if (dom.debtOnlyFilter) {
+        dom.debtOnlyFilter.addEventListener('change', filterSubscribers);
+    }
+    if (dom.btnApplySubscriberFilters) {
+        dom.btnApplySubscriberFilters.addEventListener('click', filterSubscribers);
+    }
+    if (dom.btnResetSubscriberFilters) {
+        dom.btnResetSubscriberFilters.addEventListener('click', resetSubscriberFilters);
+    }
     dom.btnTodayPromises.addEventListener('click', loadPromisesToday);
     dom.btnAddSubscriber.addEventListener('click', openAddSubscriberModal);
     dom.btnAddArea.addEventListener('click', () => addAreaModal.show());
@@ -409,10 +498,10 @@ function registerEventListeners() {
     dom.quickPromiseInput.addEventListener('change', quickUpdatePromise);
     dom.fullDebtBtn.addEventListener('click', setFullDebtAmount);
     dom.btnPrevPage.addEventListener('click', () => {
-        if (currentSubscriberPage > 1) loadSubscribers(currentSubscriberPage - 1, dom.searchInput.value.trim());
+        if (currentSubscriberPage > 1) loadSubscribers(currentSubscriberPage - 1);
     });
     dom.btnNextPage.addEventListener('click', () => {
-        if (currentSubscriberPage < totalSubscriberPages) loadSubscribers(currentSubscriberPage + 1, dom.searchInput.value.trim());
+        if (currentSubscriberPage < totalSubscriberPages) loadSubscribers(currentSubscriberPage + 1);
     });
     if (dom.btnPrevLogsPage) {
         dom.btnPrevLogsPage.addEventListener('click', () => {
@@ -542,17 +631,10 @@ async function submitNewArea() {
     }
 }
 
-async function loadSubscribers(page = 1, searchQuery = '') {
+async function loadSubscribers(page = 1) {
     try {
-        const params = new URLSearchParams({
-            page: String(page),
-            per_page: String(subscribersPerPage)
-        });
-
-        const trimmedQuery = (searchQuery || '').trim();
-        if (trimmedQuery) {
-            params.set('search', trimmedQuery);
-        }
+        updateSubscriberFilterSummary();
+        const params = buildSubscriberQueryParams(page);
 
         const data = await apiCall(`/subscribers?${params.toString()}`);
         if (!data || data.status !== 'success') return;
@@ -573,8 +655,26 @@ async function loadSubscribers(page = 1, searchQuery = '') {
 }
 
 function filterSubscribers() {
-    const query = dom.searchInput.value.trim();
-    loadSubscribers(1, query);
+    syncSubscriberFiltersFromDom();
+    if (!hasValidSubscriberDateRange()) return;
+    loadSubscribers(1);
+}
+
+function resetSubscriberFilters() {
+    subscriberFilters = {
+        search: '',
+        debtOnly: false,
+        renewalFrom: '',
+        renewalTo: ''
+    };
+
+    if (dom.searchInput) dom.searchInput.value = '';
+    if (dom.debtOnlyFilter) dom.debtOnlyFilter.checked = false;
+    if (dom.renewalFromFilter) dom.renewalFromFilter.value = '';
+    if (dom.renewalToFilter) dom.renewalToFilter.value = '';
+
+    updateSubscriberFilterSummary();
+    loadSubscribers(1);
 }
 
 function createSubscriberRow(sub) {
@@ -586,6 +686,7 @@ function createSubscriberRow(sub) {
     const phone = sub.phone_number || sub.phone || 'لا يوجد رقم';
     const area = sub.area_name || sub.area_id || 'غير محدد';
     const promiseText = sub.promise_date && sub.promise_date !== 'None' ? `🗓️ ${sub.promise_date}` : '🗓️ لا يوجد وعد';
+    const lastRenewalText = sub.last_renewal_date ? `آخر اشتراك: ${sub.last_renewal_date}` : 'آخر اشتراك: لا يوجد تجديد';
     const notes = sub.notes && String(sub.notes).trim() ? String(sub.notes).trim() : 'لا توجد ملاحظات';
 
     card.innerHTML = `
@@ -604,6 +705,7 @@ function createSubscriberRow(sub) {
                     <span class="area-name"></span>
                 </div>
 
+                <div class="small text-info mb-2 last-renewal-date"></div>
                 <div class="small text-muted mb-2 promise-date"></div>
                 <div class="small text-warning mb-3 subscriber-notes"></div>
 
@@ -629,6 +731,7 @@ function createSubscriberRow(sub) {
     card.querySelector('.subscriber-name').textContent = sub.name || '-';
     card.querySelector('.subscriber-name').addEventListener('click', () => showSubscriberDetails(sub.id));
     card.querySelector('.area-name').textContent = area;
+    card.querySelector('.last-renewal-date').textContent = lastRenewalText;
 
     const balanceBadge = card.querySelector('.balance-badge');
     balanceBadge.textContent = isDebt ? `دين ${Math.abs(balanceValue).toLocaleString()}` : `رصيد ${balanceValue.toLocaleString()}`;

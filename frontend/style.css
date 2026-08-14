@@ -3,6 +3,19 @@
 #profileInfoCard { top: 100%; }
 #profileInfoCard.d-none { display: none !important; }
 #profileInfoCard .card-body { background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%); }
+.subscriber-filter-panel {
+    background: linear-gradient(135deg, #f8fbff 0%, #ffffff 100%);
+    border: 1px solid #dbe9ff;
+    border-radius: 18px;
+    padding: 1rem;
+}
+
+.subscriber-filter-switch {
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
 
 .side-tabs {
     display: flex;
