@@ -87,6 +87,7 @@ const dom = {
     reportStatusMessage: document.getElementById('report-status-msg'),
     btnOpenLogFilter: document.getElementById('btn-open-log-filter'),
     btnApplyLogFilter: document.getElementById('btnApplyLogFilter'),
+    btnClearLogFilter: document.getElementById('btnClearLogFilter'),
     logFilterSubscriberId: document.getElementById('logFilterSubscriberId'),
     btnCopyDetails: document.getElementById('btn-copy-details'),
     btnDeleteSub: document.getElementById('btn-delete-sub'),
@@ -484,6 +485,30 @@ function registerEventListeners() {
     dom.btnAddSubscriber.addEventListener('click', openAddSubscriberModal);
     dom.btnAddArea.addEventListener('click', () => addAreaModal.show());
     dom.btnSaveArea.addEventListener('click', submitNewArea);
+    document.addEventListener('click', async (event) => {
+        const editButton = event.target.closest('.edit-area-btn');
+        if (!editButton) return;
+
+        const areaId = Number(editButton.dataset.areaId);
+        const currentName = editButton.dataset.areaName || '';
+        const newName = window.prompt('اكتب الاسم الجديد للمنطقة:', currentName);
+
+        if (newName === null) return;
+
+        const trimmedName = newName.trim();
+        if (!trimmedName) {
+            showAlert('يرجى إدخال اسم المنطقة.', 'warning');
+            return;
+        }
+
+        const data = await apiCall(`/areas/${areaId}`, 'PUT', { name: trimmedName });
+        if (data && data.status === 'success') {
+            showAlert(data.message || 'تم تحديث اسم المنطقة بنجاح.');
+            loadAreas();
+        } else {
+            showAlert(data?.message || 'فشل تحديث اسم المنطقة.', 'danger');
+        }
+    });
     if (dom.btnOpenLogFilter) {
         dom.btnOpenLogFilter.addEventListener('click', () => logFilterModal.show());
     }
@@ -505,6 +530,21 @@ function registerEventListeners() {
             } else {
                 filterLogs(currentLogFilter);
             }
+            logFilterModal.hide();
+        });
+    }
+    if (dom.btnClearLogFilter) {
+        dom.btnClearLogFilter.addEventListener('click', () => {
+            logFilterStartDate = '';
+            logFilterEndDate = '';
+            activeLogSubscriberId = null;
+            const subscriberIdInput = document.getElementById('logFilterSubscriberId');
+            if (subscriberIdInput) subscriberIdInput.value = '';
+            document.getElementById('logFilterStartDate').value = '';
+            document.getElementById('logFilterEndDate').value = '';
+            currentLogFilter = 'الكل';
+            updateLogFilterButtonLabel();
+            loadLogs(1);
             logFilterModal.hide();
         });
     }
@@ -667,15 +707,23 @@ function renderAreaOptions(areas) {
 
 function renderAreasTable(areas) {
     dom.areasTableBody.innerHTML = '';
+    const canEditArea = getCurrentRole() === 'admin';
+
     if (!areas.length) {
-        dom.areasTableBody.innerHTML = '<tr><td colspan="2" class="text-muted p-4">لا توجد مناطق مسجلة بعد.</td></tr>';
+        dom.areasTableBody.innerHTML = `<tr><td colspan="${canEditArea ? 3 : 2}" class="text-muted p-4">لا توجد مناطق مسجلة بعد.</td></tr>`;
         return;
     }
+
     areas.forEach((area, index) => {
+        const editButton = canEditArea
+            ? `<button type="button" class="btn btn-sm btn-outline-primary edit-area-btn" data-area-id="${area.id}" data-area-name="${area.name}"><i class="fa-solid fa-pen"></i> تعديل</button>`
+            : '';
+
         dom.areasTableBody.innerHTML += `
             <tr>
                 <td>${index + 1}</td>
                 <td>${area.name}</td>
+                <td>${editButton}</td>
             </tr>
         `;
     });
@@ -976,36 +1024,46 @@ async function openSubscriberEditor(subscriberId, fallbackSub = null) {
 function enterInlineEditMode(sub) {
     const normalizedSub = normalizeSubscriber(sub);
     isInlineEditingSubscriber = true;
-    dom.subscriberDetailView.classList.add('d-none');
-    dom.editSubscriberForm.classList.remove('d-none');
-    dom.btnEditSub.classList.add('d-none');
-    dom.btnCopyDetails.classList.add('d-none');
-    dom.btnCloseDetails.classList.add('d-none');
-    dom.btnCancelInlineEdit.classList.remove('d-none');
-    dom.btnSaveEdit.classList.remove('d-none');
+
+    if (dom.subscriberDetailView) dom.subscriberDetailView.classList.add('d-none');
+    if (dom.editSubscriberForm) dom.editSubscriberForm.classList.remove('d-none');
+    if (dom.btnEditSub) dom.btnEditSub.classList.add('d-none');
+    if (dom.btnCopyDetails) dom.btnCopyDetails.classList.add('d-none');
+    if (dom.btnCloseDetails) dom.btnCloseDetails.classList.add('d-none');
+    if (dom.btnCancelInlineEdit) dom.btnCancelInlineEdit.classList.remove('d-none');
+    if (dom.btnSaveEdit) dom.btnSaveEdit.classList.remove('d-none');
     setDetailsModalMode(true);
 
-    document.getElementById('editSubId').value = normalizedSub.id;
-    document.getElementById('editName').value = normalizedSub.name || '';
-    document.getElementById('editPhone').value = normalizedSub.phone === 'لا يوجد رقم مسجل' ? '' : normalizedSub.phone || '';
-    dom.editAreaId.value = normalizedSub.area_id || '';
-    document.getElementById('editNotes').value = normalizedSub.notes || '';
-    document.getElementById('editPromiseDate').value = normalizedSub.promise_date && normalizedSub.promise_date !== 'None' && normalizedSub.promise_date !== 'لا يوجد وعد مسجل' ? normalizedSub.promise_date : '';
+    const editSubId = document.getElementById('editSubId');
+    const editName = document.getElementById('editName');
+    const editPhone = document.getElementById('editPhone');
+    const editNotes = document.getElementById('editNotes');
+    const editPromiseDate = document.getElementById('editPromiseDate');
+
+    if (editSubId) editSubId.value = normalizedSub.id;
+    if (editName) editName.value = normalizedSub.name || '';
+    if (editPhone) editPhone.value = normalizedSub.phone === 'لا يوجد رقم مسجل' ? '' : normalizedSub.phone || '';
+    if (dom.editAreaId) dom.editAreaId.value = normalizedSub.area_id || '';
+    if (editNotes) editNotes.value = normalizedSub.notes || '';
+    if (editPromiseDate) {
+        editPromiseDate.value = normalizedSub.promise_date && normalizedSub.promise_date !== 'None' && normalizedSub.promise_date !== 'لا يوجد وعد مسجل' ? normalizedSub.promise_date : '';
+    }
 }
 
 function exitInlineEditMode(options = {}) {
     const preserveSelection = Boolean(options.preserveSelection);
     isInlineEditingSubscriber = false;
-    dom.subscriberDetailView.classList.remove('d-none');
-    dom.editSubscriberForm.classList.add('d-none');
-    dom.btnEditSub.classList.remove('d-none');
-    dom.btnCopyDetails.classList.remove('d-none');
-    dom.btnCloseDetails.classList.remove('d-none');
-    dom.btnCancelInlineEdit.classList.add('d-none');
-    dom.btnSaveEdit.classList.add('d-none');
+
+    if (dom.subscriberDetailView) dom.subscriberDetailView.classList.remove('d-none');
+    if (dom.editSubscriberForm) dom.editSubscriberForm.classList.add('d-none');
+    if (dom.btnEditSub) dom.btnEditSub.classList.remove('d-none');
+    if (dom.btnCopyDetails) dom.btnCopyDetails.classList.remove('d-none');
+    if (dom.btnCloseDetails) dom.btnCloseDetails.classList.remove('d-none');
+    if (dom.btnCancelInlineEdit) dom.btnCancelInlineEdit.classList.add('d-none');
+    if (dom.btnSaveEdit) dom.btnSaveEdit.classList.add('d-none');
     setDetailsModalMode(false);
 
-    if (!preserveSelection) {
+    if (!preserveSelection && dom.editSubscriberForm) {
         dom.editSubscriberForm.reset();
     }
 }

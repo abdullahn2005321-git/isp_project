@@ -164,10 +164,11 @@
                                 <tr>
                                     <th>#</th>
                                     <th>اسم المنطقة</th>
+                                    <th>الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody id="areas-table-body">
-                                <tr><td colspan="2" class="text-muted p-4">جاري تحميل المناطق...</td></tr>
+                                <tr><td colspan="3" class="text-muted p-4">جاري تحميل المناطق...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -293,6 +294,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    <div class="text-center small text-primary fw-bold mb-3">منفذ الإجراءات</div>
                     <div class="d-grid gap-2">
                         <div class="mb-2">
                             <label for="logFilterSubscriberId" class="form-label fw-bold small">رقم المشترك</label>
@@ -309,6 +311,7 @@
                         <button type="button" class="btn btn-primary fw-bold" id="btnApplyLogFilter">تطبيق</button>
                         <button type="button" class="btn btn-outline-primary fw-bold" data-log-filter="تسديد">التسديدات</button>
                         <button type="button" class="btn btn-outline-success fw-bold" data-log-filter="تجديد">التجديدات</button>
+                        <button type="button" class="btn btn-outline-danger" id="btnClearLogFilter">حذف التصفية</button>
                         <button type="button" class="btn btn-outline-secondary" data-log-filter="الكل">إلغاء التصفية</button>
                     </div>
                 </div>
@@ -393,6 +396,7 @@
                         </button>
                     </div>
                     <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-outline-secondary" id="btn-close-details" data-bs-dismiss="modal">إغلاق</button>
                         <button type="button" class="btn btn-outline-secondary" id="btn-copy-details">
                             <i class="fa-solid fa-copy"></i> نسخ البيانات
                         </button>

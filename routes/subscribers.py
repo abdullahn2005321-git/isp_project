@@ -60,6 +60,39 @@ def get_areas():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@subscribers_bp.route('/api/areas/<int:area_id>', methods=['PUT'])
+@jwt_required()
+def update_area(area_id):
+    claims = get_jwt()
+    user_role = claims.get("role")
+    admin_id = claims.get("admin_id")
+
+    if user_role != "admin":
+        return jsonify({"status": "error", "message": "يجب أن تكون مديراً لتعديل اسم المنطقة."}), 403
+
+    data = request.get_json(silent=True) or {}
+    new_name = str(data.get('name', '')).strip()
+
+    if not new_name:
+        return jsonify({"status": "error", "message": "اسم المنطقة مطلوب."}), 400
+
+    area = Area.query.filter_by(id=area_id, admin_id=admin_id).first()
+    if not area:
+        return jsonify({"status": "error", "message": "هذه المنطقة لا تخص هذا المدير أو غير موجودة."}), 403
+
+    area.name = new_name
+
+    try:
+        db.session.commit()
+        return jsonify({
+            "status": "success",
+            "message": "تم تحديث اسم المنطقة بنجاح.",
+            "area": {"id": area.id, "name": area.name}
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 #==============================
 #=======subscriber endpoints
 #==============================

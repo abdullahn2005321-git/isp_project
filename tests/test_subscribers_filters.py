@@ -194,3 +194,32 @@ def test_get_logs_filters_by_single_subscriber_id(client):
     assert [log['subscriber_name'] for log in data['logs']] == ['Subscriber One', 'Subscriber One']
     assert all(log['subscriber_id'] == subscriber_id for log in data['logs'])
     assert [log['processed_by'] for log in data['logs']] == ['logs-staff', 'logs-admin']
+
+
+def test_update_area_name_by_owning_admin(client):
+    with app.app_context():
+        admin = User(
+            username='area-admin',
+            password_hash=generate_password_hash('123456'),
+            role='admin'
+        )
+        db.session.add(admin)
+        db.session.flush()
+
+        area = Area(name='Old Area', admin_id=admin.id)
+        db.session.add(area)
+        db.session.commit()
+        area_id = area.id
+        token = create_admin_token(admin)
+
+    response = client.put(
+        f'/api/areas/{area_id}',
+        json={'name': 'Updated Area'},
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert data['status'] == 'success'
+    assert data['area']['name'] == 'Updated Area'
