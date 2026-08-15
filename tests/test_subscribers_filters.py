@@ -115,3 +115,72 @@ def test_get_subscribers_rejects_invalid_last_renewal_range(client):
 
     assert response.status_code == 400
     assert data['status'] == 'error'
+
+
+def test_get_logs_filters_by_single_subscriber_id(client):
+    with app.app_context():
+        admin = User(
+            username='logs-admin',
+            password_hash=generate_password_hash('123456'),
+            role='admin'
+        )
+        db.session.add(admin)
+        db.session.flush()
+
+        area = Area(name='Zone B', admin_id=admin.id)
+        db.session.add(area)
+        db.session.flush()
+
+        first_subscriber = Subscriber(
+            name='Subscriber One',
+            phone_number='20001',
+            area_id=area.id,
+            balance=0
+        )
+        second_subscriber = Subscriber(
+            name='Subscriber Two',
+            phone_number='20002',
+            area_id=area.id,
+            balance=0
+        )
+        db.session.add_all([first_subscriber, second_subscriber])
+        db.session.flush()
+
+        db.session.add_all([
+            Transaction(
+                subscriber_id=first_subscriber.id,
+                user_id=admin.id,
+                transaction_type='payment',
+                amount=5000,
+                transaction_date=datetime(2026, 2, 10, 9, 0, 0)
+            ),
+            Transaction(
+                subscriber_id=first_subscriber.id,
+                user_id=admin.id,
+                transaction_type='renewal',
+                amount=35000,
+                transaction_date=datetime(2026, 2, 11, 9, 0, 0)
+            ),
+            Transaction(
+                subscriber_id=second_subscriber.id,
+                user_id=admin.id,
+                transaction_type='payment',
+                amount=6000,
+                transaction_date=datetime(2026, 2, 12, 9, 0, 0)
+            )
+        ])
+        db.session.commit()
+        subscriber_id = first_subscriber.id
+        token = create_admin_token(admin)
+
+    response = client.get(
+        f'/api/logs?subscriber_id={subscriber_id}',
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert data['status'] == 'success'
+    assert [log['subscriber_name'] for log in data['logs']] == ['Subscriber One', 'Subscriber One']
+    assert all(log['subscriber_id'] == subscriber_id for log in data['logs'])

@@ -74,29 +74,36 @@ def get_logs():
 
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 100, type=int)
+        subscriber_id = request.args.get('subscriber_id', type=int)
 
-        paginated_transactions = Transaction.query.join(Subscriber).join(Area).filter(
+        query = Transaction.query.join(Subscriber).join(Area).filter(
             Area.admin_id == admin_id,
-        ).order_by(Transaction.transaction_date.desc()).paginate(page=page, per_page=per_page, error_out=False)
+        )
+
+        if subscriber_id is not None:
+            query = query.filter(Subscriber.id == subscriber_id)
+
+        paginated_transactions = query.order_by(
+            Transaction.transaction_date.desc()
+        ).paginate(page=page, per_page=per_page, error_out=False)
 
         transaction = paginated_transactions.items
 
-
         logs = []
         for t in transaction:
-
             t_type_arabic = "تسديد" if t.transaction_type == 'payment' else "تجديد"
 
             logs.append({
                 "type": t_type_arabic,
+                "subscriber_id": t.subscriber_id,
                 "subscriber_name": t.subscriber.name if t.subscriber else None,
                 "amount": t.amount,
                 "date": t.transaction_date.strftime("%Y-%m-%d %H:%M:%S")
             })
 
-
         return jsonify({
             "status": "success",
+            "subscriber_id": subscriber_id,
             "logs": logs,
             "pagination": {
                 "current_page": paginated_transactions.page,

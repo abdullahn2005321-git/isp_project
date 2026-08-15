@@ -29,6 +29,7 @@ let totalLogsPages = 1;
 let currentLogFilter = 'الكل';
 let logFilterStartDate = '';
 let logFilterEndDate = '';
+let isActionSubmitting = false;
 let subscriberFilters = {
     search: '',
     debtOnly: false,
@@ -87,6 +88,7 @@ const dom = {
     btnApplyLogFilter: document.getElementById('btnApplyLogFilter'),
     btnCopyDetails: document.getElementById('btn-copy-details'),
     btnDeleteSub: document.getElementById('btn-delete-sub'),
+    btnViewSubscriberLogs: document.getElementById('btn-view-subscriber-logs'),
     btnEditSub: document.getElementById('btn-edit-sub'),
     btnCloseDetails: document.getElementById('btn-close-details'),
     btnCancelInlineEdit: document.getElementById('btn-cancel-inline-edit'),
@@ -506,6 +508,14 @@ function registerEventListeners() {
     dom.btnDeleteSub.addEventListener('click', () => {
         if (selectedSubscriberId !== null) deleteSubscriber(selectedSubscriberId);
     });
+    if (dom.btnViewSubscriberLogs) {
+        dom.btnViewSubscriberLogs.addEventListener('click', () => {
+            if (selectedSubscriberId !== null) {
+                switchSection('logs');
+                loadLogs(1, selectedSubscriberId);
+            }
+        });
+    }
     dom.btnEditSub.addEventListener('click', () => {
         if (selectedSubscriberData) {
             enterInlineEditMode(selectedSubscriberData);
@@ -1030,9 +1040,17 @@ async function loadPromisesToday() {
     }
 }
 
-async function loadLogs(page = 1) {
+async function loadLogs(page = 1, subscriberId = null) {
     try {
-        const data = await apiCall(`/logs?page=${page}&per_page=${logsPerPage}`);
+        const params = new URLSearchParams({
+            page: String(page),
+            per_page: String(logsPerPage)
+        });
+        if (subscriberId) {
+            params.set('subscriber_id', String(subscriberId));
+        }
+
+        const data = await apiCall(`/logs?${params.toString()}`);
         if (!data) return;
         if (data.status === 'success') {
             const rawLogs = Array.isArray(data.logs)
@@ -1126,14 +1144,24 @@ function updateDashboardSummary() {
 }
 
 async function submitAction() {
+    if (isActionSubmitting) return;
+
     const subscriberId = document.getElementById('modal-subscriber-id').value;
     const actionType = document.getElementById('modal-action-type').value;
     const amount = dom.amountInput.value;
     const promiseDate = dom.promiseDateInput.value;
     const isCash = dom.isCashCheckbox.checked;
+
     if (!amount || Number(amount) <= 0) {
         return showAlert('يرجى إدخال مبلغ صحيح!');
     }
+
+    isActionSubmitting = true;
+    const confirmBtn = dom.confirmBtn;
+    const originalButtonText = confirmBtn.innerHTML;
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> جاري التنفيذ...';
+
     const endpoint = actionType === 'payment' ? '/transactions/payment' : '/transactions/renewal';
     const requestData = {
         subscriber_id: parseInt(subscriberId, 10),
@@ -1141,6 +1169,7 @@ async function submitAction() {
         promise_date: promiseDate,
         is_cash: isCash
     };
+
     try {
         const data = await apiCall(endpoint, 'POST', requestData);
         if (data && data.status === 'success') {
@@ -1152,6 +1181,10 @@ async function submitAction() {
         }
     } catch (error) {
         showAlert('❌ خطأ في الاتصال بالسيرفر!');
+    } finally {
+        isActionSubmitting = false;
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = originalButtonText;
     }
 }
 
