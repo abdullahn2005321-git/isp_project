@@ -92,11 +92,14 @@ def get_logs():
         logs = []
         for t in transaction:
             t_type_arabic = "تسديد" if t.transaction_type == 'payment' else "تجديد"
+            actor_name = t.processed_by.username if t.processed_by else None
 
             logs.append({
                 "type": t_type_arabic,
                 "subscriber_id": t.subscriber_id,
                 "subscriber_name": t.subscriber.name if t.subscriber else None,
+                "processed_by": actor_name,
+                "processed_by_name": actor_name,
                 "amount": t.amount,
                 "date": t.transaction_date.strftime("%Y-%m-%d %H:%M:%S")
             })

@@ -295,6 +295,10 @@
                 <div class="modal-body">
                     <div class="d-grid gap-2">
                         <div class="mb-2">
+                            <label for="logFilterSubscriberId" class="form-label fw-bold small">رقم المشترك</label>
+                            <input type="number" class="form-control" id="logFilterSubscriberId" min="1" placeholder="أدخل ID المشترك">
+                        </div>
+                        <div class="mb-2">
                             <label for="logFilterStartDate" class="form-label fw-bold small">تاريخ البدء</label>
                             <input type="date" class="form-control" id="logFilterStartDate">
                         </div>
@@ -379,25 +383,24 @@
                             </div>
                         </form>
                 </div>
-                <div class="modal-footer border-0 d-flex justify-content-between align-items-center">
-                    <div>
-                        <button type="button" class="btn btn-outline-secondary me-2" id="btn-copy-details">
-                            <i class="fa-solid fa-copy"></i> نسخ المعلومات
-                        </button>
-                        <button type="button" class="btn btn-outline-danger" id="btn-delete-sub">
-                            <i class="fa-solid fa-trash"></i> حذف المشترك
-                        </button>
-                    </div>
-                    <div>
-                        <button type="button" class="btn btn-outline-info" id="btn-view-subscriber-logs">
-                            <i class="fa-solid fa-clock-rotate-left"></i> سجل هذا المشترك
-                        </button>
-                        <button type="button" class="btn btn-secondary" id="btn-close-details" data-bs-dismiss="modal">إغلاق</button>
-                        <button type="button" class="btn btn-outline-secondary d-none" id="btn-cancel-inline-edit">إلغاء</button>
-                        <button type="button" class="btn btn-primary fw-bold px-4 d-none" id="btn-save-edit">حفظ التعديلات</button>
+                <div class="modal-footer border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex flex-wrap gap-2">
                         <button type="button" class="btn btn-primary" id="btn-edit-sub">
                             <i class="fa-solid fa-pen-to-square"></i> تعديل البيانات
                         </button>
+                        <button type="button" class="btn btn-outline-info" id="btn-view-subscriber-logs">
+                            <i class="fa-solid fa-clock-rotate-left"></i> سجل المشترك
+                        </button>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-outline-secondary" id="btn-copy-details">
+                            <i class="fa-solid fa-copy"></i> نسخ البيانات
+                        </button>
+                        <button type="button" class="btn btn-outline-danger" id="btn-delete-sub">
+                            <i class="fa-solid fa-trash"></i> حذف
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary d-none" id="btn-cancel-inline-edit">إلغاء</button>
+                        <button type="button" class="btn btn-primary fw-bold px-4 d-none" id="btn-save-edit">حفظ التعديلات</button>
                     </div>
                 </div>
             </div>

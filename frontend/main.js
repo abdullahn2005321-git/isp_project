@@ -29,6 +29,7 @@ let totalLogsPages = 1;
 let currentLogFilter = 'الكل';
 let logFilterStartDate = '';
 let logFilterEndDate = '';
+let activeLogSubscriberId = null;
 let isActionSubmitting = false;
 let subscriberFilters = {
     search: '',
@@ -86,6 +87,7 @@ const dom = {
     reportStatusMessage: document.getElementById('report-status-msg'),
     btnOpenLogFilter: document.getElementById('btn-open-log-filter'),
     btnApplyLogFilter: document.getElementById('btnApplyLogFilter'),
+    logFilterSubscriberId: document.getElementById('logFilterSubscriberId'),
     btnCopyDetails: document.getElementById('btn-copy-details'),
     btnDeleteSub: document.getElementById('btn-delete-sub'),
     btnViewSubscriberLogs: document.getElementById('btn-view-subscriber-logs'),
@@ -158,7 +160,9 @@ function normalizeLog(log) {
 
     return {
         type: normalizedType,
+        subscriber_id: log.subscriber_id ?? log.subscriberId ?? null,
         subscriber_name: log.subscriber_name ?? log.subscriber ?? log.name ?? 'غير معروف',
+        processed_by: log.processed_by ?? log.processed_by_name ?? log.user_name ?? log.actor_name ?? 'غير معروف',
         amount: Number.isFinite(amountValue) ? amountValue : 0,
         date: log.date ?? log.transaction_date ?? ''
     };
@@ -487,9 +491,20 @@ function registerEventListeners() {
         dom.btnApplyLogFilter.addEventListener('click', () => {
             const startDate = document.getElementById('logFilterStartDate').value;
             const endDate = document.getElementById('logFilterEndDate').value;
+            const subscriberIdInput = document.getElementById('logFilterSubscriberId').value.trim();
             logFilterStartDate = startDate;
             logFilterEndDate = endDate;
-            filterLogs(currentLogFilter);
+            activeLogSubscriberId = subscriberIdInput ? Number(subscriberIdInput) : null;
+
+            if (!validateLogDateRange()) {
+                return;
+            }
+
+            if (activeLogSubscriberId) {
+                loadLogs(1, activeLogSubscriberId);
+            } else {
+                filterLogs(currentLogFilter);
+            }
             logFilterModal.hide();
         });
     }
@@ -498,9 +513,20 @@ function registerEventListeners() {
             const filterType = button.dataset.logFilter;
             const startDate = document.getElementById('logFilterStartDate').value;
             const endDate = document.getElementById('logFilterEndDate').value;
+            const subscriberIdInput = document.getElementById('logFilterSubscriberId').value.trim();
             logFilterStartDate = startDate;
             logFilterEndDate = endDate;
-            filterLogs(filterType);
+            activeLogSubscriberId = subscriberIdInput ? Number(subscriberIdInput) : null;
+
+            if (!validateLogDateRange()) {
+                return;
+            }
+
+            if (activeLogSubscriberId) {
+                loadLogs(1, activeLogSubscriberId);
+            } else {
+                filterLogs(filterType);
+            }
             logFilterModal.hide();
         });
     });
@@ -511,6 +537,11 @@ function registerEventListeners() {
     if (dom.btnViewSubscriberLogs) {
         dom.btnViewSubscriberLogs.addEventListener('click', () => {
             if (selectedSubscriberId !== null) {
+                const subscriberIdInput = document.getElementById('logFilterSubscriberId');
+                if (subscriberIdInput) {
+                    subscriberIdInput.value = selectedSubscriberId;
+                }
+                activeLogSubscriberId = selectedSubscriberId;
                 switchSection('logs');
                 loadLogs(1, selectedSubscriberId);
             }
@@ -1098,6 +1129,7 @@ function renderLogsTable(logsArray) {
             <tr>
                 <td dir="ltr" class="text-muted small">${displayDate}</td>
                 <td class="fw-bold text-dark">${log.subscriber_name}</td>
+                <td class="small text-secondary">${log.processed_by || 'غير معروف'}</td>
                 <td><span class="badge ${badgeClass} fs-6"><i class="fa-solid ${icon}"></i> ${log.type}</span></td>
                 <td class="fw-bold fs-6">${Number(log.amount || 0).toLocaleString()} د.ع</td>
             </tr>
@@ -1111,9 +1143,26 @@ function updateLogFilterButtonLabel() {
     }
 }
 
+function validateLogDateRange() {
+    if (!logFilterStartDate || !logFilterEndDate) {
+        return true;
+    }
+
+    if (logFilterStartDate > logFilterEndDate) {
+        showAlert('تاريخ البداية لا يمكن أن يكون بعد تاريخ النهاية.');
+        return false;
+    }
+
+    return true;
+}
+
 function filterLogs(filterType) {
     currentLogFilter = filterType;
     updateLogFilterButtonLabel();
+
+    if (!validateLogDateRange()) {
+        return;
+    }
 
     const filteredLogs = allLogs.filter((log) => {
         const dateText = String(log.date || '');
@@ -1121,7 +1170,8 @@ function filterLogs(filterType) {
         const matchesType = filterType === 'الكل' || log.type === filterType;
         const matchesStart = !logFilterStartDate || logDate >= logFilterStartDate;
         const matchesEnd = !logFilterEndDate || logDate <= logFilterEndDate;
-        return matchesType && matchesStart && matchesEnd;
+        const matchesSubscriber = !activeLogSubscriberId || Number(log.subscriber_id) === Number(activeLogSubscriberId);
+        return matchesType && matchesStart && matchesEnd && matchesSubscriber;
     });
 
     renderLogsTable(filteredLogs);

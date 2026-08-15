@@ -127,6 +127,15 @@ def test_get_logs_filters_by_single_subscriber_id(client):
         db.session.add(admin)
         db.session.flush()
 
+        staff = User(
+            username='logs-staff',
+            password_hash=generate_password_hash('123456'),
+            role='staff',
+            parent_admin_id=admin.id
+        )
+        db.session.add(staff)
+        db.session.flush()
+
         area = Area(name='Zone B', admin_id=admin.id)
         db.session.add(area)
         db.session.flush()
@@ -156,7 +165,7 @@ def test_get_logs_filters_by_single_subscriber_id(client):
             ),
             Transaction(
                 subscriber_id=first_subscriber.id,
-                user_id=admin.id,
+                user_id=staff.id,
                 transaction_type='renewal',
                 amount=35000,
                 transaction_date=datetime(2026, 2, 11, 9, 0, 0)
@@ -184,3 +193,4 @@ def test_get_logs_filters_by_single_subscriber_id(client):
     assert data['status'] == 'success'
     assert [log['subscriber_name'] for log in data['logs']] == ['Subscriber One', 'Subscriber One']
     assert all(log['subscriber_id'] == subscriber_id for log in data['logs'])
+    assert [log['processed_by'] for log in data['logs']] == ['logs-staff', 'logs-admin']
