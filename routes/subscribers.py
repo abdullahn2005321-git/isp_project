@@ -19,8 +19,8 @@ def add_area():
     user_role = claims.get("role")
     admin_id = claims.get("admin_id")
 
-    if user_role != "admin":
-        return jsonify({"status":"error", "message": "you must be admin"}), 403
+    if user_role != "admin" and user_role != "editor":
+        return jsonify({"status":"error", "message": "you must be admin or editor"}), 403
     
     data = request.get_json()
 
@@ -39,7 +39,7 @@ def add_area():
     except Exception as e:
         db.session.rollback()
         if "Duplicate entry" in str(e) or "IntegrityError" in str(e):
-             return jsonify({"status": "error", "message": "هذه المنطقة موجودة مسبقاً."}), 400
+             return jsonify({"status": "error", "message": "Area with this name already exists."}), 400
         return jsonify({"status": "error", "message": str(e)}), 500
     
 @subscribers_bp.route('/api/areas', methods=['GET'])
@@ -67,18 +67,18 @@ def update_area(area_id):
     user_role = claims.get("role")
     admin_id = claims.get("admin_id")
 
-    if user_role != "admin":
-        return jsonify({"status": "error", "message": "يجب أن تكون مديراً لتعديل اسم المنطقة."}), 403
+    if user_role != "admin" and user_role != "editor":
+        return jsonify({"status": "error", "message": "you must be admin or editor"}), 403
 
     data = request.get_json(silent=True) or {}
     new_name = str(data.get('name', '')).strip()
 
     if not new_name:
-        return jsonify({"status": "error", "message": "اسم المنطقة مطلوب."}), 400
+        return jsonify({"status": "error", "message": "Area name is required."}), 400
 
     area = Area.query.filter_by(id=area_id, admin_id=admin_id).first()
     if not area:
-        return jsonify({"status": "error", "message": "هذه المنطقة لا تخص هذا المدير أو غير موجودة."}), 403
+        return jsonify({"status": "error", "message": "This area does not belong to this admin or does not exist."}), 403
 
     area.name = new_name
 
@@ -101,7 +101,11 @@ def update_area(area_id):
 def add_subscriber():
 
     claims = get_jwt()
+    user_role = claims.get("role")
     admin_id = claims.get("admin_id")
+
+    if user_role != "admin" and user_role != "editor":
+        return jsonify({"status":"error", "message": "you must be admin or editor"}), 403
 
     data = request.get_json()
 
@@ -237,7 +241,7 @@ def get_subscribers():
         if renewal_from or renewal_to:
             query = query.order_by(last_renewal_subquery.c.last_renewal_date.asc(), Subscriber.id.asc())
         else:
-            query = query.order_by(Subscriber.id.desc())
+            query = query.order_by(last_renewal_subquery.c.last_renewal_date.desc().nullslast(), Subscriber.id.desc())
 
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
@@ -305,47 +309,51 @@ def get_subscriber(sub_id):
     }), 200
 
 
-@subscribers_bp.route('/api/promises_today', methods=['GET'])
-@jwt_required()
-def get_promises_today():
-    try:
-        claims = get_jwt()
-        admin_id = claims.get("admin_id")
+##@subscribers_bp.route('/api/promises_today', methods=['GET'])
+##@jwt_required()
+##def get_promises_today():
+##    try:
+##        claims = get_jwt()
+##        admin_id = claims.get("admin_id")
 
-        today = str(date.today())
-        subscribers = Subscriber.query.join(Area).filter(
-            db.func.date(Subscriber.promise_date) == today,
-            Subscriber.is_active == True,
-            Area.admin_id == admin_id
-        ).options(joinedload(Subscriber.area)).all()
+##        today = str(date.today())
+##        subscribers = Subscriber.query.join(Area).filter(
+##            db.func.date(Subscriber.promise_date) == today,
+##            Subscriber.is_active == True,
+##            Area.admin_id == admin_id
+##        ).options(joinedload(Subscriber.area)).all()
 
-        subs_list = []
-        for sub in subscribers:
-            subs_list.append({
-                "id": sub.id,
-                "name": sub.name,
-                "phone": sub.phone_number if sub.phone_number and sub.phone_number.strip() != "" else "لا يوجد رقم مسجل",
-                "area_id": sub.area_id,
-                "area_name": sub.area.name if sub.area else None,
-                "notes": sub.notes,
-                "balance": sub.balance,
-                "promise_date": sub.promise_date.strftime("%Y-%m-%d") if sub.promise_date else "لا يوجد وعد مسجل"
-            })
-        
-        return jsonify({
-            "status": "success",
-            "count": len(subs_list),
-            "subscribers": subs_list
-        }), 200
-    
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+##        subs_list = []
+##        for sub in subscribers:
+##            subs_list.append({
+##                "id": sub.id,
+##                "name": sub.name,
+##                "phone": sub.phone_number if sub.phone_number and sub.phone_number.strip() != "" else "لا يوجد رقم مسجل",
+##                "area_id": sub.area_id,
+##                "area_name": sub.area.name if sub.area else None,
+##                "notes": sub.notes,
+##                "balance": sub.balance,
+##                "promise_date": sub.promise_date.strftime("%Y-%m-%d") if sub.promise_date else "لا يوجد وعد مسجل"
+##            })
+##        
+##        return jsonify({
+##            "status": "success",
+##            "count": len(subs_list),
+##            "subscribers": subs_list
+##        }), 200
+##    
+##    except Exception as e:
+##        return jsonify({"status": "error", "message": str(e)}), 500
 
 @subscribers_bp.route('/api/subscribers/<int:sub_id>', methods=['PUT'])
 @jwt_required()
 def update_subscriber(sub_id):
     claims = get_jwt()
+    user_role = claims.get("role")
     admin_id = claims.get("admin_id")
+
+    if user_role != "admin" and user_role != "editor" and user_role != "commenter":
+        return jsonify({"status": "error", "message": "you must be admin, editor or commenter"}), 403
 
     sub = Subscriber.query.join(Area).filter(
         Subscriber.id == sub_id,
@@ -408,12 +416,12 @@ def update_subscriber(sub_id):
 def delete_subscriber(sub_id):
     claims = get_jwt()
     admin_id = claims.get("admin_id")
-    admin_role = claims.get("role")
+    user_role = claims.get("role")
 
-    if admin_role != "admin":
+    if user_role != "admin" and user_role != "editor":
         return jsonify({
             "status": "error",
-            "message": "you must be admin"
+            "message": "you must be admin or editor"
         }), 403
     
     sub = Subscriber.query.join(Area).filter(Subscriber.id == sub_id, Area.admin_id == admin_id).first()

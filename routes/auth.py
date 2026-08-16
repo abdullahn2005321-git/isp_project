@@ -6,14 +6,16 @@ from models import db, User
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/api/register', methods=['POST'])
-@jwt_required()
+@jwt_required(optional=True)
 def register_admin():
-    extra_claims = get_jwt()
-    if extra_claims.get('role') != 'super_admin':
-            return jsonify({
-                "status": "error",
-                "message": "صلاحية غير كافية, يجب ان تكون سوبر ادمن لتسجيل الادمن"
-            }), 403
+    extra_claims = get_jwt() or {}
+    existing_admin = User.query.filter_by(role='admin').first()
+
+    if existing_admin and extra_claims.get('role') != 'super_admin':
+        return jsonify({
+            "status": "error",
+            "message": "صلاحية غير كافية, يجب ان تكون سوبر ادمن لتسجيل الادمن"
+        }), 403
 
     data = request.get_json()
     if not data or 'username' not in data or 'password' not in data:
@@ -70,13 +72,20 @@ def register_staff():
             "status": "error",
             "message": "الاسم مأخوذ بالفعل"
         }), 400
-    
+
+    role = str(data.get('role', 'viewer')).strip().lower()
+    if role not in ['viewer', 'commenter', 'editor']:
+        return jsonify({
+            "status": "error",
+            "message": "الدور غير صالح"
+        }), 400
+
     current_admin_id = get_jwt_identity()
 
     new_staff = User(
         username=data['username'],
         password_hash=generate_password_hash(data['password']),
-        role='staff',
+        role=role,
         parent_admin_id=current_admin_id
     )
     try:
@@ -179,9 +188,9 @@ def login():
 
     if user and check_password_hash(user.password_hash, data['password']):
 
-        user_role = user.role
-        if user_role != 'super_admin' and user_role != 'admin' and user_role != 'staff':
-            user_role = 'staff'
+        user_role = str(user.role or 'viewer').strip().lower()
+        if user_role not in ['super_admin', 'admin', 'commenter', 'editor', 'viewer']:
+            user_role = 'viewer'
 
         target_admin_id = user.id if user_role == 'admin' else user.parent_admin_id
 

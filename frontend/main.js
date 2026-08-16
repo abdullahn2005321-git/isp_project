@@ -251,6 +251,27 @@ function normalizeRole(role) {
     return typeof role === 'string' ? role.trim().toLowerCase() : '';
 }
 
+function getRoleLabel(role) {
+    const normalizedRole = normalizeRole(role);
+
+    if (normalizedRole === 'super_admin') return 'مدير عام';
+    if (normalizedRole === 'admin') return 'مدير';
+    if (normalizedRole === 'editor') return 'محرر';
+    if (normalizedRole === 'commenter') return 'معلق';
+    if (normalizedRole === 'viewer') return 'مشاهد';
+    return 'موظف';
+}
+
+function canManageStaff(role) {
+    const normalizedRole = normalizeRole(role);
+    return normalizedRole === 'admin' || normalizedRole === 'super_admin';
+}
+
+function canManageContent(role) {
+    const normalizedRole = normalizeRole(role);
+    return normalizedRole === 'admin' || normalizedRole === 'editor' || normalizedRole === 'super_admin';
+}
+
 async function copyPhoneToClipboard(phone) {
     if (!phone || phone === 'لا يوجد رقم') return false;
 
@@ -331,25 +352,38 @@ function showApp() {
     localStorage.setItem('userRole', userRole);
     const username = localStorage.getItem('username') || 'غير معروف';
     dom.profileUsername.innerText = username;
-    dom.profileRole.innerText = userRole === 'super_admin' ? 'مدير عام' : userRole === 'admin' ? 'مدير' : 'موظف';
+    dom.profileRole.innerText = getRoleLabel(userRole);
     dom.profileAreasCount.innerText = Array.isArray(allAreas) ? allAreas.length : 0;
 
-    const canManageStaff = userRole === 'admin' || userRole === 'super_admin';
+    const canManageStaffOnly = canManageStaff(userRole);
+    const canManageContentOnly = canManageContent(userRole);
 
     if (dom.btnAddStaff) {
-        if (canManageStaff) {
-            dom.btnAddStaff.classList.remove('d-none');
-        } else {
-            dom.btnAddStaff.classList.add('d-none');
-        }
+        dom.btnAddStaff.classList.toggle('d-none', !canManageStaffOnly);
     }
 
     if (dom.teamAddStaffWrapper) {
-        if (canManageStaff) {
-            dom.teamAddStaffWrapper.classList.remove('d-none');
-        } else {
-            dom.teamAddStaffWrapper.classList.add('d-none');
-        }
+        dom.teamAddStaffWrapper.classList.toggle('d-none', !canManageStaffOnly);
+    }
+
+    if (dom.btnAddSubscriber) {
+        dom.btnAddSubscriber.classList.toggle('d-none', !canManageContentOnly);
+    }
+
+    if (dom.btnAddArea) {
+        dom.btnAddArea.classList.toggle('d-none', !canManageContentOnly);
+    }
+
+    if (dom.btnSaveNew) {
+        dom.btnSaveNew.disabled = !canManageContentOnly;
+    }
+
+    if (dom.btnSaveEdit) {
+        dom.btnSaveEdit.disabled = !canManageContentOnly;
+    }
+
+    if (dom.btnDeleteSub) {
+        dom.btnDeleteSub.disabled = !canManageContentOnly;
     }
 }
 
@@ -707,7 +741,7 @@ function renderAreaOptions(areas) {
 
 function renderAreasTable(areas) {
     dom.areasTableBody.innerHTML = '';
-    const canEditArea = getCurrentRole() === 'admin';
+    const canEditArea = canManageContent(getCurrentRole());
 
     if (!areas.length) {
         dom.areasTableBody.innerHTML = `<tr><td colspan="${canEditArea ? 3 : 2}" class="text-muted p-4">لا توجد مناطق مسجلة بعد.</td></tr>`;

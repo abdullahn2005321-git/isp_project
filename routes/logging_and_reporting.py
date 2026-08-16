@@ -13,7 +13,14 @@ logging_and_reporting_bp = Blueprint('logging_and_reporting', __name__)
 def daily_report():
     try:
         claims = get_jwt()
+        user_role = claims.get("role")
         admin_id = claims.get("admin_id")
+
+        if user_role != 'admin' and user_role != 'editor':
+            return jsonify({
+                "status": "error",
+                "message": "Unauthorized access. Only admin and editors can view the daily report."
+            }), 403
 
         target_date = request.args.get('date', str(date.today()))
 
@@ -70,7 +77,14 @@ def daily_report():
 def get_logs():
     try:
         claims = get_jwt()
+        user_role = claims.get("role")
         admin_id = claims.get("admin_id")
+
+        if user_role != 'admin' and user_role != 'editor':
+            return jsonify({
+                "status": "error",
+                "message": "Unauthorized access. Only admin and editors can view logs."
+            }), 403
 
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 100, type=int)

@@ -94,6 +94,80 @@ def test_get_subscribers_combines_debt_and_last_renewal_filters(client):
     assert [subscriber['last_renewal_date'] for subscriber in data['subscribers']] == ['2026-01-05', '2026-01-20']
 
 
+def test_get_subscribers_defaults_to_latest_renewal_desc(client):
+    with app.app_context():
+        admin = User(
+            username='default-order-admin',
+            password_hash=generate_password_hash('123456'),
+            role='admin'
+        )
+        db.session.add(admin)
+        db.session.flush()
+
+        area = Area(name='Zone B', admin_id=admin.id)
+        db.session.add(area)
+        db.session.flush()
+
+        newest_subscriber = Subscriber(
+            name='Newest Renewal',
+            phone_number='20001',
+            area_id=area.id,
+            balance=0
+        )
+        mid_subscriber = Subscriber(
+            name='Middle Renewal',
+            phone_number='20002',
+            area_id=area.id,
+            balance=0
+        )
+        oldest_subscriber = Subscriber(
+            name='Oldest Renewal',
+            phone_number='20003',
+            area_id=area.id,
+            balance=0
+        )
+        db.session.add_all([newest_subscriber, mid_subscriber, oldest_subscriber])
+        db.session.flush()
+
+        db.session.add_all([
+            Transaction(
+                subscriber_id=newest_subscriber.id,
+                user_id=admin.id,
+                transaction_type='renewal',
+                amount=35000,
+                transaction_date=datetime(2026, 1, 25, 12, 0, 0)
+            ),
+            Transaction(
+                subscriber_id=mid_subscriber.id,
+                user_id=admin.id,
+                transaction_type='renewal',
+                amount=35000,
+                transaction_date=datetime(2026, 1, 10, 12, 0, 0)
+            ),
+            Transaction(
+                subscriber_id=oldest_subscriber.id,
+                user_id=admin.id,
+                transaction_type='renewal',
+                amount=35000,
+                transaction_date=datetime(2026, 1, 5, 12, 0, 0)
+            )
+        ])
+        db.session.commit()
+
+        token = create_admin_token(admin)
+
+    response = client.get(
+        '/api/subscribers',
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert data['status'] == 'success'
+    assert [subscriber['name'] for subscriber in data['subscribers']] == ['Newest Renewal', 'Middle Renewal', 'Oldest Renewal']
+
+
 def test_get_subscribers_rejects_invalid_last_renewal_range(client):
     with app.app_context():
         admin = User(
