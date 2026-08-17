@@ -506,7 +506,10 @@ function registerEventListeners() {
     }
     dom.btnLogout.addEventListener('click', logoutUser);
     dom.tabDashboard.addEventListener('click', () => switchSection('dashboard'));
-    dom.tabSubscribers.addEventListener('click', () => switchSection('subscribers'));
+    dom.tabSubscribers.addEventListener('click', () => {
+        switchSection('subscribers');
+        loadSubscribers(1);
+    });
     dom.tabLogs.addEventListener('click', () => switchSection('logs'));
     dom.searchInput.addEventListener('input', filterSubscribers);
     if (dom.debtOnlyFilter) {
@@ -797,7 +800,9 @@ async function loadSubscribers(page = 1) {
             dom.subscribersTableBody.innerHTML = `<div class="col-12 text-danger p-4 text-center">${data?.message || 'تعذر تحميل قائمة المشتركين.'}</div>`;
             return;
         }
-        const subscribersList = (data.subscribers || []).map(normalizeSubscriber);
+        const subscribersList = (Array.isArray(data.subscribers) ? data.subscribers : [])
+            .filter((subscriber) => subscriber && typeof subscriber === 'object')
+            .map(normalizeSubscriber);
         allSubscribers = subscribersList;
         currentSubscriberPage = page;
         totalSubscriberPages = data.pagination?.total_pages || 1;
@@ -915,7 +920,15 @@ function renderTable(list) {
         return;
     }
     list.forEach((sub) => {
-        dom.subscribersTableBody.appendChild(createSubscriberRow(sub));
+        try {
+            dom.subscribersTableBody.appendChild(createSubscriberRow(sub));
+        } catch (error) {
+            console.error('خطأ في رسم بيانات المشترك:', sub, error);
+        }
+    });
+
+    if (!dom.subscribersTableBody.children.length) {
+        dom.subscribersTableBody.innerHTML = '<div class="col-12 text-danger p-4 text-center">تعذر عرض بيانات المشتركين.</div>';
     });
 }
 
