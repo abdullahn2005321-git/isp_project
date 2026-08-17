@@ -1,9 +1,15 @@
 from flask import Blueprint, request, jsonify
-from models import db, Subscriber, Transaction, Area
+from models import db, Subscriber, Transaction, Area, User
 from routes.subscribers import get_current_admin_id
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 
 transactions_bp = Blueprint('transactions', __name__)
+
+
+def can_process_transaction():
+    user = db.session.get(User, int(get_jwt_identity()))
+    role = str(user.role if user else '').strip().lower()
+    return role in {'admin', 'editor'}
 
 #==============================
 #==========payment endpoints
@@ -13,6 +19,12 @@ transactions_bp = Blueprint('transactions', __name__)
 def add_payment():
     admin_id = get_current_admin_id()
     user_id = get_jwt_identity()
+
+    if not can_process_transaction():
+        return jsonify({
+            "status": "error",
+            "message": "هذه الصلاحية لا تسمح بالتسديد أو التجديد."
+        }), 403
 
     data = request.get_json()
 
@@ -80,6 +92,12 @@ def add_payment():
 def renew_subscription():
     admin_id = get_current_admin_id()
     user_id = get_jwt_identity()
+
+    if not can_process_transaction():
+        return jsonify({
+            "status": "error",
+            "message": "هذه الصلاحية لا تسمح بالتسديد أو التجديد."
+        }), 403
 
     data = request.get_json()
     

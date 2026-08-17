@@ -280,6 +280,11 @@ function canManageContent(role) {
     return normalizedRole === 'admin' || normalizedRole === 'editor' || normalizedRole === 'super_admin';
 }
 
+function canProcessTransactions(role) {
+    const normalizedRole = normalizeRole(role);
+    return normalizedRole === 'admin' || normalizedRole === 'editor';
+}
+
 async function copyPhoneToClipboard(phone) {
     if (!phone || phone === 'لا يوجد رقم') return false;
 
@@ -862,6 +867,7 @@ function createSubscriberRow(sub) {
     const promiseText = sub.promise_date && sub.promise_date !== 'None' ? `🗓️ ${sub.promise_date}` : '🗓️ لا يوجد وعد';
     const lastRenewalText = sub.last_renewal_date ? `آخر اشتراك: ${sub.last_renewal_date}` : 'آخر اشتراك: لا يوجد تجديد';
     const notes = sub.notes && String(sub.notes).trim() ? String(sub.notes).trim() : 'لا توجد ملاحظات';
+    const canProcess = canProcessTransactions(getCurrentRole());
 
     card.innerHTML = `
         <div class="card h-100 shadow-sm border-0 rounded-4">
@@ -883,10 +889,12 @@ function createSubscriberRow(sub) {
                 <div class="small text-muted mb-2 promise-date"></div>
                 <div class="small text-warning mb-3 subscriber-notes"></div>
 
-                <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-sm btn-outline-success flex-fill fw-bold renew-btn">تجديد</button>
-                    <button type="button" class="btn btn-sm btn-outline-primary flex-fill fw-bold payment-btn">تسديد</button>
-                </div>
+                ${canProcess ? `
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-success flex-fill fw-bold renew-btn">تجديد</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary flex-fill fw-bold payment-btn">تسديد</button>
+                    </div>
+                ` : ''}
             </div>
         </div>
     `;

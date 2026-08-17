@@ -83,3 +83,75 @@ def test_register_staff_accepts_new_role(client):
         staff = User.query.filter_by(username='editor-member').first()
         assert staff is not None
         assert staff.role == 'editor'
+
+
+def test_viewer_cannot_process_payment(client):
+    with app.app_context():
+        admin = User(
+            username='viewer-owner-admin',
+            password_hash=generate_password_hash('123456'),
+            role='admin'
+        )
+        db.session.add(admin)
+        db.session.flush()
+
+        viewer = User(
+            username='viewer-member',
+            password_hash=generate_password_hash('123456'),
+            role='viewer',
+            parent_admin_id=admin.id
+        )
+        db.session.add(viewer)
+        db.session.commit()
+
+        token = create_access_token(
+            identity=str(viewer.id),
+            additional_claims={
+                'role': 'viewer',
+                'admin_id': admin.id
+            }
+        )
+
+    response = client.post(
+        '/api/transactions/payment',
+        json={'subscriber_id': 1, 'amount': 5000},
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    assert response.status_code == 403
+
+
+def test_commenter_cannot_process_payment(client):
+    with app.app_context():
+        admin = User(
+            username='commenter-owner-admin',
+            password_hash=generate_password_hash('123456'),
+            role='admin'
+        )
+        db.session.add(admin)
+        db.session.flush()
+
+        commenter = User(
+            username='commenter-member',
+            password_hash=generate_password_hash('123456'),
+            role='commenter',
+            parent_admin_id=admin.id
+        )
+        db.session.add(commenter)
+        db.session.commit()
+
+        token = create_access_token(
+            identity=str(commenter.id),
+            additional_claims={
+                'role': 'commenter',
+                'admin_id': admin.id
+            }
+        )
+
+    response = client.post(
+        '/api/transactions/payment',
+        json={'subscriber_id': 1, 'amount': 5000},
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    assert response.status_code == 403
