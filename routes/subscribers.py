@@ -259,8 +259,8 @@ def get_subscribers():
             )
             query = query.order_by(
                 missing_renewal_last.asc(),
-                last_renewal_subquery.c.last_renewal_date.desc(),
-                Subscriber.id.desc()
+                last_renewal_subquery.c.last_renewal_date.asc(),
+                Subscriber.id.asc()
             )
 
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)

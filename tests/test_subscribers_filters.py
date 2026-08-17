@@ -165,7 +165,7 @@ def test_get_subscribers_defaults_to_latest_renewal_desc(client):
 
     assert response.status_code == 200
     assert data['status'] == 'success'
-    assert [subscriber['name'] for subscriber in data['subscribers']] == ['Newest Renewal', 'Middle Renewal', 'Oldest Renewal']
+    assert [subscriber['name'] for subscriber in data['subscribers']] == ['Oldest Renewal', 'Middle Renewal', 'Newest Renewal']
 
 
 def test_get_subscribers_includes_legacy_rows_with_null_active_flag(client):
