@@ -167,6 +167,11 @@ def add_subscriber():
 def get_subscribers():
     try:
         admin_id = get_current_admin_id()
+        if admin_id is None:
+            return jsonify({
+                "status": "error",
+                "message": "لم يتم التعرف على مالك بيانات المشتركين لهذا المستخدم."
+            }), 403
 
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 50, type=int)
@@ -224,7 +229,7 @@ def get_subscribers():
             joinedload(Subscriber.area)
         ).filter(
             Area.admin_id == admin_id,
-            Subscriber.is_active == True
+            db.or_(Subscriber.is_active == True, Subscriber.is_active.is_(None))
         )
 
         if search and search.strip():
@@ -248,7 +253,7 @@ def get_subscribers():
         if renewal_from or renewal_to:
             query = query.order_by(last_renewal_subquery.c.last_renewal_date.asc(), Subscriber.id.asc())
         else:
-            query = query.order_by(last_renewal_subquery.c.last_renewal_date.desc().nullslast(), Subscriber.id.desc())
+            query = query.order_by(last_renewal_subquery.c.last_renewal_date.desc().nullsfirst(), Subscriber.id.desc())
 
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 

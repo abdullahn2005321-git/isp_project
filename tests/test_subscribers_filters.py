@@ -168,6 +168,40 @@ def test_get_subscribers_defaults_to_latest_renewal_desc(client):
     assert [subscriber['name'] for subscriber in data['subscribers']] == ['Newest Renewal', 'Middle Renewal', 'Oldest Renewal']
 
 
+def test_get_subscribers_includes_legacy_rows_with_null_active_flag(client):
+    with app.app_context():
+        admin = User(
+            username='legacy-data-admin',
+            password_hash=generate_password_hash('123456'),
+            role='admin'
+        )
+        db.session.add(admin)
+        db.session.flush()
+
+        area = Area(name='Legacy Zone', admin_id=admin.id)
+        subscriber = Subscriber(
+            name='Legacy Subscriber',
+            phone_number='20008',
+            area=area,
+            balance=0,
+            is_active=None
+        )
+        db.session.add_all([area, subscriber])
+        db.session.commit()
+
+        token = create_admin_token(admin)
+
+    response = client.get(
+        '/api/subscribers',
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert [item['name'] for item in data['subscribers']] == ['Legacy Subscriber']
+
+
 def test_get_subscribers_uses_logged_in_admin_when_claim_is_stale(client):
     with app.app_context():
         admin = User(
@@ -205,6 +239,46 @@ def test_get_subscribers_uses_logged_in_admin_when_claim_is_stale(client):
 
     assert response.status_code == 200
     assert [item['name'] for item in data['subscribers']] == ['Owned Subscriber']
+
+
+def test_new_subscriber_without_renewal_appears_on_first_page(client):
+    with app.app_context():
+        admin = User(
+            username='new-subscriber-admin',
+            password_hash=generate_password_hash('123456'),
+            role='admin'
+        )
+        db.session.add(admin)
+        db.session.flush()
+
+        area = Area(name='New Subscriber Zone', admin_id=admin.id)
+        db.session.add(area)
+        db.session.commit()
+
+        token = create_admin_token(admin)
+        area_id = area.id
+
+    response = client.post(
+        '/api/subscribers',
+        json={
+            'name': 'Just Added Subscriber',
+            'phone_number': '20007',
+            'area_id': area_id
+        },
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    assert response.status_code == 201
+
+    response = client.get(
+        '/api/subscribers',
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert data['subscribers'][0]['name'] == 'Just Added Subscriber'
 
 
 def test_get_areas_uses_logged_in_admin_when_claim_is_stale(client):

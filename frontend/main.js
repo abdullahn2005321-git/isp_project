@@ -191,7 +191,12 @@ async function apiCall(endpoint, method = 'GET', body = null) {
             showAlert('لا تملك صلاحية للوصول! يرجى تسجيل الدخول أولاً.');
             return null;
         }
-        return await response.json();
+        const data = await response.json().catch(() => null);
+        if (!response.ok) {
+            showAlert(data?.message || `فشل الطلب (${response.status})`, 'danger');
+            return data || { status: 'error', message: `فشل الطلب (${response.status})` };
+        }
+        return data;
     } catch (error) {
         console.error('Network Error:', error);
         return null;
@@ -782,11 +787,16 @@ async function submitNewArea() {
 
 async function loadSubscribers(page = 1) {
     try {
+        if (!dom.subscribersTableBody) return;
+        dom.subscribersTableBody.innerHTML = '<div class="col-12 text-muted p-4 text-center">جاري تحميل المشتركين...</div>';
         updateSubscriberFilterSummary();
         const params = buildSubscriberQueryParams(page);
 
         const data = await apiCall(`/subscribers?${params.toString()}`);
-        if (!data || data.status !== 'success') return;
+        if (!data || data.status !== 'success') {
+            dom.subscribersTableBody.innerHTML = `<div class="col-12 text-danger p-4 text-center">${data?.message || 'تعذر تحميل قائمة المشتركين.'}</div>`;
+            return;
+        }
         const subscribersList = (data.subscribers || []).map(normalizeSubscriber);
         allSubscribers = subscribersList;
         currentSubscriberPage = page;
@@ -799,7 +809,10 @@ async function loadSubscribers(page = 1) {
         renderTable(allSubscribers);
         updateDashboardSummary();
     } catch (error) {
-        console.error('خطأ:', error);
+        console.error('خطأ في تحميل المشتركين:', error);
+        if (dom.subscribersTableBody) {
+            dom.subscribersTableBody.innerHTML = '<div class="col-12 text-danger p-4 text-center">حدث خطأ أثناء تحميل قائمة المشتركين.</div>';
+        }
     }
 }
 
