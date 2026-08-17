@@ -285,6 +285,11 @@ function canProcessTransactions(role) {
     return normalizedRole === 'admin' || normalizedRole === 'editor';
 }
 
+function canEditSubscribers(role) {
+    const normalizedRole = normalizeRole(role);
+    return normalizedRole === 'admin' || normalizedRole === 'editor' || normalizedRole === 'commenter';
+}
+
 async function copyPhoneToClipboard(phone) {
     if (!phone || phone === 'لا يوجد رقم') return false;
 
@@ -1055,6 +1060,7 @@ async function showSubscriberDetails(subscriberId) {
         }
         const sub = normalizeSubscriber(data.subscriber);
         selectedSubscriberData = sub;
+        const canEdit = canEditSubscribers(getCurrentRole());
         dom.detailName.innerText = sub.name;
         dom.detailArea.innerText = sub.area_name || sub.area || '-';
         dom.detailBalance.innerText = `${sub.balance.toLocaleString()} د.ع`;
@@ -1073,6 +1079,9 @@ async function showSubscriberDetails(subscriberId) {
             dom.detailNotes.innerText = 'لا توجد ملاحظات مسجلة لهذا المشترك.';
             dom.detailNotes.className = 'm-0 text-muted small fst-italic';
         }
+        if (dom.btnEditSub) dom.btnEditSub.classList.toggle('d-none', !canEdit);
+        if (dom.btnDeleteSub) dom.btnDeleteSub.classList.toggle('d-none', !canEdit);
+        if (dom.quickPromiseInput) dom.quickPromiseInput.disabled = !canEdit;
     } catch (error) {
         console.error('خطأ:', error);
         dom.detailName.innerText = '❌ خطأ في الاتصال';
@@ -1098,6 +1107,10 @@ async function openSubscriberEditor(subscriberId, fallbackSub = null) {
 
 function enterInlineEditMode(sub) {
     const normalizedSub = normalizeSubscriber(sub);
+    if (!canEditSubscribers(getCurrentRole())) {
+        showAlert('المشاهد يستطيع العرض فقط ولا يمكنه تعديل بيانات المشترك.', 'warning');
+        return;
+    }
     isInlineEditingSubscriber = true;
 
     if (dom.subscriberDetailView) dom.subscriberDetailView.classList.add('d-none');
@@ -1414,6 +1427,10 @@ function setFullDebtAmount() {
 
 async function quickUpdatePromise() {
     if (!selectedSubscriberId) return;
+    if (!canEditSubscribers(getCurrentRole())) {
+        showAlert('المشاهد يستطيع العرض فقط ولا يمكنه تعديل بيانات المشترك.', 'warning');
+        return;
+    }
     const updatedData = { promise_date: dom.quickPromiseInput.value || null };
     try {
         const data = await apiCall(`/subscribers/${selectedSubscriberId}`, 'PUT', updatedData);
