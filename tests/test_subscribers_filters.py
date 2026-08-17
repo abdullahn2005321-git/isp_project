@@ -207,6 +207,72 @@ def test_get_subscribers_uses_logged_in_admin_when_claim_is_stale(client):
     assert [item['name'] for item in data['subscribers']] == ['Owned Subscriber']
 
 
+def test_get_areas_uses_logged_in_admin_when_claim_is_stale(client):
+    with app.app_context():
+        admin = User(
+            username='owned-area-admin',
+            password_hash=generate_password_hash('123456'),
+            role='admin'
+        )
+        db.session.add(admin)
+        db.session.flush()
+        db.session.add(Area(name='Visible Zone', admin_id=admin.id))
+        db.session.commit()
+
+        token = create_access_token(
+            identity=str(admin.id),
+            additional_claims={'role': 'admin', 'admin_id': 999999}
+        )
+
+    response = client.get(
+        '/api/areas',
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert [area['name'] for area in data['areas']] == ['Visible Zone']
+
+
+def test_payment_uses_logged_in_admin_when_claim_is_stale(client):
+    with app.app_context():
+        admin = User(
+            username='payment-owner-admin',
+            password_hash=generate_password_hash('123456'),
+            role='admin'
+        )
+        db.session.add(admin)
+        db.session.flush()
+
+        area = Area(name='Payment Zone', admin_id=admin.id)
+        subscriber = Subscriber(
+            name='Payment Subscriber',
+            phone_number='20005',
+            area=area,
+            balance=0
+        )
+        db.session.add_all([area, subscriber])
+        db.session.commit()
+
+        token = create_access_token(
+            identity=str(admin.id),
+            additional_claims={'role': 'admin', 'admin_id': 999999}
+        )
+        subscriber_id = subscriber.id
+
+    response = client.post(
+        '/api/transactions/payment',
+        json={'subscriber_id': subscriber_id, 'amount': 5000},
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    data = response.get_json()
+
+    assert response.status_code == 201
+    assert data['status'] == 'success'
+
+
 def test_get_subscribers_rejects_invalid_last_renewal_range(client):
     with app.app_context():
         admin = User(
@@ -307,6 +373,50 @@ def test_get_logs_filters_by_single_subscriber_id(client):
     assert [log['subscriber_name'] for log in data['logs']] == ['Subscriber One', 'Subscriber One']
     assert all(log['subscriber_id'] == subscriber_id for log in data['logs'])
     assert [log['processed_by'] for log in data['logs']] == ['logs-staff', 'logs-admin']
+
+
+def test_get_logs_uses_logged_in_admin_when_claim_is_stale(client):
+    with app.app_context():
+        admin = User(
+            username='logs-owner-admin',
+            password_hash=generate_password_hash('123456'),
+            role='admin'
+        )
+        db.session.add(admin)
+        db.session.flush()
+
+        area = Area(name='Logs Zone', admin_id=admin.id)
+        subscriber = Subscriber(
+            name='Logs Subscriber',
+            phone_number='20006',
+            area=area,
+            balance=0
+        )
+        db.session.add_all([area, subscriber])
+        db.session.flush()
+        db.session.add(Transaction(
+            subscriber_id=subscriber.id,
+            user_id=admin.id,
+            transaction_type='payment',
+            amount=5000,
+            transaction_date=datetime(2026, 2, 15, 9, 0, 0)
+        ))
+        db.session.commit()
+
+        token = create_access_token(
+            identity=str(admin.id),
+            additional_claims={'role': 'admin', 'admin_id': 999999}
+        )
+
+    response = client.get(
+        '/api/logs',
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert [log['subscriber_name'] for log in data['logs']] == ['Logs Subscriber']
 
 
 def test_update_area_name_by_owning_admin(client):

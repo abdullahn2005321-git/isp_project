@@ -9,6 +9,15 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 subscribers_bp = Blueprint('subscribers', __name__)
 
 
+def get_current_admin_id():
+    user = db.session.get(User, int(get_jwt_identity()))
+    if not user:
+        return None
+
+    user_role = str(user.role or '').strip().lower()
+    return user.id if user_role == 'admin' else user.parent_admin_id
+
+
 #==============================
 #=============area endpoints
 #==============================
@@ -17,7 +26,7 @@ subscribers_bp = Blueprint('subscribers', __name__)
 def add_area():
     claims = get_jwt()
     user_role = claims.get("role")
-    admin_id = claims.get("admin_id")
+    admin_id = get_current_admin_id()
 
     if user_role != "admin" and user_role != "editor":
         return jsonify({"status":"error", "message": "you must be admin or editor"}), 403
@@ -46,8 +55,7 @@ def add_area():
 @jwt_required()
 def get_areas():
     try:
-        claims = get_jwt()
-        admin_id = claims.get("admin_id")
+        admin_id = get_current_admin_id()
 
         areas = Area.query.filter_by(admin_id=admin_id).all()
 
@@ -65,7 +73,7 @@ def get_areas():
 def update_area(area_id):
     claims = get_jwt()
     user_role = claims.get("role")
-    admin_id = claims.get("admin_id")
+    admin_id = get_current_admin_id()
 
     if user_role != "admin" and user_role != "editor":
         return jsonify({"status": "error", "message": "you must be admin or editor"}), 403
@@ -102,7 +110,7 @@ def add_subscriber():
 
     claims = get_jwt()
     user_role = claims.get("role")
-    admin_id = claims.get("admin_id")
+    admin_id = get_current_admin_id()
 
     if user_role != "admin" and user_role != "editor":
         return jsonify({"status":"error", "message": "you must be admin or editor"}), 403
@@ -158,9 +166,7 @@ def add_subscriber():
 @jwt_required()
 def get_subscribers():
     try:
-        claims = get_jwt()
-        user = db.session.get(User, int(get_jwt_identity()))
-        admin_id = user.id if user and user.role == "admin" else claims.get("admin_id")
+        admin_id = get_current_admin_id()
 
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 50, type=int)
@@ -279,8 +285,7 @@ def get_subscribers():
 @subscribers_bp.route('/api/subscribers/<int:sub_id>', methods=['GET'])
 @jwt_required()
 def get_subscriber(sub_id):
-    claims = get_jwt()
-    admin_id = claims.get("admin_id")
+    admin_id = get_current_admin_id()
 
     sub = Subscriber.query.join(Area).filter(
             Subscriber.id == sub_id,
@@ -351,7 +356,7 @@ def get_subscriber(sub_id):
 def update_subscriber(sub_id):
     claims = get_jwt()
     user_role = claims.get("role")
-    admin_id = claims.get("admin_id")
+    admin_id = get_current_admin_id()
 
     if user_role != "admin" and user_role != "editor" and user_role != "commenter":
         return jsonify({"status": "error", "message": "you must be admin, editor or commenter"}), 403
@@ -415,8 +420,7 @@ def update_subscriber(sub_id):
 @subscribers_bp.route('/api/subscribers/<int:sub_id>', methods=['DELETE'])
 @jwt_required()
 def delete_subscriber(sub_id):
-    claims = get_jwt()
-    admin_id = claims.get("admin_id")
+    admin_id = get_current_admin_id()
     user_role = claims.get("role")
 
     if user_role != "admin" and user_role != "editor":

@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from models import db, Subscriber, Transaction, Area
+from routes.subscribers import get_current_admin_id
 from datetime import date
 from flask_jwt_extended import jwt_required, get_jwt
 
@@ -14,7 +15,7 @@ def daily_report():
     try:
         claims = get_jwt()
         user_role = claims.get("role")
-        admin_id = claims.get("admin_id")
+        admin_id = get_current_admin_id()
 
         if user_role != 'admin' and user_role != 'editor':
             return jsonify({
@@ -78,7 +79,7 @@ def get_logs():
     try:
         claims = get_jwt()
         user_role = claims.get("role")
-        admin_id = claims.get("admin_id")
+        admin_id = get_current_admin_id()
 
         if user_role != 'admin' and user_role != 'editor':
             return jsonify({

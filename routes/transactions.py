@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from models import db, Subscriber, Transaction, Area
+from routes.subscribers import get_current_admin_id
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 
 transactions_bp = Blueprint('transactions', __name__)
@@ -10,8 +11,7 @@ transactions_bp = Blueprint('transactions', __name__)
 @transactions_bp.route('/api/transactions/payment', methods=['POST'])
 @jwt_required()
 def add_payment():
-    claims = get_jwt()
-    admin_id = claims.get("admin_id")
+    admin_id = get_current_admin_id()
     user_id = get_jwt_identity()
 
     data = request.get_json()
@@ -78,8 +78,7 @@ def add_payment():
 @transactions_bp.route('/api/transactions/renewal', methods=['POST'])
 @jwt_required()
 def renew_subscription():
-    claims = get_jwt()
-    admin_id = claims.get("admin_id")
+    admin_id = get_current_admin_id()
     user_id = get_jwt_identity()
 
     data = request.get_json()
