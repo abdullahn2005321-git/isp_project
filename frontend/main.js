@@ -1283,14 +1283,14 @@ async function loadLogs(page = 1, subscriberId = null) {
         }
     } catch (error) {
         console.error('Error loading logs:', error);
-        dom.logsTableBody.innerHTML = '<tr><td colspan="4" class="text-danger p-4">❌ خطأ في الاتصال وجلب السجل</td></tr>';
+        dom.logsTableBody.innerHTML = '<tr><td colspan="5" class="text-danger p-4">❌ خطأ في الاتصال وجلب السجل</td></tr>';
     }
 }
 
 function renderLogsTable(logsArray) {
     dom.logsTableBody.innerHTML = '';
     if (!logsArray.length) {
-        dom.logsTableBody.innerHTML = '<tr><td colspan="4" class="text-muted p-4">لا توجد عمليات مطابقة للعرض.</td></tr>';
+        dom.logsTableBody.innerHTML = '<tr><td colspan="5" class="text-muted p-4">لا توجد عمليات مطابقة للعرض.</td></tr>';
         return;
     }
     logsArray.forEach((log) => {
