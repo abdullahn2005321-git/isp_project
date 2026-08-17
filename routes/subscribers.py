@@ -253,12 +253,12 @@ def get_subscribers():
         if renewal_from or renewal_to:
             query = query.order_by(last_renewal_subquery.c.last_renewal_date.asc(), Subscriber.id.asc())
         else:
-            missing_renewal_first = db.case(
-                (last_renewal_subquery.c.last_renewal_date.is_(None), 0),
-                else_=1
+            missing_renewal_last = db.case(
+                (last_renewal_subquery.c.last_renewal_date.is_(None), 1),
+                else_=0
             )
             query = query.order_by(
-                missing_renewal_first.asc(),
+                missing_renewal_last.asc(),
                 last_renewal_subquery.c.last_renewal_date.desc(),
                 Subscriber.id.desc()
             )
