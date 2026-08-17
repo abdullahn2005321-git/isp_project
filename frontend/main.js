@@ -936,7 +936,7 @@ function renderTable(list) {
 
     if (!dom.subscribersTableBody.children.length) {
         dom.subscribersTableBody.innerHTML = '<div class="col-12 text-danger p-4 text-center">تعذر عرض بيانات المشتركين.</div>';
-    });
+    }
 }
 
 function openAddSubscriberModal() {
