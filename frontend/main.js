@@ -272,7 +272,7 @@ function getRoleLabel(role) {
 
 function canManageStaff(role) {
     const normalizedRole = normalizeRole(role);
-    return normalizedRole === 'admin' || normalizedRole === 'super_admin';
+    return normalizedRole === 'admin';
 }
 
 function canManageContent(role) {
@@ -328,7 +328,7 @@ function getCurrentRole() {
     const storedRole = localStorage.getItem('userRole');
     const token = localStorage.getItem('token');
     const decodedRole = decodeJwtRole(token);
-    return normalizeRole(decodedRole || storedRole || 'staff');
+    return normalizeRole(decodedRole || storedRole || 'viewer');
 }
 
 function redirectForRole(role) {
@@ -700,7 +700,7 @@ async function handleLogin(event) {
 
     const response = await apiCall('/login', 'POST', { username, password });
     if (response && response.token) {
-        const resolvedRole = normalizeRole(response.role || decodeJwtRole(response.token) || 'staff');
+        const resolvedRole = normalizeRole(response.role || decodeJwtRole(response.token) || 'viewer');
         localStorage.setItem('token', response.token);
         localStorage.setItem('userRole', resolvedRole);
         localStorage.setItem('username', response.username || username);
@@ -963,7 +963,7 @@ async function openTeamModal() {
 
         const manager = data.manager || {};
         const members = Array.isArray(data.members) ? data.members : [];
-        const roleLabel = (role) => role === 'admin' ? 'مدير' : 'موظف';
+        const roleLabel = (role) => getRoleLabel(role);
         const userRole = localStorage.getItem('userRole');
         if (dom.teamAddStaffWrapper) {
             dom.teamAddStaffWrapper.classList.toggle('d-none', userRole !== 'admin');
@@ -982,7 +982,7 @@ async function openTeamModal() {
                 ${members.length ? members.map((member) => `
                     <div class="border rounded p-2 mb-2">
                         <div class="fw-semibold">${member.username || '—'}</div>
-                        <div class="small text-muted">${roleLabel(member.role || 'staff')}</div>
+                        <div class="small text-muted">${roleLabel(member.role || 'viewer')}</div>
                     </div>
                 `).join('') : '<div class="text-muted">لا يوجد موظفون مسجلون حتى الآن.</div>'}
             </div>

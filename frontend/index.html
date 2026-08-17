@@ -471,6 +471,14 @@
                             <label for="staffPasswordConfirm" class="form-label fw-bold text-secondary">تأكيد كلمة المرور</label>
                             <input type="password" class="form-control" id="staffPasswordConfirm" placeholder="أعد إدخال كلمة المرور" required>
                         </div>
+                        <div class="mb-3">
+                            <label for="staffRole" class="form-label fw-bold text-secondary">صلاحية الموظف</label>
+                            <select class="form-select" id="staffRole" required>
+                                <option value="viewer" selected>مشاهد - عرض فقط</option>
+                                <option value="commenter">معلق - تعديل بيانات المشترك</option>
+                                <option value="editor">محرر - إدارة المناطق والمشتركين</option>
+                            </select>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer border-0">

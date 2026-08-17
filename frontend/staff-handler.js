@@ -3,6 +3,7 @@ async function submitNewStaff() {
     const username = document.getElementById('staffUsername')?.value.trim();
     const password = document.getElementById('staffPassword')?.value.trim();
     const passwordConfirm = document.getElementById('staffPasswordConfirm')?.value.trim();
+    const role = document.getElementById('staffRole')?.value || 'viewer';
 
     if (!username || !password || !passwordConfirm) {
         showAlert('يرجى ملء جميع الحقول!');
@@ -20,7 +21,7 @@ async function submitNewStaff() {
     }
 
     // Use apiCall from main.js
-    const data = await apiCall('/register-staff', 'POST', { username, password });
+    const data = await apiCall('/register-staff', 'POST', { username, password, role });
     if (data && data.status === 'success') {
         const modal = bootstrap.Modal.getInstance(document.getElementById('addStaffModal'));
         if (modal) modal.hide();
