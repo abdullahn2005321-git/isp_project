@@ -290,6 +290,11 @@ function canEditSubscribers(role) {
     return normalizedRole === 'admin' || normalizedRole === 'editor' || normalizedRole === 'commenter';
 }
 
+function canViewAuditLog(role) {
+    const normalizedRole = normalizeRole(role);
+    return normalizedRole === 'admin' || normalizedRole === 'editor';
+}
+
 async function copyPhoneToClipboard(phone) {
     if (!phone || phone === 'لا يوجد رقم') return false;
 
@@ -375,6 +380,7 @@ function showApp() {
 
     const canManageStaffOnly = canManageStaff(userRole);
     const canManageContentOnly = canManageContent(userRole);
+    const canViewAuditLogOnly = canViewAuditLog(userRole);
 
     if (dom.btnAddStaff) {
         dom.btnAddStaff.classList.toggle('d-none', !canManageStaffOnly);
@@ -390,6 +396,14 @@ function showApp() {
 
     if (dom.btnAddArea) {
         dom.btnAddArea.classList.toggle('d-none', !canManageContentOnly);
+    }
+
+    if (dom.tabLogs) {
+        dom.tabLogs.classList.toggle('d-none', !canViewAuditLogOnly);
+    }
+
+    if (dom.btnViewSubscriberLogs) {
+        dom.btnViewSubscriberLogs.classList.toggle('d-none', !canViewAuditLogOnly);
     }
 
     if (dom.btnSaveNew) {
@@ -523,7 +537,11 @@ function registerEventListeners() {
         switchSection('subscribers');
         loadSubscribers(1);
     });
-    dom.tabLogs.addEventListener('click', () => switchSection('logs'));
+    dom.tabLogs.addEventListener('click', () => {
+        if (canViewAuditLog(getCurrentRole())) {
+            switchSection('logs');
+        }
+    });
     dom.searchInput.addEventListener('input', filterSubscribers);
     if (dom.debtOnlyFilter) {
         dom.debtOnlyFilter.addEventListener('change', filterSubscribers);
@@ -736,7 +754,9 @@ function logoutUser() {
 function loadPageData() {
     loadSubscribers();
     loadAreas();
-    loadLogs();
+    if (canViewAuditLog(getCurrentRole())) {
+        loadLogs();
+    }
 }
 
 async function loadAreas() {
@@ -928,8 +948,14 @@ function createSubscriberRow(sub) {
 
     card.querySelector('.promise-date').textContent = promiseText;
     card.querySelector('.subscriber-notes').textContent = `📝 ${notes}`;
-    card.querySelector('.renew-btn').addEventListener('click', () => openModal(sub.id, sub.name, 'renewal', sub.balance));
-    card.querySelector('.payment-btn').addEventListener('click', () => openModal(sub.id, sub.name, 'payment', sub.balance));
+    const renewButton = card.querySelector('.renew-btn');
+    const paymentButton = card.querySelector('.payment-btn');
+    if (renewButton) {
+        renewButton.addEventListener('click', () => openModal(sub.id, sub.name, 'renewal', sub.balance));
+    }
+    if (paymentButton) {
+        paymentButton.addEventListener('click', () => openModal(sub.id, sub.name, 'payment', sub.balance));
+    }
     return card;
 }
 
