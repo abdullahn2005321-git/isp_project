@@ -253,7 +253,15 @@ def get_subscribers():
         if renewal_from or renewal_to:
             query = query.order_by(last_renewal_subquery.c.last_renewal_date.asc(), Subscriber.id.asc())
         else:
-            query = query.order_by(last_renewal_subquery.c.last_renewal_date.desc().nullsfirst(), Subscriber.id.desc())
+            missing_renewal_first = db.case(
+                (last_renewal_subquery.c.last_renewal_date.is_(None), 0),
+                else_=1
+            )
+            query = query.order_by(
+                missing_renewal_first.asc(),
+                last_renewal_subquery.c.last_renewal_date.desc(),
+                Subscriber.id.desc()
+            )
 
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
