@@ -199,7 +199,10 @@ async function apiCall(endpoint, method = 'GET', body = null) {
         return data;
     } catch (error) {
         console.error('Network Error:', error);
-        return null;
+        return {
+            status: 'error',
+            message: 'تعذر الاتصال بالخادم. تأكد من تشغيل الباك اند وفتح الصفحة من عنوان الخادم.'
+        };
     }
 }
 
@@ -685,6 +688,10 @@ async function handleLogin(event) {
     event.preventDefault();
     const username = dom.loginUsername.value.trim();
     const password = dom.loginPassword.value.trim();
+
+    localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('username');
 
     if (!username || !password) {
         dom.loginMessage.innerText = 'يرجى إدخال اسم المستخدم وكلمة المرور.';
