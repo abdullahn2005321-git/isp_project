@@ -168,6 +168,45 @@ def test_get_subscribers_defaults_to_latest_renewal_desc(client):
     assert [subscriber['name'] for subscriber in data['subscribers']] == ['Newest Renewal', 'Middle Renewal', 'Oldest Renewal']
 
 
+def test_get_subscribers_uses_logged_in_admin_when_claim_is_stale(client):
+    with app.app_context():
+        admin = User(
+            username='owned-data-admin',
+            password_hash=generate_password_hash('123456'),
+            role='admin'
+        )
+        db.session.add(admin)
+        db.session.flush()
+
+        area = Area(name='Owned Zone', admin_id=admin.id)
+        subscriber = Subscriber(
+            name='Owned Subscriber',
+            phone_number='20004',
+            area=area,
+            balance=0
+        )
+        db.session.add_all([area, subscriber])
+        db.session.commit()
+
+        token = create_access_token(
+            identity=str(admin.id),
+            additional_claims={
+                'role': 'admin',
+                'admin_id': 999999
+            }
+        )
+
+    response = client.get(
+        '/api/subscribers',
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert [item['name'] for item in data['subscribers']] == ['Owned Subscriber']
+
+
 def test_get_subscribers_rejects_invalid_last_renewal_range(client):
     with app.app_context():
         admin = User(

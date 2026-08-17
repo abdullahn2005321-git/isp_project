@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from models import db, Area, Subscriber, Transaction
+from models import db, Area, Subscriber, Transaction, User
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
@@ -159,7 +159,8 @@ def add_subscriber():
 def get_subscribers():
     try:
         claims = get_jwt()
-        admin_id = claims.get("admin_id")
+        user = db.session.get(User, int(get_jwt_identity()))
+        admin_id = user.id if user and user.role == "admin" else claims.get("admin_id")
 
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 50, type=int)
