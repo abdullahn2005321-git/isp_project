@@ -420,6 +420,7 @@ def update_subscriber(sub_id):
 @subscribers_bp.route('/api/subscribers/<int:sub_id>', methods=['DELETE'])
 @jwt_required()
 def delete_subscriber(sub_id):
+    claims = get_jwt()
     admin_id = get_current_admin_id()
     user_role = claims.get("role")
 
