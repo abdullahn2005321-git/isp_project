@@ -19,6 +19,7 @@ let selectedSubscriberId = null;
 let selectedSubscriberData = null;
 let isInlineEditingSubscriber = false;
 let allSubscribers = [];
+let totalSubscribersOverall = 0;
 let allLogs = [];
 let allAreas = [];
 let currentSubscriberDebt = 0;
@@ -655,6 +656,8 @@ function registerEventListeners() {
                     subscriberIdInput.value = selectedSubscriberId;
                 }
                 activeLogSubscriberId = selectedSubscriberId;
+                const detailsModal = bootstrap.Modal.getInstance(document.getElementById('detailsModal'));
+                if (detailsModal) detailsModal.hide();
                 switchSection('logs');
                 loadLogs(1, selectedSubscriberId);
             }
@@ -676,7 +679,9 @@ function registerEventListeners() {
     dom.btnSaveNew.addEventListener('click', submitNewSubscriber);
     dom.confirmBtn.addEventListener('click', submitAction);
     dom.quickPromiseInput.addEventListener('change', quickUpdatePromise);
-    dom.fullDebtBtn.addEventListener('click', setFullDebtAmount);
+    if (dom.fullDebtBtn) {
+        dom.fullDebtBtn.addEventListener('click', setFullDebtAmount);
+    }
     dom.btnPrevPage.addEventListener('click', () => {
         if (currentSubscriberPage > 1) loadSubscribers(currentSubscriberPage - 1);
     });
@@ -753,9 +758,21 @@ function logoutUser() {
 
 function loadPageData() {
     loadSubscribers();
+    loadTotalSubscribersCount();
     loadAreas();
     if (canViewAuditLog(getCurrentRole())) {
         loadLogs();
+        loadDailyReport();
+    }
+}
+
+async function loadTotalSubscribersCount() {
+    const data = await apiCall('/subscribers?page=1&per_page=1');
+    if (!data || data.status !== 'success') return;
+    totalSubscribersOverall = data.pagination?.total_subscribers || 0;
+    if (dom.totalSubscribers) {
+        dom.totalSubscribers.innerText = totalSubscribersOverall.toLocaleString();
+        dom.totalSubscribers.dataset.total = totalSubscribersOverall;
     }
 }
 
@@ -843,8 +860,6 @@ async function loadSubscribers(page = 1) {
         allSubscribers = subscribersList;
         currentSubscriberPage = page;
         totalSubscriberPages = data.pagination?.total_pages || 1;
-        dom.totalSubscribers.innerText = data.pagination?.total_subscribers || subscribersList.length;
-        dom.totalSubscribers.dataset.total = data.pagination?.total_subscribers || subscribersList.length;
         dom.subscriberPageInfo.innerText = `صفحة ${currentSubscriberPage} من ${totalSubscriberPages}`;
         dom.btnPrevPage.disabled = currentSubscriberPage <= 1;
         dom.btnNextPage.disabled = currentSubscriberPage >= totalSubscriberPages;
@@ -889,7 +904,7 @@ function createSubscriberRow(sub) {
     const isDebt = balanceValue < 0;
     const phone = sub.phone_number || sub.phone || 'لا يوجد رقم';
     const area = sub.area_name || sub.area_id || 'غير محدد';
-    const promiseText = sub.promise_date && sub.promise_date !== 'None' ? `🗓️ ${sub.promise_date}` : '🗓️ لا يوجد وعد';
+    const promiseText = sub.promise_date && sub.promise_date !== 'None' ? `موعد السداد: ${sub.promise_date}` : 'لا يوجد وعد';
     const lastRenewalText = sub.last_renewal_date ? `آخر اشتراك: ${sub.last_renewal_date}` : 'آخر اشتراك: لا يوجد تجديد';
     const notes = sub.notes && String(sub.notes).trim() ? String(sub.notes).trim() : 'لا توجد ملاحظات';
     const canProcess = canProcessTransactions(getCurrentRole());
@@ -900,19 +915,19 @@ function createSubscriberRow(sub) {
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
                         <div class="text-primary fw-bold subscriber-name" style="cursor: pointer; font-size: 1.05rem;"></div>
-                        <small class="text-muted subscriber-phone d-block mt-1"></small>
+                        <small class="text-primary subscriber-phone d-block mt-1"></small>
                     </div>
                     <span class="badge rounded-pill balance-badge px-2 py-2"></span>
                 </div>
 
-                <div class="small text-secondary mb-2">
+                <div class="small text-dark mb-2">
                     <i class="fa-solid fa-location-dot me-1"></i>
                     <span class="area-name"></span>
                 </div>
 
-                <div class="small text-info mb-2 last-renewal-date"></div>
-                <div class="small text-muted mb-2 promise-date"></div>
-                <div class="small text-warning mb-3 subscriber-notes"></div>
+                <div class="small text-dark mb-2 last-renewal-date"></div>
+                <div class="small text-dark mb-2 promise-date"></div>
+                <div class="small text-dark mb-3 subscriber-notes"></div>
 
                 ${canProcess ? `
                     <div class="d-flex gap-2">
@@ -925,9 +940,8 @@ function createSubscriberRow(sub) {
     `;
 
     const phoneEl = card.querySelector('.subscriber-phone');
-    phoneEl.textContent = `📞 ${phone}`;
+    phoneEl.textContent = `الهاتف: ${phone}`;
     phoneEl.style.cursor = 'pointer';
-    phoneEl.style.color = '#0d6efd';
     phoneEl.style.fontWeight = '600';
     phoneEl.title = 'انقر لنسخ الرقم';
     phoneEl.addEventListener('click', async () => {
@@ -947,7 +961,7 @@ function createSubscriberRow(sub) {
     balanceBadge.classList.add(isDebt ? 'bg-danger' : 'bg-success');
 
     card.querySelector('.promise-date').textContent = promiseText;
-    card.querySelector('.subscriber-notes').textContent = `📝 ${notes}`;
+    card.querySelector('.subscriber-notes').textContent = `ملاحظات: ${notes}`;
     const renewButton = card.querySelector('.renew-btn');
     const paymentButton = card.querySelector('.payment-btn');
     if (renewButton) {
@@ -1053,6 +1067,7 @@ async function submitNewSubscriber() {
             addSubModal.hide();
             showAlert(data.message);
             loadSubscribers();
+            loadTotalSubscribersCount();
             loadDailyReport();
         } else {
             showAlert(`❌ خطأ: ${data ? data.message : 'تعذر حفظ المشترك.'}`);
@@ -1075,7 +1090,7 @@ async function showSubscriberDetails(subscriberId) {
     dom.quickPromiseInput.value = '';
     dom.detailNotes.innerText = 'جاري جلب الملاحظات...';
     dom.detailNotes.className = 'm-0 text-muted small fst-italic';
-    const detailsModal = new bootstrap.Modal(document.getElementById('detailsModal'));
+    const detailsModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('detailsModal'));
     detailsModal.show();
     try {
         const data = await apiCall(`/subscribers/${subscriberId}`);
@@ -1144,6 +1159,7 @@ function enterInlineEditMode(sub) {
     if (dom.btnEditSub) dom.btnEditSub.classList.add('d-none');
     if (dom.btnCopyDetails) dom.btnCopyDetails.classList.add('d-none');
     if (dom.btnCloseDetails) dom.btnCloseDetails.classList.add('d-none');
+    if (dom.btnViewSubscriberLogs) dom.btnViewSubscriberLogs.classList.add('d-none');
     if (dom.btnCancelInlineEdit) dom.btnCancelInlineEdit.classList.remove('d-none');
     if (dom.btnSaveEdit) dom.btnSaveEdit.classList.remove('d-none');
     setDetailsModalMode(true);
@@ -1173,6 +1189,7 @@ function exitInlineEditMode(options = {}) {
     if (dom.btnEditSub) dom.btnEditSub.classList.remove('d-none');
     if (dom.btnCopyDetails) dom.btnCopyDetails.classList.remove('d-none');
     if (dom.btnCloseDetails) dom.btnCloseDetails.classList.remove('d-none');
+    if (dom.btnViewSubscriberLogs) dom.btnViewSubscriberLogs.classList.toggle('d-none', !canViewAuditLog(getCurrentRole()));
     if (dom.btnCancelInlineEdit) dom.btnCancelInlineEdit.classList.add('d-none');
     if (dom.btnSaveEdit) dom.btnSaveEdit.classList.add('d-none');
     setDetailsModalMode(false);
@@ -1215,6 +1232,7 @@ async function deleteSubscriber(subId) {
             if (detailsModal) detailsModal.hide();
             showAlert(`🗑️ ${data.message}`);
             loadSubscribers();
+            loadTotalSubscribersCount();
         } else {
             showAlert(`❌ خطأ: ${data ? data.message : 'تعذر حذف المشترك.'}`);
         }
@@ -1349,8 +1367,22 @@ function filterLogs(filterType) {
     renderLogsTable(filteredLogs);
 }
 
+async function loadDailyReport() {
+    if (!canViewAuditLog(getCurrentRole())) return;
+    const data = await apiCall('/daily_report');
+    if (!data || data.status !== 'success') return;
+
+    const summary = data.summary || {};
+    if (dom.todayPayments) {
+        dom.todayPayments.innerText = `${Number(summary.total_payments_collected || 0).toLocaleString()} د.ع`;
+    }
+    if (dom.todayRenewals) {
+        dom.todayRenewals.innerText = `${Number(summary.total_renewals_value || 0).toLocaleString()} د.ع`;
+    }
+}
+
 function updateDashboardSummary() {
-    const totalSubscribersCount = Number(dom.totalSubscribers?.dataset?.total || allSubscribers.length || 0);
+    const totalSubscribersCount = Number(dom.totalSubscribers?.dataset?.total || totalSubscribersOverall || 0);
     const totalAreasCount = Array.isArray(allAreas) ? allAreas.length : 0;
     const totalDebt = allSubscribers.reduce((sum, sub) => sum + (sub.balance < 0 ? Math.abs(sub.balance) : 0), 0);
 
@@ -1398,6 +1430,7 @@ async function submitAction() {
             actionModal.hide();
             loadSubscribers();
             loadLogs();
+            loadDailyReport();
         } else {
             showAlert(`❌ تنبيه: ${data ? data.message : 'تعذر تنفيذ العملية.'}`);
         }
@@ -1425,11 +1458,13 @@ function openModal(subscriberId, subscriberName, actionType, currentBalance) {
         titleLabel.innerHTML = '<i class="fa-solid fa-hand-holding-dollar text-primary"></i> تسديد مبلغ';
         confirmBtn.className = 'btn btn-primary w-100 py-2 fw-bold fs-5';
         dom.cashPaymentDiv.style.display = 'none';
+        if (dom.fullDebtBtn) dom.fullDebtBtn.classList.remove('d-none');
     } else {
         titleLabel.innerHTML = '<i class="fa-solid fa-wifi text-success"></i> تجديد اشتراك';
         confirmBtn.className = 'btn btn-success w-100 py-2 fw-bold fs-5';
         dom.cashPaymentDiv.style.display = 'block';
         dom.isCashCheckbox.checked = false;
+        if (dom.fullDebtBtn) dom.fullDebtBtn.classList.add('d-none');
     }
     document.getElementById('modal-subscriber-name').innerText = subscriberName;
     dom.amountInput.value = '';
