@@ -30,6 +30,13 @@ app.register_blueprint(transactions_bp)
 app.register_blueprint(logging_and_reporting_bp)
 app.register_blueprint(auth_bp)
 
+database_url = os.getenv("DATABASE_URL")
+
+if database_url and database_url.startswith("mysql://"):
+  database_url = database_url.replace("mysql://", "mysql+pymysql://", 1)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+
 # ==========================================
 # مسارات تشغيل الواجهة الأمامية (Frontend)
 # ==========================================
