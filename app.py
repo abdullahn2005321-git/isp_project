@@ -21,6 +21,13 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.getenv('SECRET_KEY')
 jwt = JWTManager(app)
 
+db_url = os.getenv("DATABASE_URL")
+
+if db_url and db_url.startswith("mysql://"):
+  db_url = db_url.replace("mysql://", "mysql+pymysql://", 1)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+
 db.init_app(app)
 
 migrate = Migrate(app, db)
@@ -30,12 +37,6 @@ app.register_blueprint(transactions_bp)
 app.register_blueprint(logging_and_reporting_bp)
 app.register_blueprint(auth_bp)
 
-database_url = os.getenv("DATABASE_URL")
-
-if database_url and database_url.startswith("mysql://"):
-  database_url = database_url.replace("mysql://", "mysql+pymysql://", 1)
-
-app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 
 # ==========================================
 # مسارات تشغيل الواجهة الأمامية (Frontend)
