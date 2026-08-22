@@ -21,12 +21,23 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.getenv('SECRET_KEY')
 jwt = JWTManager(app)
 
-db_url = os.getenv("DATABASE_URL")
+db_url = os.getenv("DATABASE_URL") or os.getenv("MYSQL_URL")
 
-if db_url and db_url.startswith("mysql://"):
-  db_url = db_url.replace("mysql://", "mysql+pymysql://", 1)
+if db_url:
+  # تصحيح بداية الرابط ليتوافق مع SQLAlchemy
+  if db_url.startswith("mysql://"):
+    db_url = db_url.replace("mysql://", "mysql+pymysql://", 1)
+else:
+  # إذا لم يتوفر الرابط، يتم البناء تلقائياً من المتغيرات الفردية
+  db_user = os.getenv("MYSQLUSER", "root")
+  db_pass = os.getenv("MYSQLPASSWORD", "")
+  db_host = os.getenv("MYSQLHOST", "127.0.0.1")
+  db_port = os.getenv("MYSQLPORT", "3306")
+  db_name = os.getenv("MYSQLDATABASE", "railway")
+  db_url = f"mysql+pymysql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db.init_app(app)
 
