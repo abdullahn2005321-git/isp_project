@@ -1,6 +1,11 @@
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 db = SQLAlchemy()
+
+def get_iraq_now():
+    return datetime.now(ZoneInfo("Asia/Baghdad"))
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -26,7 +31,7 @@ class Subscriber(db.Model):
     name = db.Column(db.String(100), nullable=False)
     phone_number = db.Column(db.String(20), nullable=False, unique=True)
     balance = db.Column(db.Integer, default=0)
-    promise_date = db.Column(db.DateTime, nullable=True)
+    promise_date = db.Column(db.Date, nullable=True)
     notes = db.Column(db.Text, nullable=True)
     is_active = db.Column(db.Boolean, default=True)
     transactions = db.relationship('Transaction', backref='subscriber', lazy=True)
@@ -38,5 +43,5 @@ class Transaction(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     transaction_type = db.Column(db.String(20), nullable=False)  # 'payment' or 'renewal'
     amount = db.Column(db.Integer, nullable=False)
-    transaction_date = db.Column(db.DateTime, default=db.func.now())
+    transaction_date = db.Column(db.DateTime, default=get_iraq_now, index=True)
     processed_by = db.relationship('User', backref='processed_transactions', lazy=True)
