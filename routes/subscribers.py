@@ -451,6 +451,12 @@ def delete_subscriber(sub_id):
             "message": "Subscriber not found or you don't have permission to modify it."
         }), 404
 
+    if sub.balance != 0:
+        return jsonify({
+            "status": "error",
+            "message": "Cannot delete subscriber with non-zero balance."
+        }), 400
+
     try:
         sub.is_active = False
         db.session.commit()

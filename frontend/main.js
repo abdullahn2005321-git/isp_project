@@ -20,6 +20,7 @@ let selectedSubscriberData = null;
 let isInlineEditingSubscriber = false;
 let allSubscribers = [];
 let totalSubscribersOverall = 0;
+let subscribersRequestId = 0;
 let allLogs = [];
 let allAreas = [];
 let currentSubscriberDebt = 0;
@@ -845,11 +846,13 @@ async function submitNewArea() {
 async function loadSubscribers(page = 1) {
     try {
         if (!dom.subscribersTableBody) return;
+        const requestId = ++subscribersRequestId;
         dom.subscribersTableBody.innerHTML = '<div class="col-12 text-muted p-4 text-center">جاري تحميل المشتركين...</div>';
         updateSubscriberFilterSummary();
         const params = buildSubscriberQueryParams(page);
 
         const data = await apiCall(`/subscribers?${params.toString()}`);
+        if (requestId !== subscribersRequestId) return;
         if (!data || data.status !== 'success') {
             dom.subscribersTableBody.innerHTML = `<div class="col-12 text-danger p-4 text-center">${data?.message || 'تعذر تحميل قائمة المشتركين.'}</div>`;
             return;
@@ -1261,7 +1264,7 @@ async function loadPromisesToday() {
     }
 }
 
-async function loadLogs(page = 1, subscriberId = null) {
+async function loadLogs(page = 1, subscriberId = activeLogSubscriberId) {
     try {
         const params = new URLSearchParams({
             page: String(page),
