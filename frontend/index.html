@@ -29,7 +29,7 @@
                             <div class="border rounded p-2 mb-3 bg-light">
                                 <div class="small text-secondary mb-1"><i class="fa-solid fa-map-location-dot"></i> المناطق</div>
                                 <div class="small text-muted">عدد المناطق: <span id="profileAreasCount">0</span></div>
-                                <button type="button" class="btn btn-sm btn-outline-primary w-100 mt-2" id="btnProfileAreas"><i class="fa-solid fa-plus"></i> إضافة منطقة</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary w-100 mt-2" id="btnProfileAreas"><i class="fa-solid fa-plus"></i> إدارة المناطق</button>
                             </div>
                             <button type="button" class="btn btn-outline-secondary btn-sm w-100 mb-2" id="btnMyTeam"><i class="fa-solid fa-users-rectangle"></i> فريقي</button>
                             <button type="button" class="btn btn-outline-danger btn-sm w-100" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button>
@@ -45,15 +45,15 @@
         <div class="card shadow-sm border-0 mx-auto login-card">
             <div class="card-body">
                 <h3 class="card-title text-center mb-4">تسجيل الدخول</h3>
-                <p class="text-center text-muted mb-4">استخدم بيانات المسؤول للبدء في إدارة المشتركين.</p>
+                <p class="text-center text-muted mb-4">ادخل بياناتك لتسجيل الدخول.</p>
                 <form id="loginForm" autocomplete="off">
                     <div class="mb-3">
                         <label for="loginUsername" class="form-label fw-bold">اسم المستخدم</label>
-                        <input type="text" class="form-control" id="loginUsername" placeholder="admin" required>
+                        <input type="text" class="form-control" id="loginUsername" placeholder="اسم المستخدم الخاص بك" required>
                     </div>
                     <div class="mb-3">
                         <label for="loginPassword" class="form-label fw-bold">كلمة المرور</label>
-                        <input type="password" class="form-control" id="loginPassword" placeholder="123456" required>
+                        <input type="password" class="form-control" id="loginPassword" placeholder="كلمة المرور الخاصة بك" required>
                     </div>
                     <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">تسجيل الدخول</button>
                 </form>
@@ -274,7 +274,7 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="newAreaName" class="form-label fw-bold">اسم المنطقة</label>
-                        <input type="text" class="form-control" id="newAreaName" placeholder="مثال: حي الزهور" required>
+                        <input type="text" class="form-control" id="newAreaName" placeholder="" required>
                     </div>
                 </div>
                 <div class="modal-footer border-0">
@@ -350,7 +350,6 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="text-center small text-primary fw-bold mb-3">منفذ الإجراءات</div>
                     <div class="d-grid gap-2">
                         <div class="mb-2">
                             <label for="logFilterSubscriberId" class="form-label fw-bold small">رقم المشترك</label>
@@ -367,7 +366,7 @@
                         <button type="button" class="btn btn-primary fw-bold" id="btnApplyLogFilter">تطبيق</button>
                         <button type="button" class="btn btn-outline-primary fw-bold" data-log-filter="تسديد">التسديدات</button>
                         <button type="button" class="btn btn-outline-success fw-bold" data-log-filter="تجديد">التجديدات</button>
-                        <button type="button" class="btn btn-outline-danger" id="btnClearLogFilter">إلغاء كل التصفيات</button>
+                        <button type="button" class="btn btn-outline-danger" id="btnClearLogFilter">إلغاءالتصفيات</button>
                     </div>
                 </div>
             </div>

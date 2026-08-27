@@ -27,7 +27,7 @@ async function submitNewStaff() {
         if (modal) modal.hide();
         const form = document.getElementById('addStaffForm');
         if (form) form.reset();
-        showAlert('✅ ' + data.message);
+        showAlert('✅ ' + data.message, 'success');
         // Refresh staff list if needed
         if (typeof loadStaff === 'function') {
             loadStaff();

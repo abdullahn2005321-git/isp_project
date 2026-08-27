@@ -583,7 +583,7 @@ function registerEventListeners() {
 
         const data = await apiCall(`/areas/${areaId}`, 'PUT', { name: trimmedName });
         if (data && data.status === 'success') {
-            showAlert(data.message || 'تم تحديث اسم المنطقة بنجاح.');
+            showAlert(data.message || 'تم تحديث اسم المنطقة بنجاح.', 'success');
             loadAreas();
         } else {
             showAlert(data?.message || 'فشل تحديث اسم المنطقة.', 'danger');
@@ -841,7 +841,7 @@ async function submitNewArea() {
     if (data && data.status === 'success') {
         addAreaModal.hide();
         dom.newAreaName.value = '';
-        showAlert(data.message);
+        showAlert(data.message, 'success');
         loadAreas();
     } else {
         showAlert(data?.message || 'فشل إنشاء المنطقة.');
@@ -1108,7 +1108,7 @@ async function submitNewSubscriber() {
         const data = await apiCall('/subscribers', 'POST', newSubscriberData);
         if (data && data.status === 'success') {
             addSubModal.hide();
-            showAlert(data.message);
+            showAlert(data.message, 'success');
             loadSubscribers();
             loadTotalSubscribersCount();
             loadDailyReport();
@@ -1254,7 +1254,7 @@ async function submitEditSubscriber() {
     try {
         const data = await apiCall(`/subscribers/${subId}`, 'PUT', updatedData);
         if (data && data.status === 'success') {
-            showAlert(`✅ ${data.message}`);
+            showAlert(`✅ ${data.message}`, 'success');
             await showSubscriberDetails(Number(subId));
             loadSubscribers();
         } else {
@@ -1273,7 +1273,7 @@ async function deleteSubscriber(subId) {
         if (data && data.status === 'success') {
             const detailsModal = bootstrap.Modal.getInstance(document.getElementById('detailsModal'));
             if (detailsModal) detailsModal.hide();
-            showAlert(`🗑️ ${data.message}`);
+            showAlert(`🗑️ ${data.message}`, 'success');
             loadSubscribers();
             loadTotalSubscribersCount();
         } else {
@@ -1291,11 +1291,11 @@ async function loadPromisesToday() {
         if (!data) return;
         if (data.status === 'success') {
             if (data.count === 0) {
-                showAlert('لا توجد وعود مستحقة لهذا اليوم! 🎉');
+                showAlert('لا توجد وعود مستحقة لهذا اليوم! 🎉', 'success');
                 loadSubscribers();
             } else {
                 renderTable(data.subscribers);
-                showAlert(`تم العثور على ${data.count} وعود مستحقة اليوم!`);
+                showAlert(`تم العثور على ${data.count} وعود مستحقة اليوم!`, 'info');
             }
         }
     } catch (error) {
@@ -1471,6 +1471,7 @@ async function submitAction() {
         const data = await apiCall(endpoint, 'POST', requestData);
         if (data && data.status === 'success') {
             actionModal.hide();
+            showAlert(data.message || 'تم تنفيذ العملية بنجاح.', 'success');
             loadSubscribers();
             loadLogs();
             loadDailyReport();
@@ -1558,7 +1559,7 @@ function copySubscriberDetails() {
     const notes = dom.detailNotes.innerText;
     const textToCopy = `ID: ${id}\nالاسم: ${name}\nالمنطقة: ${area}\nرقم الهاتف: ${phone}\nالرصيد الحالي: ${balance}\nوعد التسديد: ${promiseDate}\nملاحظات: ${notes}`;
     navigator.clipboard.writeText(textToCopy)
-        .then(() => showAlert('تم نسخ معلومات المشترك إلى الحافظة.'))
+        .then(() => showAlert('تم نسخ معلومات المشترك إلى الحافظة.', 'success'))
         .catch((error) => {
             console.error('خطأ في نسخ المعلومات:', error);
             showAlert('تعذر نسخ المعلومات. الرجاء المحاولة مرة أخرى.');

@@ -3,6 +3,7 @@ from flask_migrate import Migrate
 from models import db
 from flask_cors import CORS
 import os
+from datetime import timedelta
 from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager
 
@@ -21,6 +22,7 @@ app.json.ensure_ascii = False
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'mysql+pymysql://root:@127.0.0.1/isp_db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.getenv('SECRET_KEY')
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)
 jwt = JWTManager(app)
 
 db_url = os.getenv("DATABASE_URL") or os.getenv("MYSQL_URL")
