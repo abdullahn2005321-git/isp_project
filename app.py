@@ -10,6 +10,8 @@ from routes.subscribers import subscribers_bp
 from routes.transactions import transactions_bp
 from routes.logging_and_reporting import logging_and_reporting_bp
 from routes.auth import auth_bp
+from routes.admins import admins_bp
+from routes.user_management import user_management_bp
 
 load_dotenv()
 
@@ -47,6 +49,9 @@ app.register_blueprint(subscribers_bp)
 app.register_blueprint(transactions_bp)
 app.register_blueprint(logging_and_reporting_bp)
 app.register_blueprint(auth_bp)
+app.register_blueprint(admins_bp)
+app.register_blueprint(user_management_bp)
+
 
 
 # ==========================================

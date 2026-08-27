@@ -14,6 +14,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), default='staff')
     parent_admin_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
     staff_members = db.relationship('User', backref=db.backref('manager', remote_side=[id]), lazy=True)
 
 class Area(db.Model):
@@ -41,6 +42,7 @@ class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     subscriber_id = db.Column(db.Integer, db.ForeignKey('subscribers.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
     transaction_type = db.Column(db.String(20), nullable=False)  # 'payment' or 'renewal'
     amount = db.Column(db.Integer, nullable=False)
     transaction_date = db.Column(db.DateTime, default=get_iraq_now, index=True)

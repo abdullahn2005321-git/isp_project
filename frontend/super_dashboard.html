@@ -95,6 +95,38 @@
         </div>
     </div>
 
+        <div class="modal fade" id="editManagerModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">تعديل بيانات المدير</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editManagerForm">
+                            <input type="hidden" id="editManagerId">
+                            <div class="mb-3">
+                                <label for="editManagerUsername" class="form-label">اسم المستخدم</label>
+                                <input type="text" class="form-control" id="editManagerUsername" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editManagerPassword" class="form-label">كلمة المرور الجديدة</label>
+                                <input type="password" class="form-control" id="editManagerPassword" placeholder="اتركها فارغة بدون تغيير">
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="editManagerActive" checked>
+                                <label class="form-check-label" for="editManagerActive">الحساب نشط</label>
+                            </div>
+                            <div id="editManagerMessage" class="small mt-3"></div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                        <button type="submit" form="editManagerForm" class="btn btn-primary">حفظ التعديلات</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function logoutSuper() {
@@ -134,7 +166,7 @@
             messageBox.className = 'small';
 
             try {
-                const response = await fetch(buildApiUrl('/register'), {
+                const response = await fetch(buildApiUrl('/admins'), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -168,6 +200,57 @@
             }
         }
 
+        function openEditManagerModal(button) {
+            document.getElementById('editManagerId').value = button.dataset.managerId || '';
+            document.getElementById('editManagerUsername').value = button.dataset.managerUsername || '';
+            document.getElementById('editManagerPassword').value = '';
+            document.getElementById('editManagerActive').checked = button.dataset.managerActive !== 'false';
+            document.getElementById('editManagerMessage').textContent = '';
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('editManagerModal')).show();
+        }
+
+        async function updateManager(event) {
+            event.preventDefault();
+            const managerId = document.getElementById('editManagerId').value;
+            const username = document.getElementById('editManagerUsername').value.trim();
+            const password = document.getElementById('editManagerPassword').value;
+            const messageBox = document.getElementById('editManagerMessage');
+            if (!username) {
+                messageBox.className = 'small mt-3 text-danger';
+                messageBox.textContent = 'اسم المستخدم مطلوب.';
+                return;
+            }
+
+            const payload = {
+                username,
+                is_active: document.getElementById('editManagerActive').checked
+            };
+            if (password) payload.password = password;
+
+            try {
+                const response = await fetch(buildApiUrl(`/admins/${managerId}`), {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || result.status !== 'success') {
+                    messageBox.className = 'small mt-3 text-danger';
+                    messageBox.textContent = result.message || 'فشل تحديث المدير.';
+                    return;
+                }
+
+                bootstrap.Modal.getInstance(document.getElementById('editManagerModal'))?.hide();
+                await loadManagers();
+            } catch (error) {
+                messageBox.className = 'small mt-3 text-danger';
+                messageBox.textContent = 'حدث خطأ في الاتصال بالسيرفر.';
+            }
+        }
+
         function renderManagers(managers) {
             const tbody = document.getElementById('managersTableBody');
             tbody.innerHTML = '';
@@ -187,8 +270,8 @@
                     <td>${index + 1}</td>
                     <td>${manager.username || '-'}</td>
                     <td>admin</td>
-                    <td><span class="badge bg-success">نشط</span></td>
-                    <td><button class="btn btn-sm btn-outline-primary" disabled>إدارة</button></td>
+                    <td><span class="badge ${manager.is_active === false ? 'bg-secondary' : 'bg-success'}">${manager.is_active === false ? 'غير نشط' : 'نشط'}</span></td>
+                    <td><button class="btn btn-sm btn-outline-primary edit-manager-btn" data-manager-id="${manager.id}" data-manager-username="${manager.username || ''}" data-manager-active="${manager.is_active !== false}"><i class="fa-solid fa-pen"></i> تعديل</button></td>
                 `;
                 tbody.appendChild(row);
             });
@@ -204,7 +287,7 @@
 
             try {
                 const response = await fetch(buildApiUrl('/admins'), {
-                    method: 'POST',
+                    method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
                         ...(localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
@@ -249,6 +332,11 @@
             const username = localStorage.getItem('username') || 'super_admin';
             document.getElementById('superUsername').textContent = username;
             document.getElementById('addManagerForm').addEventListener('submit', createManager);
+            document.getElementById('editManagerForm').addEventListener('submit', updateManager);
+            document.addEventListener('click', (event) => {
+                const editButton = event.target.closest('.edit-manager-btn');
+                if (editButton) openEditManagerModal(editButton);
+            });
             loadManagers();
 
             const modal = document.getElementById('addManagerModal');
