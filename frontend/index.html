@@ -61,6 +61,45 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="editStaffModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white border-0">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-user-pen"></i> تعديل الموظف</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editStaffForm">
+                        <input type="hidden" id="editStaffId">
+                        <div class="mb-3">
+                            <label for="editStaffUsername" class="form-label fw-bold text-secondary">اسم المستخدم</label>
+                            <input type="text" class="form-control" id="editStaffUsername" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editStaffPassword" class="form-label fw-bold text-secondary">كلمة المرور الجديدة</label>
+                            <input type="password" class="form-control" id="editStaffPassword" placeholder="اتركها فارغة بدون تغيير">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editStaffRole" class="form-label fw-bold text-secondary">الصلاحية</label>
+                            <select class="form-select" id="editStaffRole" required>
+                                <option value="viewer">مشاهد</option>
+                                <option value="commenter">معلق</option>
+                                <option value="editor">محرر</option>
+                            </select>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="editStaffActive" checked>
+                            <label class="form-check-label" for="editStaffActive">الحساب نشط</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" form="editStaffForm" class="btn btn-primary" id="btn-save-staff-edit">حفظ التعديلات</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div id="appContainer" class="app-container d-none">
         <div class="container">

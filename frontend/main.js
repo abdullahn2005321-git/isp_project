@@ -512,6 +512,11 @@ function buildSubscriberQueryParams(page = 1) {
 
 function registerEventListeners() {
     dom.loginForm.addEventListener('submit', handleLogin);
+    document.getElementById('editStaffForm')?.addEventListener('submit', submitStaffUpdate);
+    document.addEventListener('click', (event) => {
+        const editButton = event.target.closest('.edit-staff-btn');
+        if (editButton) openEditStaffModal(editButton);
+    });
     dom.btnProfileInfo.addEventListener('click', (event) => {
         event.stopPropagation();
         dom.profileInfoCard.classList.toggle('d-none');
@@ -1011,7 +1016,7 @@ async function openTeamModal() {
     modal.show();
 
     try {
-        const data = await apiCall('/my-team');
+        const data = await apiCall('/staff');
         if (!data || data.status !== 'success') {
             teamModalBody.innerHTML = '<div class="text-danger">تعذر جلب بيانات الفريق.</div>';
             return;
@@ -1037,8 +1042,13 @@ async function openTeamModal() {
                 <div class="fw-bold text-secondary mb-2"><i class="fa-solid fa-users"></i> الموظفون</div>
                 ${members.length ? members.map((member) => `
                     <div class="border rounded p-2 mb-2">
-                        <div class="fw-semibold">${member.username || '—'}</div>
-                        <div class="small text-muted">${roleLabel(member.role || 'viewer')}</div>
+                        <div class="d-flex justify-content-between align-items-center gap-2">
+                            <div>
+                                <div class="fw-semibold">${member.username || '—'}</div>
+                                <div class="small text-muted">${roleLabel(member.role || 'viewer')}</div>
+                            </div>
+                            ${userRole === 'admin' ? `<button type="button" class="btn btn-sm btn-outline-primary edit-staff-btn" data-staff-id="${member.id}" data-staff-username="${member.username || ''}" data-staff-role="${member.role || 'viewer'}" data-staff-active="${member.is_active !== false}"><i class="fa-solid fa-pen"></i> تعديل</button>` : ''}
+                        </div>
                     </div>
                 `).join('') : '<div class="text-muted">لا يوجد موظفون مسجلون حتى الآن.</div>'}
             </div>
@@ -1046,6 +1056,36 @@ async function openTeamModal() {
     } catch (error) {
         console.error('خطأ في تحميل فريق العمل:', error);
         teamModalBody.innerHTML = '<div class="text-danger">حدث خطأ أثناء تحميل بيانات الفريق.</div>';
+    }
+}
+
+function openEditStaffModal(button) {
+    document.getElementById('editStaffId').value = button.dataset.staffId || '';
+    document.getElementById('editStaffUsername').value = button.dataset.staffUsername || '';
+    document.getElementById('editStaffPassword').value = '';
+    document.getElementById('editStaffRole').value = button.dataset.staffRole || 'viewer';
+    document.getElementById('editStaffActive').checked = button.dataset.staffActive !== 'false';
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('editStaffModal')).show();
+}
+
+async function submitStaffUpdate(event) {
+    event.preventDefault();
+    const staffId = document.getElementById('editStaffId').value;
+    const username = document.getElementById('editStaffUsername').value.trim();
+    const password = document.getElementById('editStaffPassword').value;
+    const role = document.getElementById('editStaffRole').value;
+    if (!username) {
+        showAlert('اسم المستخدم مطلوب', 'warning');
+        return;
+    }
+
+    const payload = { username, role, is_active: document.getElementById('editStaffActive').checked };
+    if (password) payload.password = password;
+    const data = await apiCall(`/my-team/${staffId}`, 'PUT', payload);
+    if (data?.status === 'success') {
+        bootstrap.Modal.getInstance(document.getElementById('editStaffModal'))?.hide();
+        showAlert(data.message, 'success');
+        openTeamModal();
     }
 }
 
