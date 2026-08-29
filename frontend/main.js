@@ -1382,7 +1382,7 @@ function validateLogDateRange() {
     }
 
     if (logFilterStartDate > logFilterEndDate) {
-        showAlert('تاريخ البداية لا يمكن أن يكون بعد تاريخ النهاية.');
+        showAlert('تاريخ البداية يجب أن يكون أقدم أو يساوي تاريخ النهاية');
         return false;
     }
 
