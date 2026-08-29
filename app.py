@@ -1,6 +1,6 @@
 from flask import Flask, send_from_directory
 from flask_migrate import Migrate
-from models import db
+from models import db, DailyFinancialSummary
 from flask_cors import CORS
 import os
 from datetime import timedelta
