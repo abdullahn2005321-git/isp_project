@@ -117,6 +117,8 @@ const dom = {
     fullDebtBtn: document.getElementById('fullDebtBtn'),
     isCashCheckbox: document.getElementById('isCashCheckbox'),
     cashPaymentDiv: document.getElementById('cashPaymentDiv'),
+    paymentMethodDiv: document.getElementById('paymentMethodDiv'),
+    paymentMethod: document.getElementById('paymentMethod'),
     promiseDateInput: document.getElementById('promiseDate'),
     addSubscriberForm: document.getElementById('addSubscriberForm'),
     editSubscriberForm: document.getElementById('editSubscriberForm'),
@@ -1530,6 +1532,7 @@ async function submitAction() {
     const amount = dom.amountInput.value;
     const promiseDate = dom.promiseDateInput.value;
     const isCash = dom.isCashCheckbox.checked;
+    const paymentMethod = dom.paymentMethod?.value || 'cash';
 
     if (!amount || Number(amount) <= 0) {
         return showAlert('يرجى إدخال مبلغ صحيح!');
@@ -1548,6 +1551,9 @@ async function submitAction() {
         promise_date: promiseDate,
         is_cash: isCash
     };
+    if (actionType === 'payment') {
+        requestData.payment_type = paymentMethod;
+    }
 
     try {
         const data = await apiCall(endpoint, 'POST', requestData);
@@ -1584,11 +1590,14 @@ function openModal(subscriberId, subscriberName, actionType, currentBalance) {
         titleLabel.innerHTML = '<i class="fa-solid fa-hand-holding-dollar text-primary"></i> تسديد مبلغ';
         confirmBtn.className = 'btn btn-primary w-100 py-2 fw-bold fs-5';
         dom.cashPaymentDiv.style.display = 'none';
+        dom.paymentMethodDiv.style.display = 'block';
+        dom.paymentMethod.value = 'cash';
         if (dom.fullDebtBtn) dom.fullDebtBtn.classList.remove('d-none');
     } else {
         titleLabel.innerHTML = '<i class="fa-solid fa-wifi text-success"></i> تجديد اشتراك';
         confirmBtn.className = 'btn btn-success w-100 py-2 fw-bold fs-5';
         dom.cashPaymentDiv.style.display = 'block';
+        dom.paymentMethodDiv.style.display = 'none';
         dom.isCashCheckbox.checked = false;
         if (dom.fullDebtBtn) dom.fullDebtBtn.classList.add('d-none');
     }

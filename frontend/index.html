@@ -347,6 +347,13 @@
                             <i class="fa-solid fa-money-bill-wave"></i> تم استلام مبلغ التجديد نقدا 
                         </label>
                     </div>
+                    <div class="mb-3" id="paymentMethodDiv" style="display: none;">
+                        <label for="paymentMethod" class="form-label fw-bold text-secondary">طريقة الدفع</label>
+                        <select class="form-select" id="paymentMethod">
+                            <option value="cash">نقدي</option>
+                            <option value="electronic">دفع إلكتروني</option>
+                        </select>
+                    </div>
                     <div class="mb-2 bg-light p-3 rounded border border-warning-subtle">
                         <label for="promiseDate" class="form-label text-dark fw-bold"><i class="fa-solid fa-calendar-day text-warning"></i> تاريخ الوعد بالتسديد (اختياري)</label>
                         <input type="date" class="form-control" id="promiseDate">

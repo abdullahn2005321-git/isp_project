@@ -33,7 +33,14 @@ def add_payment():
             "status": "error",
             "message": "subscriber_id and amount are required."
         }), 400
-    
+
+    payment_method = data.get('payment_type', 'cash')
+    if payment_method not in {'cash', 'electronic'}:
+        return jsonify({
+            "status": "error",
+            "message": "Invalid payment method. Must be 'cash' or 'electronic'."
+        }), 400
+
     sub = Subscriber.query.join(Area).with_for_update().filter(
         Subscriber.id == data['subscriber_id'],
         Area.admin_id == admin_id,
@@ -45,6 +52,7 @@ def add_payment():
             "status": "error",
             "message": "Subscriber not found."
         }), 404
+
     
     try:
         payment_amount = int(data['amount'])
@@ -60,6 +68,7 @@ def add_payment():
         subscriber_id = sub.id,
         user_id = user_id,
         transaction_type = 'payment',
+        payment_method = payment_method,
         amount = payment_amount
     )
 
