@@ -113,6 +113,9 @@
                 <li class="nav-item">
                     <button type="button" class="nav-link" id="tab-logs"><i class="fa-solid fa-clipboard-list"></i></button>
                 </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link" id="tab-monthly-report" title="التقرير الشهري"><i class="fa-solid fa-calendar-days"></i></button>
+                </li>
             </ul>
 
             <div id="dashboard" class="section-content active">
@@ -257,6 +260,39 @@
                         <div>
                             <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="btn-prev-logs-page">السابق</button>
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-next-logs-page">التالي</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="monthly-report" class="section-content">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
+                        <h5 class="m-0 text-secondary"><i class="fa-solid fa-calendar-days"></i> التقرير المالي الشهري</h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="monthlyReportPeriod" class="visually-hidden">الشهر</label>
+                            <input type="month" class="form-control form-control-sm" id="monthlyReportPeriod">
+                            <button type="button" class="btn btn-primary btn-sm" id="btnLoadMonthlyReport"><i class="fa-solid fa-rotate"></i> تحديث</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="monthlyReportMessage" class="small text-muted mb-3">اختر شهراً لعرض ملخصه المالي.</div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-6 col-lg-3"><div class="border rounded p-3 h-100 bg-success-subtle"><div class="small text-secondary">إجمالي التحصيل</div><div class="fw-bold fs-5" id="monthlyTotalCollected">0 د.ع</div></div></div>
+                            <div class="col-6 col-lg-3"><div class="border rounded p-3 h-100 bg-primary-subtle"><div class="small text-secondary">التحصيل النقدي</div><div class="fw-bold fs-5" id="monthlyCashReceived">0 د.ع</div></div></div>
+                            <div class="col-6 col-lg-3"><div class="border rounded p-3 h-100 bg-info-subtle"><div class="small text-secondary">التحصيل الإلكتروني</div><div class="fw-bold fs-5" id="monthlyElectronicReceived">0 د.ع</div></div></div>
+                            <div class="col-6 col-lg-3"><div class="border rounded p-3 h-100 bg-warning-subtle"><div class="small text-secondary">عمليات التجديد</div><div class="fw-bold fs-5" id="monthlyRenewalsAmount">0 د.ع</div></div></div>
+                        </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-4"><div class="small text-secondary">عدد الدفعات</div><div class="fw-bold" id="monthlyPaymentsCount">0</div></div>
+                            <div class="col-4"><div class="small text-secondary">عدد التجديدات</div><div class="fw-bold" id="monthlyRenewalsCount">0</div></div>
+                            <div class="col-4"><div class="small text-secondary">أيام النشاط</div><div class="fw-bold" id="monthlyActiveDaysCount">0</div></div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped text-center align-middle mb-0">
+                                <thead class="table-light"><tr><th>التاريخ</th><th>الدفعات</th><th>التجديدات</th><th>نقدي</th><th>إلكتروني</th><th>إجمالي التحصيل</th></tr></thead>
+                                <tbody id="monthlyReportTableBody"><tr><td colspan="6" class="text-muted p-4">لا توجد بيانات معروضة.</td></tr></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>

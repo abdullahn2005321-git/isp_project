@@ -74,10 +74,22 @@ const dom = {
     tabDashboard: document.getElementById('tab-dashboard'),
     tabSubscribers: document.getElementById('tab-subscribers'),
     tabLogs: document.getElementById('tab-logs'),
+    tabMonthlyReport: document.getElementById('tab-monthly-report'),
     dashboardSection: document.getElementById('dashboard'),
     subscribersSection: document.getElementById('subscribers'),
     areasSection: document.getElementById('areas'),
     logsSection: document.getElementById('logs'),
+    monthlyReportPeriod: document.getElementById('monthlyReportPeriod'),
+    btnLoadMonthlyReport: document.getElementById('btnLoadMonthlyReport'),
+    monthlyReportMessage: document.getElementById('monthlyReportMessage'),
+    monthlyReportTableBody: document.getElementById('monthlyReportTableBody'),
+    monthlyTotalCollected: document.getElementById('monthlyTotalCollected'),
+    monthlyCashReceived: document.getElementById('monthlyCashReceived'),
+    monthlyElectronicReceived: document.getElementById('monthlyElectronicReceived'),
+    monthlyRenewalsAmount: document.getElementById('monthlyRenewalsAmount'),
+    monthlyPaymentsCount: document.getElementById('monthlyPaymentsCount'),
+    monthlyRenewalsCount: document.getElementById('monthlyRenewalsCount'),
+    monthlyActiveDaysCount: document.getElementById('monthlyActiveDaysCount'),
     btnTodayPromises: document.getElementById('btn-today-promises'),
     btnAddSubscriber: document.getElementById('btn-add-subscriber'),
     btnAddArea: document.getElementById('btn-add-area'),
@@ -404,6 +416,10 @@ function showApp() {
         dom.tabLogs.classList.toggle('d-none', !canViewAuditLogOnly);
     }
 
+    if (dom.tabMonthlyReport) {
+        dom.tabMonthlyReport.classList.toggle('d-none', !canViewAuditLogOnly);
+    }
+
     if (dom.btnViewSubscriberLogs) {
         dom.btnViewSubscriberLogs.classList.toggle('d-none', !canViewAuditLogOnly);
     }
@@ -427,6 +443,9 @@ function initPage() {
     addAreaModal = new bootstrap.Modal(document.getElementById('addAreaModal'));
     addStaffModal = new bootstrap.Modal(document.getElementById('addStaffModal'));
     logFilterModal = new bootstrap.Modal(document.getElementById('logFilterModal'));
+    if (dom.monthlyReportPeriod) {
+        dom.monthlyReportPeriod.value = new Date().toISOString().slice(0, 7);
+    }
     registerEventListeners();
     loadInitialState();
 }
@@ -549,6 +568,17 @@ function registerEventListeners() {
             switchSection('logs');
         }
     });
+    if (dom.tabMonthlyReport) {
+        dom.tabMonthlyReport.addEventListener('click', () => {
+            if (canViewAuditLog(getCurrentRole())) {
+                switchSection('monthly-report');
+                loadMonthlyReport();
+            }
+        });
+    }
+    if (dom.btnLoadMonthlyReport) {
+        dom.btnLoadMonthlyReport.addEventListener('click', loadMonthlyReport);
+    }
     dom.searchInput.addEventListener('input', filterSubscribers);
     if (dom.debtOnlyFilter) {
         dom.debtOnlyFilter.addEventListener('change', filterSubscribers);
@@ -1422,6 +1452,58 @@ async function loadDailyReport() {
     if (dom.todayRenewals) {
         dom.todayRenewals.innerText = `${Number(summary.total_renewals_value || 0).toLocaleString()} د.ع`;
     }
+}
+
+function formatIraqiDinar(value) {
+    return `${Number(value || 0).toLocaleString()} د.ع`;
+}
+
+function renderMonthlyReport(data) {
+    const totals = data.totals || {};
+    const days = Array.isArray(data.days) ? data.days : [];
+
+    dom.monthlyTotalCollected.innerText = formatIraqiDinar(totals.grand_total_collected);
+    dom.monthlyCashReceived.innerText = formatIraqiDinar(totals.total_cash_received);
+    dom.monthlyElectronicReceived.innerText = formatIraqiDinar(totals.total_electronic_received);
+    dom.monthlyRenewalsAmount.innerText = formatIraqiDinar(totals.total_renewals_amount);
+    dom.monthlyPaymentsCount.innerText = Number(totals.total_payments_count || 0).toLocaleString();
+    dom.monthlyRenewalsCount.innerText = Number(totals.total_renewals_count || 0).toLocaleString();
+    dom.monthlyActiveDaysCount.innerText = Number(totals.active_days_count || 0).toLocaleString();
+    dom.monthlyReportMessage.className = 'small text-muted mb-3';
+    dom.monthlyReportMessage.innerText = `ملخص شهر ${data.month}/${data.year}`;
+
+    if (!days.length) {
+        dom.monthlyReportTableBody.innerHTML = '<tr><td colspan="6" class="text-muted p-4">لا توجد عمليات مسجلة في هذا الشهر.</td></tr>';
+        return;
+    }
+
+    dom.monthlyReportTableBody.innerHTML = days.map((day) => `
+        <tr>
+            <td dir="ltr" class="text-muted">${day.summary_date || '-'}</td>
+            <td>${Number(day.payments_count || 0).toLocaleString()}</td>
+            <td>${Number(day.renewals_count || 0).toLocaleString()}</td>
+            <td>${formatIraqiDinar(day.cash_received)}</td>
+            <td>${formatIraqiDinar(day.electronic_received)}</td>
+            <td class="fw-bold">${formatIraqiDinar(day.total_collected)}</td>
+        </tr>
+    `).join('');
+}
+
+async function loadMonthlyReport() {
+    if (!canViewAuditLog(getCurrentRole()) || !dom.monthlyReportPeriod?.value) return;
+
+    const [year, month] = dom.monthlyReportPeriod.value.split('-');
+    dom.monthlyReportMessage.className = 'small text-muted mb-3';
+    dom.monthlyReportMessage.innerText = 'جاري تحميل التقرير...';
+
+    const data = await apiCall(`/monthly-summary?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`);
+    if (!data || !data.success) {
+        dom.monthlyReportMessage.className = 'small text-danger mb-3';
+        dom.monthlyReportMessage.innerText = data?.error || data?.message || 'تعذر تحميل التقرير الشهري.';
+        return;
+    }
+
+    renderMonthlyReport(data);
 }
 
 function updateDashboardSummary() {

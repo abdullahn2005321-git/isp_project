@@ -1,10 +1,79 @@
 from flask import Blueprint, request, jsonify
-from models import db, Subscriber, Transaction, Area
+from models import User, db, Subscriber, Transaction, Area, DailyFinancialSummary, get_iraq_now
 from routes.subscribers import get_current_admin_id
 from datetime import date
-from flask_jwt_extended import jwt_required, get_jwt
+from flask_jwt_extended import get_jwt_identity, jwt_required, get_jwt
+from sqlalchemy import extract
 
 logging_and_reporting_bp = Blueprint('logging_and_reporting', __name__)
+
+# ==============================
+# ====== Monthly Summary Endpoint
+# ==============================
+
+@logging_and_reporting_bp.route('/api/monthly-summary', methods=['GET'])
+@jwt_required()
+def get_monthly_financial_summary():
+    """
+    جلب ملخص مالي شهري للأدمن الحالي مع إجماليات الشهر.
+    المعاملات الاختيارية عبر الـ Query Params:
+    - year: السنة (افتراضياً: السنة الحالية بتوقيت العراق)
+    - month: الشهر (افتراضياً: الشهر الحالي بتوقيت العراق)
+    """
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+
+    if not user:
+        return jsonify({"error": "المستخدم غير موجود"}), 404
+
+    admin_id = user.id if user.role == 'admin' else user.parent_admin_id
+    if not admin_id:
+        return jsonify({"error": "لا تملك صلاحية الوصول لهذا التقرير"}), 403
+
+    now = get_iraq_now()
+    year = request.args.get('year', default=now.year, type=int)
+    month = request.args.get('month', default=now.month, type=int)
+
+    daily_records = DailyFinancialSummary.query.filter(
+        DailyFinancialSummary.admin_id == admin_id,
+        extract('year', DailyFinancialSummary.summary_date) == year,
+        extract('month', DailyFinancialSummary.summary_date) == month
+    ).order_by(DailyFinancialSummary.summary_date.asc()).all()
+
+    days_data = []
+    for record in daily_records:
+        days_data.append({
+            "summary_date": record.summary_date.strftime("%Y-%m-%d"),
+            "renewals_count": record.renewals_count,
+            "total_renewals_amount": record.total_renewals_amount,
+            "payments_count": record.payments_count,
+            "cash_received": record.cash_received,
+            "electronic_received": record.electronic_received,
+            "total_collected": record.total_collected,
+            "total_transactions_count": record.total_transactions_count
+        })
+
+    monthly_totals = {
+        "total_renewals_count": sum(d["renewals_count"] for d in days_data),
+        "total_renewals_amount": sum(d["total_renewals_amount"] for d in days_data),
+        "total_payments_count": sum(d["payments_count"] for d in days_data),
+        "total_cash_received": sum(d["cash_received"] for d in days_data),
+        "total_electronic_received": sum(d["electronic_received"] for d in days_data),
+        "grand_total_collected": sum(d["total_collected"] for d in days_data),
+        "total_transactions_count": sum(d["total_transactions_count"] for d in days_data),
+        "active_days_count": len(days_data)
+    }
+
+    return jsonify({
+        "success": True,
+        "admin_id": admin_id,
+        "year": year,
+        "month": month,
+        "totals": monthly_totals,
+        "days": days_data
+    }), 200
+
+
 
 #==============================
 #==========daily report endpoint
