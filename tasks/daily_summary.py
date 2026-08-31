@@ -69,4 +69,5 @@ def generate_multi_admin_daily_summary(target_date=None):
 
 if __name__ == '__main__':
      with app.app_context():
+        print("Connected to DB URI:", app.config.get("SQLALCHEMY_DATABASE_URI"))
         generate_multi_admin_daily_summary()
