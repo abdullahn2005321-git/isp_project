@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify
 from models import User, db, Subscriber, Transaction, Area, DailyFinancialSummary, get_iraq_now
 from routes.subscribers import get_current_admin_id
-from datetime import date
 from flask_jwt_extended import get_jwt_identity, jwt_required, get_jwt
 from sqlalchemy import extract
 
@@ -92,7 +91,7 @@ def daily_report():
                 "message": "Unauthorized access. Only admin and editors can view the daily report."
             }), 403
 
-        target_date = request.args.get('date', str(date.today()))
+        target_date = request.args.get('date', get_iraq_now().date().isoformat())
 
         transaction = Transaction.query.join(Subscriber).join(Area).filter(
             db.func.date(Transaction.transaction_date) == target_date,

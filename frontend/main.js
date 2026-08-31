@@ -185,6 +185,45 @@ function normalizeLog(log) {
     };
 }
 
+function getBaghdadYearMonth() {
+    const baghdadParts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Baghdad',
+        year: 'numeric',
+        month: '2-digit'
+    }).formatToParts(new Date());
+    const values = Object.fromEntries(
+        baghdadParts
+            .filter(({ type }) => type !== 'literal')
+            .map(({ type, value }) => [type, value])
+    );
+
+    return `${values.year}-${values.month}`;
+}
+
+function formatBaghdadDateTime(value) {
+    const dateText = String(value || '').trim();
+    if (!dateText) return '';
+
+    // Naive values are already Baghdad wall-clock times from the API.
+    if (!/[zZ]$|[+-]\d{2}:?\d{2}$/.test(dateText)) {
+        return dateText.replace('T', ' ').slice(0, 19);
+    }
+
+    const date = new Date(dateText);
+    if (Number.isNaN(date.getTime())) return dateText.replace('T', ' ').slice(0, 19);
+
+    return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Baghdad',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hourCycle: 'h23'
+    }).format(date).replace(',', '');
+}
+
 function requestOptions(method = 'GET', body = null) {
     const headers = { 'Content-Type': 'application/json' };
     const token = localStorage.getItem('token');
@@ -446,7 +485,7 @@ function initPage() {
     addStaffModal = new bootstrap.Modal(document.getElementById('addStaffModal'));
     logFilterModal = new bootstrap.Modal(document.getElementById('logFilterModal'));
     if (dom.monthlyReportPeriod) {
-        dom.monthlyReportPeriod.value = new Date().toISOString().slice(0, 7);
+        dom.monthlyReportPeriod.value = getBaghdadYearMonth();
     }
     registerEventListeners();
     loadInitialState();
@@ -1389,7 +1428,7 @@ function renderLogsTable(logsArray) {
     logsArray.forEach((log) => {
         const badgeClass = log.type === 'تسديد' ? 'bg-primary' : (log.type === 'تجديد' ? 'bg-success' : 'bg-secondary');
         const icon = log.type === 'تسديد' ? 'fa-hand-holding-dollar' : (log.type === 'تجديد' ? 'fa-wifi' : 'fa-circle-info');
-        const displayDate = String(log.date || '').replace('T', ' ').slice(0, 19);
+        const displayDate = formatBaghdadDateTime(log.date);
         dom.logsTableBody.innerHTML += `
             <tr>
                 <td dir="ltr" class="text-muted small">${displayDate}</td>
