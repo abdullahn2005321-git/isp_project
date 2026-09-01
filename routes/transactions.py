@@ -155,6 +155,7 @@ def renew_subscription():
             subscriber_id=sub.id,
             user_id=user_id,
             transaction_type='payment',
+            payment_method='cash',
             amount=renewal_amount
         )
 

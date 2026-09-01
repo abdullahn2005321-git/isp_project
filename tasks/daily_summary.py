@@ -20,7 +20,7 @@ def generate_multi_admin_daily_summary(target_date=None):
             func.count(case((Transaction.transaction_type == 'renewal', Transaction.id))).label('renewals_count'),
             func.coalesce(func.sum(case((Transaction.transaction_type == 'renewal', Transaction.amount), else_=0)), 0).label('total_renewals_amount'),
             func.count(case((Transaction.transaction_type == 'payment', Transaction.id))).label('payments_count'),
-            func.coalesce(func.sum(case(((Transaction.transaction_type == 'payment') & (Transaction.payment_method == 'cash'), Transaction.amount), else_=0)), 0).label('cash_received'),
+            func.coalesce(func.sum(case(((Transaction.transaction_type == 'payment') & ((Transaction.payment_method == 'cash') | (Transaction.payment_method.is_(None))), Transaction.amount), else_=0)), 0).label('cash_received'),
             func.coalesce(func.sum(case(((Transaction.transaction_type == 'payment') & (Transaction.payment_method == 'electronic'), Transaction.amount), else_=0)), 0).label('electronic_received'),
             func.count(Transaction.id).label('total_transactions_count')
         ).join(
