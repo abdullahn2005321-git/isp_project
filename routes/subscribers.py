@@ -232,6 +232,18 @@ def get_subscribers():
             db.or_(Subscriber.is_active == True, Subscriber.is_active.is_(None))
         )
 
+        total_debt = query.order_by(None).with_entities(
+            db.func.coalesce(
+                db.func.sum(
+                    db.case(
+                        (Subscriber.balance < 0, -Subscriber.balance),
+                        else_=0
+                    )
+                ),
+                0
+            )
+        ).scalar()
+
         if search and search.strip():
             search_term = f"%{search.strip()}%"
             query = query.filter(
@@ -284,6 +296,7 @@ def get_subscribers():
             "subscribers": sub_list,
             "pagination": {
                 "total_subscribers": pagination.total,
+                "total_debt": total_debt,
                 "current_page": pagination.page,
                 "total_pages": pagination.pages,
                 "has_next": pagination.has_next,

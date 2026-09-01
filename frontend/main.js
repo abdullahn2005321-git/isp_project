@@ -20,6 +20,7 @@ let selectedSubscriberData = null;
 let isInlineEditingSubscriber = false;
 let allSubscribers = [];
 let totalSubscribersOverall = 0;
+let totalDebtOverall = 0;
 let subscribersRequestId = 0;
 let allLogs = [];
 let allAreas = [];
@@ -939,6 +940,7 @@ async function loadSubscribers(page = 1) {
         allSubscribers = subscribersList;
         currentSubscriberPage = page;
         totalSubscriberPages = data.pagination?.total_pages || 1;
+        totalDebtOverall = Number(data.pagination?.total_debt || 0);
         dom.subscriberPageInfo.innerText = `صفحة ${currentSubscriberPage} من ${totalSubscriberPages}`;
         dom.btnPrevPage.disabled = currentSubscriberPage <= 1;
         dom.btnNextPage.disabled = currentSubscriberPage >= totalSubscriberPages;
@@ -1550,7 +1552,6 @@ async function loadMonthlyReport() {
 function updateDashboardSummary() {
     const totalSubscribersCount = Number(dom.totalSubscribers?.dataset?.total || totalSubscribersOverall || 0);
     const totalAreasCount = Array.isArray(allAreas) ? allAreas.length : 0;
-    const totalDebt = allSubscribers.reduce((sum, sub) => sum + (sub.balance < 0 ? Math.abs(sub.balance) : 0), 0);
 
     if (dom.totalSubscribers) {
         dom.totalSubscribers.innerText = totalSubscribersCount.toLocaleString();
@@ -1559,7 +1560,7 @@ function updateDashboardSummary() {
         dom.profileAreasCount.innerText = totalAreasCount.toLocaleString();
     }
     if (dom.totalDebt) {
-        dom.totalDebt.innerText = `${totalDebt.toLocaleString()} د.ع`;
+        dom.totalDebt.innerText = `${totalDebtOverall.toLocaleString()} د.ع`;
     }
 }
 

@@ -92,6 +92,41 @@ def test_get_subscribers_combines_debt_and_last_renewal_filters(client):
     assert data['status'] == 'success'
     assert [subscriber['name'] for subscriber in data['subscribers']] == ['Older Debt', 'Recent Debt']
     assert [subscriber['last_renewal_date'] for subscriber in data['subscribers']] == ['2026-01-05', '2026-01-20']
+    assert data['pagination']['total_debt'] == 6500
+
+
+def test_get_subscribers_returns_total_debt_beyond_current_page(client):
+    with app.app_context():
+        admin = User(
+            username='debt-total-admin',
+            password_hash=generate_password_hash('123456'),
+            role='admin'
+        )
+        db.session.add(admin)
+        db.session.flush()
+
+        area = Area(name='Debt Total Zone', admin_id=admin.id)
+        db.session.add(area)
+        db.session.flush()
+
+        db.session.add_all([
+            Subscriber(name='First Debt', phone_number='10101', area_id=area.id, balance=-1000),
+            Subscriber(name='Second Debt', phone_number='10102', area_id=area.id, balance=-2000),
+            Subscriber(name='No Debt', phone_number='10103', area_id=area.id, balance=500)
+        ])
+        db.session.commit()
+        token = create_admin_token(admin)
+
+    response = client.get(
+        '/api/subscribers?page=1&per_page=1',
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert len(data['subscribers']) == 1
+    assert data['pagination']['total_debt'] == 3000
 
 
 def test_get_subscribers_defaults_to_latest_renewal_desc(client):
