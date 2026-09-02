@@ -33,20 +33,27 @@
 }
 
 .financial-filter {
-    min-height: 42px;
+    height: 42px;
+    padding-top: 3px;
+    padding-bottom: 2px;
 }
 
 .financial-filter-range {
     direction: ltr;
-    margin: 0;
+    display: block;
+    width: calc(100% - 1rem);
+    margin: 0 0.5rem;
+    height: 16px;
 }
 
 .financial-filter-labels {
     display: flex;
     justify-content: space-between;
+    padding: 0 0.5rem;
     color: #6c757d;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
+    line-height: 16px;
     direction: ltr;
 }
 
