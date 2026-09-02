@@ -36,8 +36,7 @@ let activeLogSubscriberId = null;
 let isActionSubmitting = false;
 let subscriberFilters = {
     search: '',
-    debtOnly: false,
-    balanceOnly: false,
+    financialStatus: 0,
     areaId: '',
     renewalFrom: '',
     renewalTo: ''
@@ -66,8 +65,7 @@ const dom = {
     todayIncome: document.getElementById('today-income'),
     totalDebt: document.getElementById('total-debt'),
     searchInput: document.getElementById('searchInput'),
-    debtOnlyFilter: document.getElementById('debtOnlyFilter'),
-    balanceOnlyFilter: document.getElementById('balanceOnlyFilter'),
+    financialBalanceFilter: document.getElementById('financialBalanceFilter'),
     areaFilter: document.getElementById('areaFilter'),
     renewalFromFilter: document.getElementById('renewalFromFilter'),
     renewalToFilter: document.getElementById('renewalToFilter'),
@@ -511,8 +509,7 @@ function setDetailsModalMode(isEditing) {
 function syncSubscriberFiltersFromDom() {
     subscriberFilters = {
         search: dom.searchInput?.value.trim() || '',
-        debtOnly: Boolean(dom.debtOnlyFilter?.checked),
-        balanceOnly: Boolean(dom.balanceOnlyFilter?.checked),
+        financialStatus: Number(dom.financialBalanceFilter?.value || 0),
         areaId: dom.areaFilter?.value || '',
         renewalFrom: dom.renewalFromFilter?.value || '',
         renewalTo: dom.renewalToFilter?.value || ''
@@ -528,11 +525,11 @@ function updateSubscriberFilterSummary() {
         summaryParts.push(`بحث: ${subscriberFilters.search}`);
     }
 
-    if (subscriberFilters.debtOnly) {
+    if (subscriberFilters.financialStatus < 0) {
         summaryParts.push('المديونون فقط');
     }
 
-    if (subscriberFilters.balanceOnly) {
+    if (subscriberFilters.financialStatus > 0) {
         summaryParts.push('أصحاب الرصيد فقط');
     }
 
@@ -571,11 +568,11 @@ function buildSubscriberQueryParams(page = 1) {
         params.set('search', subscriberFilters.search);
     }
 
-    if (subscriberFilters.debtOnly) {
+    if (subscriberFilters.financialStatus < 0) {
         params.set('debt_only', 'true');
     }
 
-    if (subscriberFilters.balanceOnly) {
+    if (subscriberFilters.financialStatus > 0) {
         params.set('balance_only', 'true');
     }
 
@@ -645,11 +642,8 @@ function registerEventListeners() {
         dom.btnLoadMonthlyReport.addEventListener('click', loadMonthlyReport);
     }
     dom.searchInput.addEventListener('input', filterSubscribers);
-    if (dom.debtOnlyFilter) {
-        dom.debtOnlyFilter.addEventListener('change', filterSubscribers);
-    }
-    if (dom.balanceOnlyFilter) {
-        dom.balanceOnlyFilter.addEventListener('change', filterSubscribers);
+    if (dom.financialBalanceFilter) {
+        dom.financialBalanceFilter.addEventListener('input', filterSubscribers);
     }
     if (dom.areaFilter) {
         dom.areaFilter.addEventListener('change', filterSubscribers);
@@ -1001,16 +995,14 @@ function filterSubscribers() {
 function resetSubscriberFilters() {
     subscriberFilters = {
         search: '',
-        debtOnly: false,
-        balanceOnly: false,
+        financialStatus: 0,
         areaId: '',
         renewalFrom: '',
         renewalTo: ''
     };
 
     if (dom.searchInput) dom.searchInput.value = '';
-    if (dom.debtOnlyFilter) dom.debtOnlyFilter.checked = false;
-    if (dom.balanceOnlyFilter) dom.balanceOnlyFilter.checked = false;
+    if (dom.financialBalanceFilter) dom.financialBalanceFilter.value = '0';
     if (dom.areaFilter) dom.areaFilter.value = '';
     if (dom.renewalFromFilter) dom.renewalFromFilter.value = '';
     if (dom.renewalToFilter) dom.renewalToFilter.value = '';

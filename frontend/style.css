@@ -32,6 +32,28 @@
     direction: rtl;
 }
 
+.financial-filter {
+    min-height: 42px;
+}
+
+.financial-filter-range {
+    direction: ltr;
+    margin: 0;
+}
+
+.financial-filter-labels {
+    display: flex;
+    justify-content: space-between;
+    color: #6c757d;
+    font-size: 0.8rem;
+    font-weight: 600;
+    direction: ltr;
+}
+
+.financial-filter-labels span {
+    direction: rtl;
+}
+
 #detailsModal .modal-content {
     transition: box-shadow 0.2s ease, border-color 0.2s ease;
     border: 1px solid #e8edf5;
