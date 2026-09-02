@@ -176,7 +176,9 @@ def get_subscribers():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 50, type=int)
         search = request.args.get('search', '', type=str)
+        area_id = request.args.get('area_id', None, type=int)
         debt_only = str(request.args.get('debt_only', 'false')).strip().lower() in ('1', 'true', 'yes', 'on')
+        balance_only = str(request.args.get('balance_only', 'false')).strip().lower() in ('1', 'true', 'yes', 'on')
         renewal_from_raw = request.args.get('renewal_from', '', type=str).strip()
         renewal_to_raw = request.args.get('renewal_to', '', type=str).strip()
 
@@ -253,8 +255,14 @@ def get_subscribers():
                 )
             )
 
+        if area_id:
+            query = query.filter(Subscriber.area_id == area_id)
+
         if debt_only:
             query = query.filter(Subscriber.balance < 0)
+        
+        if balance_only:
+            query = query.filter(Subscriber.balance > 0)
 
         if renewal_from:
             query = query.filter(db.func.date(last_renewal_subquery.c.last_renewal_date) >= renewal_from)

@@ -37,6 +37,8 @@ let isActionSubmitting = false;
 let subscriberFilters = {
     search: '',
     debtOnly: false,
+    balanceOnly: false,
+    areaId: '',
     renewalFrom: '',
     renewalTo: ''
 };
@@ -65,6 +67,8 @@ const dom = {
     totalDebt: document.getElementById('total-debt'),
     searchInput: document.getElementById('searchInput'),
     debtOnlyFilter: document.getElementById('debtOnlyFilter'),
+    balanceOnlyFilter: document.getElementById('balanceOnlyFilter'),
+    areaFilter: document.getElementById('areaFilter'),
     renewalFromFilter: document.getElementById('renewalFromFilter'),
     renewalToFilter: document.getElementById('renewalToFilter'),
     btnApplySubscriberFilters: document.getElementById('btnApplySubscriberFilters'),
@@ -508,6 +512,8 @@ function syncSubscriberFiltersFromDom() {
     subscriberFilters = {
         search: dom.searchInput?.value.trim() || '',
         debtOnly: Boolean(dom.debtOnlyFilter?.checked),
+        balanceOnly: Boolean(dom.balanceOnlyFilter?.checked),
+        areaId: dom.areaFilter?.value || '',
         renewalFrom: dom.renewalFromFilter?.value || '',
         renewalTo: dom.renewalToFilter?.value || ''
     };
@@ -524,6 +530,15 @@ function updateSubscriberFilterSummary() {
 
     if (subscriberFilters.debtOnly) {
         summaryParts.push('المديونون فقط');
+    }
+
+    if (subscriberFilters.balanceOnly) {
+        summaryParts.push('أصحاب الرصيد فقط');
+    }
+
+    if (subscriberFilters.areaId) {
+        const selectedArea = allAreas.find((area) => String(area.id) === String(subscriberFilters.areaId));
+        summaryParts.push(`المنطقة: ${selectedArea?.name || subscriberFilters.areaId}`);
     }
 
     if (subscriberFilters.renewalFrom || subscriberFilters.renewalTo) {
@@ -558,6 +573,14 @@ function buildSubscriberQueryParams(page = 1) {
 
     if (subscriberFilters.debtOnly) {
         params.set('debt_only', 'true');
+    }
+
+    if (subscriberFilters.balanceOnly) {
+        params.set('balance_only', 'true');
+    }
+
+    if (subscriberFilters.areaId) {
+        params.set('area_id', subscriberFilters.areaId);
     }
 
     if (subscriberFilters.renewalFrom) {
@@ -624,6 +647,12 @@ function registerEventListeners() {
     dom.searchInput.addEventListener('input', filterSubscribers);
     if (dom.debtOnlyFilter) {
         dom.debtOnlyFilter.addEventListener('change', filterSubscribers);
+    }
+    if (dom.balanceOnlyFilter) {
+        dom.balanceOnlyFilter.addEventListener('change', filterSubscribers);
+    }
+    if (dom.areaFilter) {
+        dom.areaFilter.addEventListener('change', filterSubscribers);
     }
     if (dom.btnApplySubscriberFilters) {
         dom.btnApplySubscriberFilters.addEventListener('click', filterSubscribers);
@@ -877,6 +906,15 @@ function renderAreaOptions(areas) {
     });
     dom.addAreaId.innerHTML = optionsHTML;
     dom.editAreaId.innerHTML = optionsHTML;
+
+    if (dom.areaFilter) {
+        const selectedAreaId = subscriberFilters.areaId;
+        dom.areaFilter.innerHTML = '<option value="">كل المناطق</option>';
+        areas.forEach((area) => {
+            dom.areaFilter.insertAdjacentHTML('beforeend', `<option value="${area.id}">${area.name}</option>`);
+        });
+        dom.areaFilter.value = selectedAreaId;
+    }
 }
 
 function renderAreasTable(areas) {
@@ -964,12 +1002,16 @@ function resetSubscriberFilters() {
     subscriberFilters = {
         search: '',
         debtOnly: false,
+        balanceOnly: false,
+        areaId: '',
         renewalFrom: '',
         renewalTo: ''
     };
 
     if (dom.searchInput) dom.searchInput.value = '';
     if (dom.debtOnlyFilter) dom.debtOnlyFilter.checked = false;
+    if (dom.balanceOnlyFilter) dom.balanceOnlyFilter.checked = false;
+    if (dom.areaFilter) dom.areaFilter.value = '';
     if (dom.renewalFromFilter) dom.renewalFromFilter.value = '';
     if (dom.renewalToFilter) dom.renewalToFilter.value = '';
 
