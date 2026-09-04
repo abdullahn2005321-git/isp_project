@@ -438,6 +438,7 @@ function showApp() {
 
     const canManageStaffOnly = canManageStaff(userRole);
     const canManageContentOnly = canManageContent(userRole);
+    const canEditSubscribersOnly = canEditSubscribers(userRole);
     const canViewAuditLogOnly = canViewAuditLog(userRole);
 
     if (dom.btnAddStaff) {
@@ -473,7 +474,7 @@ function showApp() {
     }
 
     if (dom.btnSaveEdit) {
-        dom.btnSaveEdit.disabled = !canManageContentOnly;
+        dom.btnSaveEdit.disabled = !canEditSubscribersOnly;
     }
 
     if (dom.btnDeleteSub) {
