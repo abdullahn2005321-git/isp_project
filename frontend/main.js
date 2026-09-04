@@ -29,6 +29,7 @@ let currentSubscriberPage = 1;
 let totalSubscriberPages = 1;
 let currentLogsPage = 1;
 let totalLogsPages = 1;
+let totalLogsItems = 0;
 let currentLogFilter = 'الكل';
 let logFilterStartDate = '';
 let logFilterEndDate = '';
@@ -701,11 +702,7 @@ function registerEventListeners() {
                 return;
             }
 
-            if (activeLogSubscriberId) {
-                loadLogs(1, activeLogSubscriberId);
-            } else {
-                filterLogs(currentLogFilter);
-            }
+            loadLogs(1, activeLogSubscriberId);
             logFilterModal.hide();
         });
     }
@@ -738,11 +735,9 @@ function registerEventListeners() {
                 return;
             }
 
-            if (activeLogSubscriberId) {
-                loadLogs(1, activeLogSubscriberId);
-            } else {
-                filterLogs(filterType);
-            }
+            currentLogFilter = filterType;
+            updateLogFilterButtonLabel();
+            loadLogs(1, activeLogSubscriberId);
             logFilterModal.hide();
         });
     });
@@ -1421,6 +1416,17 @@ async function loadLogs(page = 1, subscriberId = activeLogSubscriberId) {
         if (subscriberId) {
             params.set('subscriber_id', String(subscriberId));
         }
+        if (logFilterStartDate) {
+            params.set('start_date', logFilterStartDate);
+        }
+        if (logFilterEndDate) {
+            params.set('end_date', logFilterEndDate);
+        }
+        if (currentLogFilter === 'تسديد') {
+            params.set('payment', 'true');
+        } else if (currentLogFilter === 'تجديد') {
+            params.set('renewal', 'true');
+        }
 
         const data = await apiCall(`/logs?${params.toString()}`);
         if (!data) return;
@@ -1435,8 +1441,9 @@ async function loadLogs(page = 1, subscriberId = activeLogSubscriberId) {
 
             currentLogsPage = data.pagination?.current_page || page;
             totalLogsPages = data.pagination?.total_pages || 1;
+            totalLogsItems = data.pagination?.total_items || 0;
             if (dom.logsPageInfo) {
-                dom.logsPageInfo.innerText = `صفحة ${currentLogsPage} من ${totalLogsPages}`;
+                dom.logsPageInfo.innerText = `صفحة ${currentLogsPage} من ${totalLogsPages} - الإجمالي: ${totalLogsItems}`;
             }
             if (dom.btnPrevLogsPage) {
                 dom.btnPrevLogsPage.disabled = currentLogsPage <= 1;
@@ -1445,7 +1452,6 @@ async function loadLogs(page = 1, subscriberId = activeLogSubscriberId) {
                 dom.btnNextLogsPage.disabled = currentLogsPage >= totalLogsPages;
             }
 
-            currentLogFilter = 'الكل';
             updateLogFilterButtonLabel();
             renderLogsTable(allLogs);
             updateDashboardSummary();

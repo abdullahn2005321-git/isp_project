@@ -3,6 +3,7 @@ from models import User, db, Subscriber, Transaction, Area, DailyFinancialSummar
 from routes.subscribers import get_current_admin_id
 from flask_jwt_extended import get_jwt_identity, jwt_required, get_jwt
 from sqlalchemy import extract
+from datetime import datetime, timedelta
 
 logging_and_reporting_bp = Blueprint('logging_and_reporting', __name__)
 
@@ -158,6 +159,40 @@ def get_logs():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 100, type=int)
         subscriber_id = request.args.get('subscriber_id', type=int)
+        start_date_raw = request.args.get('start_date','', type=str).strip()
+        end_date_raw = request.args.get('end_date','', type=str).strip()
+        renewal = request.args.get('renewal', type=str)
+        payment = request.args.get('payment', type=str)
+
+        start_date = None
+        end_date = None
+
+        if start_date_raw:
+            try:
+                start_date = datetime.strptime(start_date_raw, "%Y-%m-%d")
+            except ValueError:
+                return jsonify({
+                    "status": "error",
+                    "message": "Invalid start_date format. Use YYYY-MM-DD."
+                }), 400
+
+        if end_date_raw:
+            try:
+                end_date = datetime.strptime(end_date_raw, "%Y-%m-%d")
+            except ValueError:
+                return jsonify({
+                    "status": "error",
+                    "message": "Invalid end_date format. Use YYYY-MM-DD."
+                }), 400
+
+        if start_date and end_date and start_date > end_date:
+            return jsonify({
+                "status": "error",
+                "message": "start_date cannot be later than end_date."
+            }), 400
+
+        if end_date:
+            end_date += timedelta(days=1)
 
         query = Transaction.query.join(Subscriber).join(Area).filter(
             Area.admin_id == admin_id,
@@ -165,6 +200,16 @@ def get_logs():
 
         if subscriber_id is not None:
             query = query.filter(Subscriber.id == subscriber_id)
+        
+        if start_date:
+            query = query.filter(Transaction.transaction_date >= start_date)
+        if end_date:
+            query = query.filter(Transaction.transaction_date < end_date)
+
+        if renewal and renewal.strip().lower() in ('1', 'true', 'yes', 'on'):
+            query = query.filter(Transaction.transaction_type == 'renewal')
+        if payment and payment.strip().lower() in ('1', 'true', 'yes', 'on'):
+            query = query.filter(Transaction.transaction_type == 'payment')
 
         paginated_transactions = query.order_by(
             Transaction.transaction_date.desc()

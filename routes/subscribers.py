@@ -3,7 +3,7 @@ from models import db, Area, Subscriber, Transaction, User
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
-from datetime import date, datetime
+from datetime import datetime
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 
 subscribers_bp = Blueprint('subscribers', __name__)
@@ -191,7 +191,7 @@ def get_subscribers():
             except ValueError:
                 return jsonify({
                     "status": "error",
-                    "message": "صيغة تاريخ البداية غير صحيحة. استخدم YYYY-MM-DD."
+                    "message": "Invalid renewal_from format. Use YYYY-MM-DD."
                 }), 400
 
         if renewal_to_raw:
@@ -200,13 +200,13 @@ def get_subscribers():
             except ValueError:
                 return jsonify({
                     "status": "error",
-                    "message": "صيغة تاريخ النهاية غير صحيحة. استخدم YYYY-MM-DD."
+                    "message": "Invalid renewal_to format. Use YYYY-MM-DD."
                 }), 400
 
         if renewal_from and renewal_to and renewal_from > renewal_to:
             return jsonify({
                 "status": "error",
-                "message": "تاريخ البداية يجب أن يكون أقدم أو يساوي تاريخ النهاية."
+                "message": "renewal_from cannot be later than renewal_to."
             }), 400
 
         last_renewal_subquery = db.session.query(
@@ -313,7 +313,10 @@ def get_subscribers():
         }), 200
     
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
 
 
 @subscribers_bp.route('/api/subscribers/<int:sub_id>', methods=['GET'])
