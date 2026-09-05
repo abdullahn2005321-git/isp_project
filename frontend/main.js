@@ -1557,7 +1557,7 @@ function renderMonthlyReport(data) {
     dom.monthlyReportMessage.innerText = `ملخص شهر ${data.month}/${data.year}`;
 
     if (!days.length) {
-        dom.monthlyReportTableBody.innerHTML = '<tr><td colspan="6" class="text-muted p-4">لا توجد عمليات مسجلة في هذا الشهر.</td></tr>';
+        dom.monthlyReportTableBody.innerHTML = '<tr><td colspan="7" class="text-muted p-4">لا توجد عمليات مسجلة في هذا الشهر.</td></tr>';
         return;
     }
 
@@ -1566,6 +1566,7 @@ function renderMonthlyReport(data) {
             <td dir="ltr" class="text-muted">${day.summary_date || '-'}</td>
             <td>${Number(day.payments_count || 0).toLocaleString()}</td>
             <td>${Number(day.renewals_count || 0).toLocaleString()}</td>
+            <td>${formatIraqiDinar(day.total_renewals_amount)}</td>
             <td>${formatIraqiDinar(day.cash_received)}</td>
             <td>${formatIraqiDinar(day.electronic_received)}</td>
             <td class="fw-bold">${formatIraqiDinar(day.total_collected)}</td>
