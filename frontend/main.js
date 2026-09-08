@@ -111,7 +111,6 @@ const dom = {
     btnDeleteSub: document.getElementById('btn-delete-sub'),
     btnViewSubscriberLogs: document.getElementById('btn-view-subscriber-logs'),
     btnEditSub: document.getElementById('btn-edit-sub'),
-    btnCloseDetails: document.getElementById('btn-close-details'),
     btnCancelInlineEdit: document.getElementById('btn-cancel-inline-edit'),
     btnSaveEdit: document.getElementById('btn-save-edit'),
     btnSaveNew: document.getElementById('btn-save-new'),
@@ -742,6 +741,11 @@ function registerEventListeners() {
         });
     });
     dom.btnCopyDetails.addEventListener('click', copySubscriberDetails);
+    dom.detailPhone.addEventListener('click', async () => {
+        const phone = dom.detailPhone.innerText.trim();
+        const copied = await copyPhoneToClipboard(phone);
+        showAlert(copied ? 'تم نسخ رقم الهاتف بنجاح' : 'لا يمكن نسخ الرقم الآن', copied ? 'success' : 'warning');
+    });
     dom.btnDeleteSub.addEventListener('click', () => {
         if (selectedSubscriberId !== null) deleteSubscriber(selectedSubscriberId);
     });
@@ -980,6 +984,13 @@ async function loadSubscribers(page = 1) {
             dom.subscribersTableBody.innerHTML = '<div class="col-12 text-danger p-4 text-center">حدث خطأ أثناء تحميل قائمة المشتركين.</div>';
         }
     }
+}
+
+async function refreshSubscribersKeepingScroll() {
+    const scrollPosition = window.scrollY;
+    const page = currentSubscriberPage;
+    await loadSubscribers(page);
+    requestAnimationFrame(() => window.scrollTo({ top: scrollPosition, behavior: 'auto' }));
 }
 
 function filterSubscribers() {
@@ -1258,6 +1269,8 @@ async function showSubscriberDetails(subscriberId) {
         } else {
             dom.detailPhone.innerText = sub.phone;
             dom.detailPhone.className = 'fw-bold text-dark';
+            dom.detailPhone.style.cursor = 'pointer';
+            dom.detailPhone.title = 'اضغط لنسخ الرقم';
         }
         if (sub.notes && sub.notes.trim() !== '' && sub.notes !== 'None') {
             dom.detailNotes.innerText = sub.notes;
@@ -1304,7 +1317,6 @@ function enterInlineEditMode(sub) {
     if (dom.editSubscriberForm) dom.editSubscriberForm.classList.remove('d-none');
     if (dom.btnEditSub) dom.btnEditSub.classList.add('d-none');
     if (dom.btnCopyDetails) dom.btnCopyDetails.classList.add('d-none');
-    if (dom.btnCloseDetails) dom.btnCloseDetails.classList.add('d-none');
     if (dom.btnViewSubscriberLogs) dom.btnViewSubscriberLogs.classList.add('d-none');
     if (dom.btnCancelInlineEdit) dom.btnCancelInlineEdit.classList.remove('d-none');
     if (dom.btnSaveEdit) dom.btnSaveEdit.classList.remove('d-none');
@@ -1334,7 +1346,6 @@ function exitInlineEditMode(options = {}) {
     if (dom.editSubscriberForm) dom.editSubscriberForm.classList.add('d-none');
     if (dom.btnEditSub) dom.btnEditSub.classList.remove('d-none');
     if (dom.btnCopyDetails) dom.btnCopyDetails.classList.remove('d-none');
-    if (dom.btnCloseDetails) dom.btnCloseDetails.classList.remove('d-none');
     if (dom.btnViewSubscriberLogs) dom.btnViewSubscriberLogs.classList.toggle('d-none', !canViewAuditLog(getCurrentRole()));
     if (dom.btnCancelInlineEdit) dom.btnCancelInlineEdit.classList.add('d-none');
     if (dom.btnSaveEdit) dom.btnSaveEdit.classList.add('d-none');
@@ -1359,7 +1370,7 @@ async function submitEditSubscriber() {
         if (data && data.status === 'success') {
             showAlert(`✅ ${data.message}`, 'success');
             await showSubscriberDetails(Number(subId));
-            loadSubscribers();
+            await refreshSubscribersKeepingScroll();
         } else {
             showAlert(`❌ خطأ: ${data ? data.message : 'تعذر حفظ التعديلات.'}`);
         }
@@ -1642,7 +1653,7 @@ async function submitAction() {
         if (data && data.status === 'success') {
             actionModal.hide();
             showAlert(data.message || 'تم تنفيذ العملية بنجاح.', 'success');
-            loadSubscribers();
+            refreshSubscribersKeepingScroll();
             loadLogs();
             loadDailyReport();
         } else {
@@ -1713,7 +1724,7 @@ async function quickUpdatePromise() {
     try {
         const data = await apiCall(`/subscribers/${selectedSubscriberId}`, 'PUT', updatedData);
         if (data && data.status === 'success') {
-            loadSubscribers();
+            refreshSubscribersKeepingScroll();
         } else {
             console.error('خطأ في تحديث الوعد:', data ? data.message : 'No response');
         }
