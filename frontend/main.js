@@ -36,6 +36,8 @@ let logFilterEndDate = '';
 let activeLogSubscriberId = null;
 let isActionSubmitting = false;
 let notesSaveTimer = null;
+let monthlyTrendChart = null;
+let monthlyPaymentMixChart = null;
 let subscriberFilters = {
     search: '',
     financialStatus: 0,
@@ -95,6 +97,8 @@ const dom = {
     monthlyPaymentsCount: document.getElementById('monthlyPaymentsCount'),
     monthlyRenewalsCount: document.getElementById('monthlyRenewalsCount'),
     monthlyActiveDaysCount: document.getElementById('monthlyActiveDaysCount'),
+    monthlyTrendChart: document.getElementById('monthlyTrendChart'),
+    monthlyPaymentMixChart: document.getElementById('monthlyPaymentMixChart'),
     btnTodayPromises: document.getElementById('btn-today-promises'),
     btnAddSubscriber: document.getElementById('btn-add-subscriber'),
     btnAddArea: document.getElementById('btn-add-area'),
@@ -1597,6 +1601,7 @@ function renderMonthlyReport(data) {
     dom.monthlyActiveDaysCount.innerText = Number(totals.active_days_count || 0).toLocaleString();
     dom.monthlyReportMessage.className = 'small text-muted mb-3';
     dom.monthlyReportMessage.innerText = `ملخص شهر ${data.month}/${data.year}`;
+    renderMonthlyCharts(days, totals);
 
     if (!days.length) {
         dom.monthlyReportTableBody.innerHTML = '<tr><td colspan="7" class="text-muted p-4">لا توجد عمليات مسجلة في هذا الشهر.</td></tr>';
@@ -1614,6 +1619,84 @@ function renderMonthlyReport(data) {
             <td class="fw-bold">${formatIraqiDinar(day.total_collected)}</td>
         </tr>
     `).join('');
+}
+
+function renderMonthlyCharts(days, totals) {
+    if (!window.Chart || !dom.monthlyTrendChart || !dom.monthlyPaymentMixChart) return;
+
+    monthlyTrendChart?.destroy();
+    monthlyPaymentMixChart?.destroy();
+
+    const labels = days.map((day) => day.summary_date || '-');
+    monthlyTrendChart = new Chart(dom.monthlyTrendChart, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'إجمالي التحصيل',
+                    data: days.map((day) => Number(day.total_collected || 0)),
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.12)',
+                    fill: true,
+                    tension: 0.35,
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointHoverRadius: 5
+                },
+                {
+                    label: 'قيمة التجديدات',
+                    data: days.map((day) => Number(day.total_renewals_amount || 0)),
+                    borderColor: '#087f95',
+                    backgroundColor: 'transparent',
+                    tension: 0.35,
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointHoverRadius: 5
+                }
+            ]
+        },
+        options: monthlyChartOptions()
+    });
+
+    monthlyPaymentMixChart = new Chart(dom.monthlyPaymentMixChart, {
+        type: 'doughnut',
+        data: {
+            labels: ['نقدي', 'إلكتروني'],
+            datasets: [{
+                data: [Number(totals.total_cash_received || 0), Number(totals.total_electronic_received || 0)],
+                backgroundColor: ['#168653', '#0d6efd'],
+                borderColor: '#ffffff',
+                borderWidth: 4,
+                hoverOffset: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '66%',
+            plugins: {
+                legend: { position: 'bottom', labels: { usePointStyle: true, padding: 18, font: { family: 'Segoe UI' } } },
+                tooltip: { callbacks: { label: (context) => ` ${context.label}: ${formatIraqiDinar(context.raw)}` } }
+            }
+        }
+    });
+}
+
+function monthlyChartOptions() {
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { intersect: false, mode: 'index' },
+        plugins: {
+            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 18, font: { family: 'Segoe UI' } } },
+            tooltip: { callbacks: { label: (context) => ` ${context.dataset.label}: ${formatIraqiDinar(context.raw)}` } }
+        },
+        scales: {
+            y: { beginAtZero: true, ticks: { callback: (value) => Number(value).toLocaleString() }, grid: { color: '#e6eef7' } },
+            x: { grid: { display: false } }
+        }
+    };
 }
 
 async function loadMonthlyReport() {

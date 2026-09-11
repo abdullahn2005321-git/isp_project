@@ -291,33 +291,50 @@
             </div>
 
             <div id="monthly-report" class="section-content">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
-                        <h5 class="m-0 text-secondary"><i class="fa-solid fa-calendar-days"></i> التقرير المالي الشهري</h5>
+                <div class="monthly-shell">
+                    <div class="monthly-header">
+                        <div>
+                            <span class="monthly-eyebrow">التحليل المالي</span>
+                            <h4 class="monthly-title"><i class="fa-solid fa-calendar-days"></i> التقرير المالي الشهري</h4>
+                            <p class="monthly-subtitle">تابع حركة التحصيل والتجديد يومًا بيوم واتخذ قراراتك بثقة.</p>
+                        </div>
                         <div class="d-flex align-items-center gap-2">
                             <label for="monthlyReportPeriod" class="visually-hidden">الشهر</label>
                             <input type="month" class="form-control form-control-sm" id="monthlyReportPeriod">
-                            <button type="button" class="btn btn-primary btn-sm" id="btnLoadMonthlyReport"><i class="fa-solid fa-rotate"></i> تحديث</button>
+                            <button type="button" class="btn monthly-load-button" id="btnLoadMonthlyReport"><i class="fa-solid fa-rotate"></i> تحديث</button>
                         </div>
                     </div>
-                    <div class="card-body">
+                    <div class="monthly-body">
                         <div id="monthlyReportMessage" class="small text-muted mb-3">اختر شهراً لعرض ملخصه المالي.</div>
-                        <div class="row g-3 mb-4">
-                            <div class="col-6 col-lg-3"><div class="border rounded p-3 h-100 bg-success-subtle"><div class="small text-secondary">إجمالي التحصيل</div><div class="fw-bold fs-5" id="monthlyTotalCollected">0 د.ع</div></div></div>
-                            <div class="col-6 col-lg-3"><div class="border rounded p-3 h-100 bg-primary-subtle"><div class="small text-secondary">التحصيل النقدي</div><div class="fw-bold fs-5" id="monthlyCashReceived">0 د.ع</div></div></div>
-                            <div class="col-6 col-lg-3"><div class="border rounded p-3 h-100 bg-info-subtle"><div class="small text-secondary">التحصيل الإلكتروني</div><div class="fw-bold fs-5" id="monthlyElectronicReceived">0 د.ع</div></div></div>
-                            <div class="col-6 col-lg-3"><div class="border rounded p-3 h-100 bg-warning-subtle"><div class="small text-secondary">عمليات التجديد</div><div class="fw-bold fs-5" id="monthlyRenewalsAmount">0 د.ع</div></div></div>
+                        <div class="monthly-stats">
+                            <div class="monthly-stat monthly-stat-total"><span>إجمالي التحصيل</span><strong id="monthlyTotalCollected">0 د.ع</strong><small>كل ما تم تحصيله</small></div>
+                            <div class="monthly-stat monthly-stat-cash"><span>التحصيل النقدي</span><strong id="monthlyCashReceived">0 د.ع</strong><small>عمليات نقدية</small></div>
+                            <div class="monthly-stat monthly-stat-electronic"><span>التحصيل الإلكتروني</span><strong id="monthlyElectronicReceived">0 د.ع</strong><small>عمليات إلكترونية</small></div>
+                            <div class="monthly-stat monthly-stat-renewals"><span>قيمة التجديدات</span><strong id="monthlyRenewalsAmount">0 د.ع</strong><small>إجمالي الاشتراكات</small></div>
                         </div>
-                        <div class="row g-3 mb-4">
-                            <div class="col-4"><div class="small text-secondary">عدد الدفعات</div><div class="fw-bold" id="monthlyPaymentsCount">0</div></div>
-                            <div class="col-4"><div class="small text-secondary">عدد التجديدات</div><div class="fw-bold" id="monthlyRenewalsCount">0</div></div>
-                            <div class="col-4"><div class="small text-secondary">أيام النشاط</div><div class="fw-bold" id="monthlyActiveDaysCount">0</div></div>
+                        <div class="monthly-counts">
+                            <div><span>عدد الدفعات</span><strong id="monthlyPaymentsCount">0</strong></div>
+                            <div><span>عدد التجديدات</span><strong id="monthlyRenewalsCount">0</strong></div>
+                            <div><span>أيام النشاط</span><strong id="monthlyActiveDaysCount">0</strong></div>
                         </div>
-                        <div class="table-responsive">
-                            <table class="table table-striped text-center align-middle mb-0">
-                                <thead class="table-light"><tr><th>التاريخ</th><th>الدفعات</th><th>التجديدات</th><th>اجمالي التجديدات</th><th>التحصيل النقدي</th><th>التحصيل الإلكتروني</th><th>إجمالي التحصيل</th></tr></thead>
-                                <tbody id="monthlyReportTableBody"><tr><td colspan="7" class="text-muted p-4">لا توجد بيانات معروضة.</td></tr></tbody>
-                            </table>
+                        <div class="monthly-charts">
+                            <div class="chart-panel chart-panel-wide">
+                                <div class="chart-panel-heading"><div><strong>الأداء اليومي</strong><small>التحصيل والتجديدات حسب اليوم</small></div><i class="fa-solid fa-chart-line"></i></div>
+                                <div class="chart-canvas-wrap"><canvas id="monthlyTrendChart"></canvas></div>
+                            </div>
+                            <div class="chart-panel">
+                                <div class="chart-panel-heading"><div><strong>توزيع التحصيل</strong><small>نقدي مقابل إلكتروني</small></div><i class="fa-solid fa-chart-pie"></i></div>
+                                <div class="chart-canvas-wrap chart-canvas-doughnut"><canvas id="monthlyPaymentMixChart"></canvas></div>
+                            </div>
+                        </div>
+                        <div class="monthly-table-panel">
+                            <div class="monthly-table-heading"><strong>التفاصيل اليومية</strong><span>سجل ملخص الشهر</span></div>
+                            <div class="table-responsive">
+                                <table class="table monthly-table text-center align-middle mb-0">
+                                    <thead><tr><th>التاريخ</th><th>الدفعات</th><th>التجديدات</th><th>اجمالي التجديدات</th><th>التحصيل النقدي</th><th>التحصيل الإلكتروني</th><th>إجمالي التحصيل</th></tr></thead>
+                                    <tbody id="monthlyReportTableBody"><tr><td colspan="7" class="text-muted p-4">لا توجد بيانات معروضة.</td></tr></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -612,6 +629,7 @@
     </div>
 
     <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <script defer src="./main.js"></script>
     <script defer src="./staff-handler.js"></script>
 </body>
