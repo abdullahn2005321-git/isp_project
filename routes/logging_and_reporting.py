@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from models import User, db, Subscriber, Transaction, Area, DailyFinancialSummary, get_iraq_now
 from routes.subscribers import get_current_admin_id
-from flask_jwt_extended import get_jwt_identity, jwt_required, get_jwt
+from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy import extract
 from datetime import datetime, timedelta
 
@@ -82,16 +82,7 @@ def get_monthly_financial_summary():
 @jwt_required()
 def daily_report():
     try:
-        claims = get_jwt()
-        user_role = claims.get("role")
         admin_id = get_current_admin_id()
-
-        if user_role != 'admin' and user_role != 'editor':
-            return jsonify({
-                "status": "error",
-                "message": "Unauthorized access. Only admin and editors can view the daily report."
-            }), 403
-
         target_date = request.args.get('date', get_iraq_now().date().isoformat())
 
         transaction = Transaction.query.join(Subscriber).join(Area).filter(
@@ -146,16 +137,7 @@ def daily_report():
 @jwt_required()
 def get_logs():
     try:
-        claims = get_jwt()
-        user_role = claims.get("role")
         admin_id = get_current_admin_id()
-
-        if user_role != 'admin' and user_role != 'editor':
-            return jsonify({
-                "status": "error",
-                "message": "Unauthorized access. Only admin and editors can view logs."
-            }), 403
-
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 100, type=int)
         subscriber_id = request.args.get('subscriber_id', type=int)

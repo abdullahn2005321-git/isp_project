@@ -350,8 +350,7 @@ function canEditSubscribers(role) {
 }
 
 function canViewAuditLog(role) {
-    const normalizedRole = normalizeRole(role);
-    return normalizedRole === 'admin' || normalizedRole === 'editor';
+    return true;
 }
 
 async function copyPhoneToClipboard(phone) {
