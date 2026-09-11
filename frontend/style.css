@@ -99,6 +99,85 @@
 .stat-payments { --stat-color: #168653; --stat-bg: #f3fcf6; --stat-border: #d2efdc; --stat-icon-bg: #def6e6; --stat-glow: rgba(22, 134, 83, 0.11); }
 .stat-renewals { --stat-color: #087f95; --stat-bg: #f1fbfd; --stat-border: #ccecf1; --stat-icon-bg: #d9f4f8; --stat-glow: rgba(8, 127, 149, 0.11); }
 
+.subscriber-shell {
+    overflow: hidden;
+    border: 1px solid #dce7f3;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 10px 28px rgba(36, 74, 113, 0.08);
+}
+.subscriber-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 1.4rem;
+    border-bottom: 1px solid #e5edf6;
+    background: linear-gradient(120deg, #ffffff 0%, #f1f7ff 100%);
+}
+.subscriber-eyebrow {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: #0d6efd;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+.subscriber-title { margin: 0; color: #1f2937; font-weight: 800; }
+.subscriber-title i { margin-inline-end: 0.35rem; color: #0d6efd; }
+.subscriber-subtitle { margin: 0.45rem 0 0; color: #64748b; font-size: 0.88rem; }
+.subscriber-add-button {
+    flex: 0 0 auto;
+    border: 1px solid #0d6efd;
+    border-radius: 10px;
+    color: #ffffff;
+    background: #0d6efd;
+    font-weight: 700;
+}
+.subscriber-add-button:hover,
+.subscriber-add-button:focus-visible { color: #ffffff; background: #0b5ed7; border-color: #0b5ed7; }
+.subscriber-body { padding: 1rem; background: #f8fbff; }
+.subscriber-filter-panel { margin-bottom: 1rem !important; }
+.subscriber-filter-panel .form-control,
+.subscriber-filter-panel .form-select { border-color: #d3e1ef; border-radius: 9px; }
+.subscriber-filter-panel .form-control:focus,
+.subscriber-filter-panel .form-select:focus { border-color: #80b4ef; box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1); }
+.subscriber-filter-panel .input-group-text { border-color: #d3e1ef !important; }
+.subscriber-filter-panel .btn { border-radius: 9px; }
+.subscriber-filter-panel #subscriberFiltersSummary { color: #6b7d90 !important; }
+.subscriber-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.9rem 1.2rem;
+    border-top: 1px solid #e5edf6;
+    background: #ffffff;
+}
+.subscriber-footer button { border-radius: 9px; border-color: #bfd6f4; color: #41617f; font-weight: 700; }
+.subscriber-footer button:hover:not(:disabled) { color: #0b5ed7; background: #eef5ff; border-color: #a9c8ed; }
+.subscriber-footer button:disabled { opacity: 0.45; }
+#subscribers-table-body { align-items: stretch; }
+#subscribers-table-body > [class*="col-"] { display: flex; }
+#subscribers-table-body .card {
+    width: 100%;
+    border: 1px solid #dce7f3 !important;
+    border-radius: 14px !important;
+    background: #ffffff;
+    box-shadow: 0 5px 16px rgba(36, 74, 113, 0.06) !important;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+#subscribers-table-body .card:hover { transform: translateY(-2px); border-color: #b9d4f2 !important; box-shadow: 0 9px 22px rgba(36, 74, 113, 0.11) !important; }
+#subscribers-table-body .subscriber-name { color: #155db5 !important; }
+#subscribers-table-body .subscriber-phone { color: #64748b !important; }
+#subscribers-table-body .area-name,
+#subscribers-table-body .last-renewal-date,
+#subscribers-table-body .promise-date,
+#subscribers-table-body .subscriber-notes { color: #526477 !important; line-height: 1.55; }
+#subscribers-table-body .subscriber-notes { min-height: 2.4rem; }
+#subscribers-table-body .renew-btn,
+#subscribers-table-body .payment-btn { border-radius: 9px; }
+
 .logs-shell {
     overflow: hidden;
     border: 1px solid #dce7f3;
@@ -184,6 +263,14 @@
     .logs-footer { align-items: stretch; flex-direction: column; padding: 0.8rem; }
     .logs-footer > div { display: flex; }
     .logs-page-button { flex: 1; }
+    .subscriber-header { align-items: flex-start; flex-direction: column; padding: 1rem; }
+    .subscriber-title { font-size: 1.1rem; }
+    .subscriber-subtitle { font-size: 0.8rem; line-height: 1.6; }
+    .subscriber-add-button { width: 100%; }
+    .subscriber-body { padding: 0.75rem; }
+    .subscriber-footer { align-items: stretch; flex-direction: column; padding: 0.8rem; }
+    .subscriber-footer > div { display: flex; }
+    .subscriber-footer button { flex: 1; }
 }
 #profileInfoCard { top: 100%; }
 #profileInfoCard.d-none { display: none !important; }
