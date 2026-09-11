@@ -46,8 +46,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function openStaffModal() {
         if (addStaffForm) addStaffForm.reset();
-        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addStaffModal'));
-        if (modal) modal.show();
+        const addStaffModalElement = document.getElementById('addStaffModal');
+        const teamModalElement = document.getElementById('teamModal');
+        const showAddStaffModal = () => bootstrap.Modal.getOrCreateInstance(addStaffModalElement).show();
+
+        if (teamModalElement?.classList.contains('show')) {
+            window.returnToTeamModal = true;
+            teamModalElement.addEventListener('hidden.bs.modal', showAddStaffModal, { once: true });
+            bootstrap.Modal.getInstance(teamModalElement)?.hide();
+        } else {
+            showAddStaffModal();
+        }
     }
     
     if (btnAddStaff) {
@@ -61,6 +70,14 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnSaveStaff) {
         btnSaveStaff.addEventListener('click', submitNewStaff);
     }
+
+    [document.getElementById('addStaffModal'), document.getElementById('editStaffModal')].forEach((modalElement) => {
+        modalElement?.addEventListener('hidden.bs.modal', () => {
+            if (!window.returnToTeamModal) return;
+            window.returnToTeamModal = false;
+            if (typeof openTeamModal === 'function') openTeamModal();
+        });
+    });
     
     // Optional: Submit form with Enter key
     if (addStaffForm) {

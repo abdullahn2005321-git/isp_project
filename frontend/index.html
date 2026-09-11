@@ -63,12 +63,12 @@
     </div>
     <div class="modal fade" id="editStaffModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-sm modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white border-0">
-                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-user-pen"></i> تعديل الموظف</h5>
+            <div class="modal-content staff-form-modal">
+                <div class="modal-header staff-form-header">
+                    <div><span class="staff-form-eyebrow">إدارة الفريق</span><h5 class="modal-title fw-bold"><i class="fa-solid fa-user-pen"></i> تعديل الموظف</h5></div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body staff-form-body">
                     <form id="editStaffForm">
                         <input type="hidden" id="editStaffId">
                         <div class="mb-3">
@@ -93,9 +93,9 @@
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="submit" form="editStaffForm" class="btn btn-primary" id="btn-save-staff-edit">حفظ التعديلات</button>
+                <div class="modal-footer staff-form-footer">
+                    <button type="button" class="btn staff-cancel-button" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" form="editStaffForm" class="btn staff-save-button" id="btn-save-staff-edit"><i class="fa-solid fa-check"></i> حفظ التعديلات</button>
                 </div>
             </div>
         </div>
@@ -346,20 +346,52 @@
 
     <div class="modal fade" id="addAreaModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-sm modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white border-0">
-                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-plus"></i> إضافة منطقة جديدة</h5>
+            <div class="modal-content area-form-modal">
+                <div class="modal-header area-form-header">
+                    <div>
+                        <span class="area-form-eyebrow">تنظيم التوزيع</span>
+                        <h5 class="modal-title fw-bold"><i class="fa-solid fa-plus"></i> إضافة منطقة جديدة</h5>
+                    </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body area-form-body">
                     <div class="mb-3">
                         <label for="newAreaName" class="form-label fw-bold">اسم المنطقة</label>
-                        <input type="text" class="form-control" id="newAreaName" placeholder="" required>
+                        <div class="input-group area-form-input">
+                            <span class="input-group-text"><i class="fa-solid fa-map-location-dot"></i></span>
+                            <input type="text" class="form-control" id="newAreaName" placeholder="اكتب اسم المنطقة" required>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="button" class="btn btn-primary fw-bold px-4" id="btn-save-area">حفظ المنطقة</button>
+                <div class="modal-footer area-form-footer">
+                    <button type="button" class="btn area-form-cancel" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn area-form-save" id="btn-save-area"><i class="fa-solid fa-check"></i> حفظ المنطقة</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editAreaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content area-form-modal">
+                <div class="modal-header area-form-header">
+                    <div>
+                        <span class="area-form-eyebrow">تحديث البيانات</span>
+                        <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square"></i> تعديل المنطقة</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body area-form-body">
+                    <input type="hidden" id="editAreaId">
+                    <label for="editAreaName" class="form-label fw-bold">اسم المنطقة</label>
+                    <div class="input-group area-form-input">
+                        <span class="input-group-text"><i class="fa-solid fa-map-location-dot"></i></span>
+                        <input type="text" class="form-control" id="editAreaName" placeholder="اكتب الاسم الجديد" required>
+                    </div>
+                </div>
+                <div class="modal-footer area-form-footer">
+                    <button type="button" class="btn area-form-cancel" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn area-form-save" id="btn-update-area"><i class="fa-solid fa-check"></i> حفظ التعديل</button>
                 </div>
             </div>
         </div>
@@ -414,15 +446,15 @@
 
     <div class="modal fade" id="teamModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title fw-bold text-secondary"><i class="fa-solid fa-users-rectangle"></i> فريق العمل</h5>
+            <div class="modal-content staff-team-modal">
+                <div class="modal-header staff-team-header">
+                    <div><span class="staff-form-eyebrow">إدارة الفريق</span><h5 class="modal-title fw-bold"><i class="fa-solid fa-users-rectangle"></i> فريق العمل</h5></div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body staff-team-body">
                     <div id="teamModalBody" class="small text-muted">جاري التحميل...</div>
                     <div class="mt-3 d-none" id="teamAddStaffWrapper">
-                        <button type="button" class="btn btn-outline-info btn-sm w-100" id="btnAddStaffProfile"><i class="fa-solid fa-user-tie"></i> إضافة موظف</button>
+                        <button type="button" class="btn staff-add-button w-100" id="btnAddStaffProfile"><i class="fa-solid fa-user-tie"></i> إضافة موظف</button>
                     </div>
                 </div>
             </div>
@@ -620,12 +652,12 @@
 
     <div id="addStaffModal" class="modal fade" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-sm modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-info text-white border-0">
-                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-user-tie"></i> تسجيل موظف جديد</h5>
+            <div class="modal-content staff-form-modal">
+                <div class="modal-header staff-form-header">
+                    <div><span class="staff-form-eyebrow">إدارة الفريق</span><h5 class="modal-title fw-bold"><i class="fa-solid fa-user-tie"></i> تسجيل موظف جديد</h5></div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body staff-form-body">
                     <form id="addStaffForm">
                         <div class="mb-3">
                             <label for="staffUsername" class="form-label fw-bold text-secondary">اسم المستخدم</label>
@@ -649,9 +681,9 @@
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="button" class="btn btn-info fw-bold px-4" id="btn-save-staff">تسجيل الموظف</button>
+                <div class="modal-footer staff-form-footer">
+                    <button type="button" class="btn staff-cancel-button" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn staff-save-button" id="btn-save-staff"><i class="fa-solid fa-check"></i> تسجيل الموظف</button>
                 </div>
             </div>
         </div>

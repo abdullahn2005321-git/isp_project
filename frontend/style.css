@@ -212,6 +212,36 @@
 .areas-table tbody td:last-child { width: 150px; border-left: 1px solid #edf2f7; border-radius: 10px 0 0 10px; }
 .areas-table .edit-area-btn { border-radius: 9px; border-color: #bfd6f4; color: #0b5ed7; font-weight: 700; }
 .areas-table .edit-area-btn:hover { color: #ffffff; border-color: #0d6efd; background: #0d6efd; }
+.area-form-modal { overflow: hidden; border: 1px solid #dce7f3; border-radius: 18px; box-shadow: 0 16px 36px rgba(36, 74, 113, 0.16); }
+.area-form-header { align-items: flex-start; justify-content: space-between; border-bottom: 1px solid #e5edf6; color: #ffffff; background: linear-gradient(120deg, #0d6efd 0%, #0b5ed7 100%); }
+.area-form-eyebrow { display: block; margin-bottom: 0.25rem; color: #cfe3ff; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em; }
+.area-form-header .modal-title i { margin-inline-end: 0.35rem; }
+.area-form-body { padding: 1.2rem; background: #f8fbff; }
+.area-form-body .form-label { display: block; margin-bottom: 0.4rem; color: #526477; }
+.area-form-input .input-group-text { min-width: 42px; justify-content: center; color: #0d6efd; border-color: #d3e1ef; background: #ffffff; }
+.area-form-input .form-control { border-color: #d3e1ef; border-radius: 0 9px 9px 0; }
+.area-form-input .form-control:focus { border-color: #80b4ef; box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1); }
+.area-form-footer { gap: 0.6rem; border-top: 1px solid #e5edf6; background: #ffffff; }
+.area-form-footer .btn { border-radius: 9px; font-weight: 700; }
+.area-form-cancel { border: 1px solid #cddceb; color: #526477; background: #ffffff; }
+.area-form-save { color: #ffffff; background: #0d6efd; }
+.area-form-save:hover { color: #ffffff; background: #0b5ed7; }
+.staff-team-modal, .staff-form-modal { overflow: hidden; border: 1px solid #dce7f3; border-radius: 18px; box-shadow: 0 16px 36px rgba(36, 74, 113, 0.16); }
+.staff-team-header, .staff-form-header { align-items: flex-start; justify-content: space-between; border-bottom: 1px solid #e5edf6; background: linear-gradient(120deg, #0d6efd 0%, #0b5ed7 100%); color: #ffffff; }
+.staff-team-header .modal-title i, .staff-form-header .modal-title i { margin-inline-end: 0.35rem; }
+.staff-form-eyebrow { display: block; margin-bottom: 0.25rem; color: #cfe3ff; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em; }
+.staff-team-body, .staff-form-body { padding: 1.1rem; background: #f8fbff; }
+.staff-form-body .form-label { display: block; margin-bottom: 0.35rem; color: #526477 !important; }
+.staff-form-body .form-control, .staff-form-body .form-select { border-color: #d3e1ef; border-radius: 9px; }
+.staff-form-body .form-control:focus, .staff-form-body .form-select:focus { border-color: #80b4ef; box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1); }
+.staff-form-footer { gap: 0.6rem; border-top: 1px solid #e5edf6; background: #ffffff; }
+.staff-form-footer .btn, .staff-add-button { border-radius: 9px; font-weight: 700; }
+.staff-cancel-button { border: 1px solid #cddceb; color: #526477; background: #ffffff; }
+.staff-save-button, .staff-add-button { border: 1px solid #0d6efd; color: #ffffff; background: #0d6efd; }
+.staff-save-button:hover, .staff-add-button:hover { color: #ffffff; border-color: #0b5ed7; background: #0b5ed7; }
+.staff-team-body #teamModalBody .border { border-color: #dce7f3 !important; border-radius: 10px !important; background: #ffffff !important; }
+.staff-team-body #teamModalBody .edit-staff-btn { border-radius: 8px; border-color: #bfd6f4; color: #0b5ed7; font-weight: 700; }
+.staff-team-body #teamModalBody .edit-staff-btn:hover { color: #ffffff; background: #0d6efd; }
 
 .logs-shell {
     overflow: hidden;
@@ -392,6 +422,8 @@
     .areas-subtitle { font-size: 0.8rem; line-height: 1.6; }
     .areas-add-button { width: 100%; }
     .areas-table-frame { padding: 0.35rem; }
+    .area-form-footer { flex-direction: column-reverse; align-items: stretch; }
+    .area-form-footer .btn { width: 100%; }
     .monthly-header { align-items: flex-start; flex-direction: column; padding: 1rem; }
     .monthly-title { font-size: 1.1rem; }
     .monthly-subtitle { font-size: 0.8rem; line-height: 1.6; }
@@ -408,6 +440,9 @@
     .add-subscriber-body { padding: 1rem; }
     .add-subscriber-footer { flex-direction: column-reverse; align-items: stretch; }
     .add-subscriber-footer .btn { width: 100%; }
+    .staff-form-footer { flex-direction: column-reverse; align-items: stretch; }
+    .staff-form-footer .btn { width: 100%; }
+    .staff-team-body, .staff-form-body { padding: 0.9rem; }
 }
 #profileInfoCard { top: 100%; width: min(310px, calc(100vw - 2rem)); z-index: 1050; border: 1px solid #dce7f3; border-radius: 16px; overflow: hidden; box-shadow: 0 16px 36px rgba(36, 74, 113, 0.16); }
 #profileInfoCard.d-none { display: none !important; }

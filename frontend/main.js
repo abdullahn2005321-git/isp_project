@@ -13,6 +13,7 @@ const API_URL = (() => {
 let actionModal;
 let addSubModal;
 let addAreaModal;
+let editAreaModal;
 let addStaffModal;
 let logFilterModal;
 let selectedSubscriberId = null;
@@ -103,7 +104,10 @@ const dom = {
     btnAddSubscriber: document.getElementById('btn-add-subscriber'),
     btnAddArea: document.getElementById('btn-add-area'),
     btnSaveArea: document.getElementById('btn-save-area'),
+    btnUpdateArea: document.getElementById('btn-update-area'),
     newAreaName: document.getElementById('newAreaName'),
+    editAreaName: document.getElementById('editAreaName'),
+    editAreaId: document.getElementById('editAreaId'),
     todayPayments: document.getElementById('today-payments'),
     todayRenewals: document.getElementById('today-renewals'),
     reportStatusBadge: document.getElementById('report-status-badge'),
@@ -489,6 +493,7 @@ function initPage() {
     actionModal = new bootstrap.Modal(document.getElementById('actionModal'));
     addSubModal = new bootstrap.Modal(document.getElementById('addSubscriberModal'));
     addAreaModal = new bootstrap.Modal(document.getElementById('addAreaModal'));
+    editAreaModal = new bootstrap.Modal(document.getElementById('editAreaModal'));
     addStaffModal = new bootstrap.Modal(document.getElementById('addStaffModal'));
     logFilterModal = new bootstrap.Modal(document.getElementById('logFilterModal'));
     if (dom.monthlyReportPeriod) {
@@ -662,29 +667,16 @@ function registerEventListeners() {
     dom.btnAddSubscriber.addEventListener('click', openAddSubscriberModal);
     dom.btnAddArea.addEventListener('click', () => addAreaModal.show());
     dom.btnSaveArea.addEventListener('click', submitNewArea);
+    dom.btnUpdateArea.addEventListener('click', submitAreaUpdate);
     document.addEventListener('click', async (event) => {
         const editButton = event.target.closest('.edit-area-btn');
         if (!editButton) return;
 
         const areaId = Number(editButton.dataset.areaId);
         const currentName = editButton.dataset.areaName || '';
-        const newName = window.prompt('اكتب الاسم الجديد للمنطقة:', currentName);
-
-        if (newName === null) return;
-
-        const trimmedName = newName.trim();
-        if (!trimmedName) {
-            showAlert('يرجى إدخال اسم المنطقة.', 'warning');
-            return;
-        }
-
-        const data = await apiCall(`/areas/${areaId}`, 'PUT', { name: trimmedName });
-        if (data && data.status === 'success') {
-            showAlert(data.message || 'تم تحديث اسم المنطقة بنجاح.', 'success');
-            loadAreas();
-        } else {
-            showAlert(data?.message || 'فشل تحديث اسم المنطقة.', 'danger');
-        }
+        dom.editAreaId.value = areaId;
+        dom.editAreaName.value = currentName;
+        editAreaModal.show();
     });
     if (dom.btnOpenLogFilter) {
         dom.btnOpenLogFilter.addEventListener('click', () => logFilterModal.show());
@@ -942,6 +934,25 @@ async function submitNewArea() {
     }
 }
 
+async function submitAreaUpdate() {
+    const areaId = Number(dom.editAreaId.value);
+    const name = dom.editAreaName.value.trim();
+
+    if (!areaId || !name) {
+        showAlert('يرجى إدخال اسم المنطقة.', 'warning');
+        return;
+    }
+
+    const data = await apiCall(`/areas/${areaId}`, 'PUT', { name });
+    if (data?.status === 'success') {
+        editAreaModal.hide();
+        showAlert(data.message || 'تم تحديث اسم المنطقة بنجاح.', 'success');
+        loadAreas();
+    } else {
+        showAlert(data?.message || 'فشل تحديث اسم المنطقة.', 'danger');
+    }
+}
+
 async function loadSubscribers(page = 1) {
     try {
         if (!dom.subscribersTableBody) return;
@@ -1169,7 +1180,17 @@ function openEditStaffModal(button) {
     document.getElementById('editStaffPassword').value = '';
     document.getElementById('editStaffRole').value = button.dataset.staffRole || 'viewer';
     document.getElementById('editStaffActive').checked = button.dataset.staffActive !== 'false';
-    bootstrap.Modal.getOrCreateInstance(document.getElementById('editStaffModal')).show();
+    const editModalElement = document.getElementById('editStaffModal');
+    const teamModalElement = document.getElementById('teamModal');
+    const showEditModal = () => bootstrap.Modal.getOrCreateInstance(editModalElement).show();
+
+    if (teamModalElement?.classList.contains('show')) {
+        window.returnToTeamModal = true;
+        teamModalElement.addEventListener('hidden.bs.modal', showEditModal, { once: true });
+        bootstrap.Modal.getInstance(teamModalElement)?.hide();
+    } else {
+        showEditModal();
+    }
 }
 
 async function submitStaffUpdate(event) {
@@ -1189,7 +1210,7 @@ async function submitStaffUpdate(event) {
     if (data?.status === 'success') {
         bootstrap.Modal.getInstance(document.getElementById('editStaffModal'))?.hide();
         showAlert(data.message, 'success');
-        openTeamModal();
+        if (!window.returnToTeamModal) openTeamModal();
     }
 }
 
