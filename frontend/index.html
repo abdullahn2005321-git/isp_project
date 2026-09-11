@@ -429,16 +429,22 @@
 
     <div class="modal fade" id="logFilterModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" style="max-width: 360px;">
-            <div class="modal-content">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title fw-bold text-secondary"><i class="fa-solid fa-filter"></i> تصفية السجل</h5>
+            <div class="modal-content log-filter-modal">
+                <div class="modal-header log-filter-header">
+                    <div>
+                        <span class="log-filter-eyebrow">أدوات البحث</span>
+                        <h5 class="modal-title fw-bold"><i class="fa-solid fa-filter"></i> تصفية السجل</h5>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="d-grid gap-2">
+                <div class="modal-body log-filter-body">
+                    <div class="log-filter-fields">
                         <div class="mb-2">
                             <label for="logFilterSubscriberId" class="form-label fw-bold small">رقم المشترك</label>
-                            <input type="number" class="form-control" id="logFilterSubscriberId" min="1" placeholder="أدخل ID المشترك">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-user-tag"></i></span>
+                                <input type="number" class="form-control" id="logFilterSubscriberId" min="1" placeholder="أدخل رقم المشترك">
+                            </div>
                         </div>
                         <div class="mb-2">
                             <label for="logFilterStartDate" class="form-label fw-bold small">تاريخ البدء</label>
@@ -448,10 +454,18 @@
                             <label for="logFilterEndDate" class="form-label fw-bold small">تاريخ الانتهاء</label>
                             <input type="date" class="form-control" id="logFilterEndDate">
                         </div>
-                        <button type="button" class="btn btn-primary fw-bold" id="btnApplyLogFilter">تطبيق</button>
-                        <button type="button" class="btn btn-outline-primary fw-bold" data-log-filter="تسديد">التسديدات</button>
-                        <button type="button" class="btn btn-outline-success fw-bold" data-log-filter="تجديد">التجديدات</button>
-                        <button type="button" class="btn btn-outline-danger" id="btnClearLogFilter">إلغاء التصفيات</button>
+                        <div class="mb-2">
+                            <label for="logFilterType" class="form-label fw-bold small">نوع العملية</label>
+                            <select class="form-select" id="logFilterType">
+                                <option value="الكل">كل العمليات</option>
+                                <option value="تسديد">التسديدات</option>
+                                <option value="تجديد">التجديدات</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="log-filter-actions">
+                        <button type="button" class="btn btn-primary fw-bold" id="btnApplyLogFilter"><i class="fa-solid fa-check"></i> تطبيق الفلتر</button>
+                        <button type="button" class="btn btn-outline-secondary" id="btnClearLogFilter"><i class="fa-solid fa-rotate-left"></i> مسح الفلاتر</button>
                     </div>
                 </div>
             </div>

@@ -112,6 +112,7 @@ const dom = {
     btnApplyLogFilter: document.getElementById('btnApplyLogFilter'),
     btnClearLogFilter: document.getElementById('btnClearLogFilter'),
     logFilterSubscriberId: document.getElementById('logFilterSubscriberId'),
+    logFilterType: document.getElementById('logFilterType'),
     btnCopyDetails: document.getElementById('btn-copy-details'),
     btnDeleteSub: document.getElementById('btn-delete-sub'),
     btnViewSubscriberLogs: document.getElementById('btn-view-subscriber-logs'),
@@ -693,6 +694,7 @@ function registerEventListeners() {
             const startDate = document.getElementById('logFilterStartDate').value;
             const endDate = document.getElementById('logFilterEndDate').value;
             const subscriberIdInput = document.getElementById('logFilterSubscriberId').value.trim();
+            currentLogFilter = dom.logFilterType?.value || 'الكل';
             logFilterStartDate = startDate;
             logFilterEndDate = endDate;
             activeLogSubscriberId = subscriberIdInput ? Number(subscriberIdInput) : null;
@@ -712,6 +714,7 @@ function registerEventListeners() {
             activeLogSubscriberId = null;
             const subscriberIdInput = document.getElementById('logFilterSubscriberId');
             if (subscriberIdInput) subscriberIdInput.value = '';
+            if (dom.logFilterType) dom.logFilterType.value = 'الكل';
             document.getElementById('logFilterStartDate').value = '';
             document.getElementById('logFilterEndDate').value = '';
             currentLogFilter = 'الكل';
@@ -720,26 +723,6 @@ function registerEventListeners() {
             logFilterModal.hide();
         });
     }
-    document.querySelectorAll('[data-log-filter]').forEach((button) => {
-        button.addEventListener('click', () => {
-            const filterType = button.dataset.logFilter;
-            const startDate = document.getElementById('logFilterStartDate').value;
-            const endDate = document.getElementById('logFilterEndDate').value;
-            const subscriberIdInput = document.getElementById('logFilterSubscriberId').value.trim();
-            logFilterStartDate = startDate;
-            logFilterEndDate = endDate;
-            activeLogSubscriberId = subscriberIdInput ? Number(subscriberIdInput) : null;
-
-            if (!validateLogDateRange()) {
-                return;
-            }
-
-            currentLogFilter = filterType;
-            updateLogFilterButtonLabel();
-            loadLogs(1, activeLogSubscriberId);
-            logFilterModal.hide();
-        });
-    });
     dom.btnCopyDetails.addEventListener('click', copySubscriberDetails);
     dom.detailPhone.addEventListener('click', async () => {
         const phone = dom.detailPhone.innerText.trim();
