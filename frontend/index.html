@@ -119,40 +119,47 @@
             </ul>
 
             <div id="dashboard" class="section-content active">
-                <h4 class="mb-4 text-secondary">نظرة عامة على النظام</h4>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card text-white bg-primary mb-3 shadow-sm border-0">
-                            <div class="card-body">
-                                <h5 class="card-title"><i class="fa-solid fa-users"></i> إجمالي المشتركين</h5>
-                                <h2 class="card-text fw-bold" id="total-subscribers">0</h2>
-                            </div>
-                        </div>
+                <div class="dashboard-heading">
+                    <div>
+                        <span class="dashboard-eyebrow">لوحة المتابعة</span>
+                        <h4 class="dashboard-title">نظرة عامة على النظام</h4>
+                        <p class="dashboard-subtitle">ملخص سريع لأهم أرقام المشتركين والحركة المالية اليومية.</p>
                     </div>
-                    <div class="col-md-6">
-                        <div class="card text-white bg-danger mb-3 shadow-sm border-0">
-                            <div class="card-body">
-                                <h5 class="card-title"><i class="fa-solid fa-file-invoice-dollar"></i> إجمالي الديون</h5>
-                                <h2 class="card-text fw-bold" id="total-debt">0 د.ع</h2>
-                            </div>
+                    <div class="dashboard-pulse"><span></span> النظام متصل</div>
+                </div>
+                <div class="dashboard-stats">
+                    <article class="dashboard-stat stat-subscribers">
+                        <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+                        <div class="stat-content">
+                            <span class="stat-label">إجمالي المشتركين</span>
+                            <strong class="stat-value" id="total-subscribers">0</strong>
+                            <span class="stat-caption">الحسابات المسجلة حاليًا</span>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card text-white bg-success mb-3 shadow-sm border-0">
-                            <div class="card-body">
-                                <h5 class="card-title"><i class="fa-solid fa-hand-holding-dollar"></i> إجمالي تحصيلات اليوم</h5>
-                                <h2 class="card-text fw-bold" id="today-payments">0 د.ع</h2>
-                            </div>
+                    </article>
+                    <article class="dashboard-stat stat-debt">
+                        <div class="stat-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                        <div class="stat-content">
+                            <span class="stat-label">إجمالي الديون</span>
+                            <strong class="stat-value" id="total-debt">0 د.ع</strong>
+                            <span class="stat-caption">الرصيد المستحق على المشتركين</span>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card text-white bg-info mb-3 shadow-sm border-0">
-                            <div class="card-body">
-                                <h5 class="card-title"><i class="fa-solid fa-wifi"></i> إجمالي التجديدات اليوم</h5>
-                                <h2 class="card-text fw-bold" id="today-renewals">0 د.ع</h2>
-                            </div>
+                    </article>
+                    <article class="dashboard-stat stat-payments">
+                        <div class="stat-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                        <div class="stat-content">
+                            <span class="stat-label">تحصيلات اليوم</span>
+                            <strong class="stat-value" id="today-payments">0 د.ع</strong>
+                            <span class="stat-caption">إجمالي عمليات التسديد</span>
                         </div>
-                    </div>
+                    </article>
+                    <article class="dashboard-stat stat-renewals">
+                        <div class="stat-icon"><i class="fa-solid fa-wifi"></i></div>
+                        <div class="stat-content">
+                            <span class="stat-label">تجديدات اليوم</span>
+                            <strong class="stat-value" id="today-renewals">0 د.ع</strong>
+                            <span class="stat-caption">قيمة الاشتراكات المجددة</span>
+                        </div>
+                    </article>
                 </div>
             </div>
 
