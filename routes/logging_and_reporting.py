@@ -19,7 +19,7 @@ def get_monthly_financial_summary():
 
     current_user_id = get_jwt_identity()
     user = User.query.get(current_user_id)
-    
+
     if user_role != 'admin' and user_role != 'editor':
         return jsonify({"error": "لا تملك صلاحية الوصول لهذا التقرير"}), 403
 
@@ -78,7 +78,7 @@ def get_monthly_financial_summary():
 #==============================
 #==========daily report endpoint
 #==============================
-@logging_and_reporting_bp.route('/api/daily_report', methods=['GET'])
+@logging_and_reporting_bp.route('/api/daily_payment_and_renewal_report', methods=['GET'])
 @jwt_required()
 def daily_report():
     try:
@@ -96,29 +96,16 @@ def daily_report():
         payments_amount = sum(payment.amount for payment in payments)
         renewals_amount = sum(renewal.amount for renewal in renewals)
 
-        total = payments_amount - renewals_amount
-
-        if total > 0:
-            status = "good"
-            message = "Today's collections are good."
-        elif total < 0:
-            status = "bad"
-            message = "Today's collections are bad."
-        else:
-            status = "neutral"
-            message = "Today's collections are neutral."
-
         report_data = {
             "target_date": target_date,
             "status": "success",
-            "message": message,
+            "message": "Daily report generated successfully.",
             "summary": {
                 "total_payments_collected": payments_amount,
                 "payments_count": len(payments),
                 "total_renewals_value": renewals_amount,
                 "renewals_count": len(renewals),
-                "net_total": total,
-                "report_status": status
+                "report_status": "generated"
             }
         }    
         

@@ -353,6 +353,11 @@ function canViewAuditLog(role) {
     return true;
 }
 
+function canViewMonthlyReport(role) {
+    const normalizedRole = normalizeRole(role);
+    return normalizedRole === 'admin' || normalizedRole === 'editor';
+}
+
 async function copyPhoneToClipboard(phone) {
     if (!phone || phone === 'لا يوجد رقم') return false;
 
@@ -439,7 +444,7 @@ function showApp() {
     const canManageStaffOnly = canManageStaff(userRole);
     const canManageContentOnly = canManageContent(userRole);
     const canEditSubscribersOnly = canEditSubscribers(userRole);
-    const canViewAuditLogOnly = canViewAuditLog(userRole);
+    const canViewMonthlyReportOnly = canViewMonthlyReport(userRole);
 
     if (dom.btnAddStaff) {
         dom.btnAddStaff.classList.toggle('d-none', !canManageStaffOnly);
@@ -457,16 +462,8 @@ function showApp() {
         dom.btnAddArea.classList.toggle('d-none', !canManageContentOnly);
     }
 
-    if (dom.tabLogs) {
-        dom.tabLogs.classList.toggle('d-none', !canViewAuditLogOnly);
-    }
-
     if (dom.tabMonthlyReport) {
-        dom.tabMonthlyReport.classList.toggle('d-none', !canViewAuditLogOnly);
-    }
-
-    if (dom.btnViewSubscriberLogs) {
-        dom.btnViewSubscriberLogs.classList.toggle('d-none', !canViewAuditLogOnly);
+        dom.tabMonthlyReport.classList.toggle('d-none', !canViewMonthlyReportOnly);
     }
 
     if (dom.btnSaveNew) {
@@ -627,13 +624,11 @@ function registerEventListeners() {
         loadSubscribers(1);
     });
     dom.tabLogs.addEventListener('click', () => {
-        if (canViewAuditLog(getCurrentRole())) {
-            switchSection('logs');
-        }
+        switchSection('logs');
     });
     if (dom.tabMonthlyReport) {
         dom.tabMonthlyReport.addEventListener('click', () => {
-            if (canViewAuditLog(getCurrentRole())) {
+            if (canViewMonthlyReport(getCurrentRole())) {
                 switchSection('monthly-report');
                 loadMonthlyReport();
             }
@@ -869,10 +864,8 @@ function loadPageData() {
     loadSubscribers();
     loadTotalSubscribersCount();
     loadAreas();
-    if (canViewAuditLog(getCurrentRole())) {
-        loadLogs();
-        loadDailyReport();
-    }
+    loadLogs();
+    loadDailyReport();
 }
 
 async function loadTotalSubscribersCount() {
@@ -1573,8 +1566,7 @@ function filterLogs(filterType) {
 }
 
 async function loadDailyReport() {
-    if (!canViewAuditLog(getCurrentRole())) return;
-    const data = await apiCall('/daily_report');
+    const data = await apiCall('/daily_payment_and_renewal_report');
     if (!data || data.status !== 'success') return;
 
     const summary = data.summary || {};
@@ -1623,7 +1615,7 @@ function renderMonthlyReport(data) {
 }
 
 async function loadMonthlyReport() {
-    if (!canViewAuditLog(getCurrentRole()) || !dom.monthlyReportPeriod?.value) return;
+    if (!canViewMonthlyReport(getCurrentRole()) || !dom.monthlyReportPeriod?.value) return;
 
     const [year, month] = dom.monthlyReportPeriod.value.split('-');
     dom.monthlyReportMessage.className = 'small text-muted mb-3';
