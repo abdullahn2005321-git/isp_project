@@ -35,6 +35,7 @@ let logFilterStartDate = '';
 let logFilterEndDate = '';
 let activeLogSubscriberId = null;
 let isActionSubmitting = false;
+let notesSaveTimer = null;
 let subscriberFilters = {
     search: '',
     financialStatus: 0,
@@ -259,7 +260,7 @@ async function apiCall(endpoint, method = 'GET', body = null) {
         console.error('Network Error:', error);
         return {
             status: 'error',
-            message: 'تعذر الاتصال بالخادم. تأكد من تشغيل الباك اند وفتح الصفحة من عنوان الخادم.'
+            message: 'تعذر الاتصال بالخادم.'
         };
     }
 }
@@ -780,6 +781,14 @@ function registerEventListeners() {
     dom.btnSaveNew.addEventListener('click', submitNewSubscriber);
     dom.confirmBtn.addEventListener('click', submitAction);
     dom.quickPromiseInput.addEventListener('change', quickUpdatePromise);
+    dom.detailNotes.addEventListener('input', () => {
+        clearTimeout(notesSaveTimer);
+        notesSaveTimer = setTimeout(saveSubscriberNotesDirectly, 700);
+    });
+    dom.detailNotes.addEventListener('blur', () => {
+        clearTimeout(notesSaveTimer);
+        saveSubscriberNotesDirectly();
+    });
     if (dom.fullDebtBtn) {
         dom.fullDebtBtn.addEventListener('click', setFullDebtAmount);
     }
@@ -1245,8 +1254,10 @@ async function showSubscriberDetails(subscriberId) {
     dom.detailPhone.innerText = '-';
     dom.detailBalance.innerText = '-';
     dom.quickPromiseInput.value = '';
-    dom.detailNotes.innerText = 'جاري جلب الملاحظات...';
-    dom.detailNotes.className = 'm-0 text-muted small fst-italic';
+    dom.detailNotes.value = '';
+    dom.detailNotes.disabled = true;
+    const notesSaveStatus = document.getElementById('notes-save-status');
+    if (notesSaveStatus) notesSaveStatus.innerText = 'جاري جلب الملاحظات...';
     const detailsModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('detailsModal'));
     detailsModal.show();
     try {
@@ -1272,19 +1283,46 @@ async function showSubscriberDetails(subscriberId) {
             dom.detailPhone.style.cursor = 'pointer';
             dom.detailPhone.title = 'اضغط لنسخ الرقم';
         }
-        if (sub.notes && sub.notes.trim() !== '' && sub.notes !== 'None') {
-            dom.detailNotes.innerText = sub.notes;
-            dom.detailNotes.className = 'm-0 text-dark small fw-semibold';
-        } else {
-            dom.detailNotes.innerText = 'لا توجد ملاحظات مسجلة لهذا المشترك.';
-            dom.detailNotes.className = 'm-0 text-muted small fst-italic';
-        }
+        dom.detailNotes.value = sub.notes && sub.notes !== 'None' ? sub.notes : '';
+        dom.detailNotes.disabled = !canEdit;
+        if (notesSaveStatus) notesSaveStatus.innerText = canEdit ? 'يتم الحفظ تلقائيًا' : '';
         if (dom.btnEditSub) dom.btnEditSub.classList.toggle('d-none', !canEdit);
         if (dom.btnDeleteSub) dom.btnDeleteSub.classList.toggle('d-none', !canEdit);
         if (dom.quickPromiseInput) dom.quickPromiseInput.disabled = !canEdit;
     } catch (error) {
         console.error('خطأ:', error);
         dom.detailName.innerText = '❌ خطأ في الاتصال';
+    }
+}
+
+async function saveSubscriberNotesDirectly() {
+    clearTimeout(notesSaveTimer);
+
+    if (!selectedSubscriberId || !dom.detailNotes || !canEditSubscribers(getCurrentRole())) {
+        return;
+    }
+
+    const notes = dom.detailNotes.value.trim();
+    const previousNotes = String(selectedSubscriberData?.notes || '').trim();
+    if (notes === previousNotes) return;
+
+    const notesSaveStatus = document.getElementById('notes-save-status');
+    if (notesSaveStatus) {
+        notesSaveStatus.innerText = 'جاري الحفظ...';
+        notesSaveStatus.className = 'text-muted d-block mt-1';
+    }
+
+    const data = await apiCall(`/subscribers/${selectedSubscriberId}`, 'PUT', { notes });
+    if (data?.status === 'success') {
+        if (selectedSubscriberData) selectedSubscriberData.notes = notes;
+        if (notesSaveStatus) {
+            notesSaveStatus.innerText = 'تم الحفظ';
+            notesSaveStatus.className = 'text-success d-block mt-1';
+        }
+        await refreshSubscribersKeepingScroll();
+    } else if (notesSaveStatus) {
+        notesSaveStatus.innerText = 'تعذر حفظ الملاحظات';
+        notesSaveStatus.className = 'text-danger d-block mt-1';
     }
 }
 
@@ -1740,7 +1778,7 @@ function copySubscriberDetails() {
     const phone = dom.detailPhone.innerText;
     const balance = dom.detailBalance.innerText;
     const promiseDate = dom.quickPromiseInput.value || 'لا يوجد';
-    const notes = dom.detailNotes.innerText;
+    const notes = dom.detailNotes.value;
     const textToCopy = `ID: ${id}\nالاسم: ${name}\nالمنطقة: ${area}\nرقم الهاتف: ${phone}\nالرصيد الحالي: ${balance}\nوعد التسديد: ${promiseDate}\nملاحظات: ${notes}`;
     navigator.clipboard.writeText(textToCopy)
         .then(() => showAlert('تم نسخ معلومات المشترك إلى الحافظة.', 'success'))
