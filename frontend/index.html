@@ -251,32 +251,38 @@
             </div>
 
             <div id="logs" class="section-content">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
-                        <h5 class="m-0 text-secondary"><i class="fa-solid fa-clock-rotate-left"></i> السجل الزمني للعمليات</h5>
-                        <button type="button" class="btn btn-outline-secondary btn-sm fw-bold px-3" id="btn-open-log-filter">تصفية</button>
+                <div class="logs-shell">
+                    <div class="logs-header">
+                        <div>
+                            <span class="logs-eyebrow">المتابعة والتدقيق</span>
+                            <h4 class="logs-title"><i class="fa-solid fa-clock-rotate-left"></i> السجل الزمني للعمليات</h4>
+                            <p class="logs-subtitle">راجع عمليات التسديد والتجديد مع تفاصيل المنفذ والتوقيت.</p>
+                        </div>
+                        <button type="button" class="btn logs-filter-button" id="btn-open-log-filter"><i class="fa-solid fa-sliders"></i> تصفية</button>
                     </div>
-                    <div class="card-body p-0">
-                        <table class="table table-striped text-center align-middle mb-0">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>التاريخ والوقت</th>
-                                    <th>المشترك</th>
-                                    <th>منفذ الإجراء</th>
-                                    <th>نوع العملية</th>
-                                    <th>المبلغ</th>
-                                </tr>
-                            </thead>
-                            <tbody id="logs-table-body">
-                                <tr><td colspan="5" class="text-muted p-4">جاري التحميل...</td></tr>
-                            </tbody>
-                        </table>
+                    <div class="logs-table-frame">
+                        <div class="table-responsive">
+                            <table class="table logs-table text-center align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>التاريخ والوقت</th>
+                                        <th>المشترك</th>
+                                        <th>منفذ الإجراء</th>
+                                        <th>نوع العملية</th>
+                                        <th>المبلغ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="logs-table-body">
+                                    <tr><td colspan="5" class="text-muted p-4">جاري التحميل...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center">
+                    <div class="logs-footer">
                         <small id="logsPageInfo" class="text-muted">صفحة 1 من 1</small>
                         <div>
-                            <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="btn-prev-logs-page">السابق</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-next-logs-page">التالي</button>
+                            <button type="button" class="btn btn-sm logs-page-button me-2" id="btn-prev-logs-page"><i class="fa-solid fa-arrow-right"></i> السابق</button>
+                            <button type="button" class="btn btn-sm logs-page-button" id="btn-next-logs-page">التالي <i class="fa-solid fa-arrow-left"></i></button>
                         </div>
                     </div>
                 </div>
