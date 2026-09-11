@@ -97,3 +97,45 @@ def test_cash_renewal_stores_cash_payment_method(client):
     with app.app_context():
         payment = Transaction.query.filter_by(transaction_type='payment').one()
         assert payment.payment_method == 'cash'
+
+
+def test_cash_renewal_accepts_electronic_payment_method(client):
+    with app.app_context():
+        admin = User(username='electronic-renewal-admin', password_hash='hash', role='admin')
+        db.session.add(admin)
+        db.session.flush()
+
+        area = Area(name='electronic-renewal-area', admin_id=admin.id)
+        db.session.add(area)
+        db.session.flush()
+
+        subscriber = Subscriber(
+            name='electronic-renewal-subscriber',
+            phone_number='07700000003',
+            area_id=area.id,
+        )
+        db.session.add(subscriber)
+        db.session.commit()
+        subscriber_id = subscriber.id
+
+        token = create_access_token(
+            identity=str(admin.id),
+            additional_claims={'role': 'admin', 'admin_id': admin.id},
+        )
+
+    response = client.post(
+        '/api/transactions/renewal',
+        json={
+            'subscriber_id': subscriber_id,
+            'amount': 350_000,
+            'is_cash': True,
+            'payment_type': 'electronic',
+        },
+        headers={'Authorization': f'Bearer {token}'},
+    )
+
+    assert response.status_code == 201
+
+    with app.app_context():
+        payment = Transaction.query.filter_by(transaction_type='payment').one()
+        assert payment.payment_method == 'electronic'

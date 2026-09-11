@@ -124,6 +124,7 @@ const dom = {
     paymentMethodDiv: document.getElementById('paymentMethodDiv'),
     paymentMethod: document.getElementById('paymentMethod'),
     promiseDateInput: document.getElementById('promiseDate'),
+    promiseDateDiv: document.getElementById('promiseDateDiv'),
     addSubscriberForm: document.getElementById('addSubscriberForm'),
     editSubscriberForm: document.getElementById('editSubscriberForm'),
     addAreaId: document.getElementById('addAreaId'),
@@ -775,6 +776,7 @@ function registerEventListeners() {
     dom.btnSaveNew.addEventListener('click', submitNewSubscriber);
     dom.confirmBtn.addEventListener('click', submitAction);
     dom.quickPromiseInput.addEventListener('change', quickUpdatePromise);
+    dom.isCashCheckbox.addEventListener('change', updateRenewalPaymentMethodVisibility);
     dom.detailNotes.addEventListener('input', () => {
         clearTimeout(notesSaveTimer);
         notesSaveTimer = setTimeout(saveSubscriberNotesDirectly, 700);
@@ -1670,10 +1672,12 @@ async function submitAction() {
     const requestData = {
         subscriber_id: parseInt(subscriberId, 10),
         amount: parseInt(amount, 10),
-        promise_date: promiseDate,
         is_cash: isCash
     };
     if (actionType === 'payment') {
+        requestData.payment_type = paymentMethod;
+    } else {
+        requestData.promise_date = promiseDate;
         requestData.payment_type = paymentMethod;
     }
 
@@ -1714,6 +1718,7 @@ function openModal(subscriberId, subscriberName, actionType, currentBalance) {
         dom.cashPaymentDiv.style.display = 'none';
         dom.paymentMethodDiv.style.display = 'block';
         dom.paymentMethod.value = 'cash';
+        dom.promiseDateDiv.style.display = 'none';
         if (dom.fullDebtBtn) dom.fullDebtBtn.classList.remove('d-none');
     } else {
         titleLabel.innerHTML = '<i class="fa-solid fa-wifi text-success"></i> تجديد اشتراك';
@@ -1721,6 +1726,8 @@ function openModal(subscriberId, subscriberName, actionType, currentBalance) {
         dom.cashPaymentDiv.style.display = 'block';
         dom.paymentMethodDiv.style.display = 'none';
         dom.isCashCheckbox.checked = false;
+        dom.paymentMethod.value = 'cash';
+        dom.promiseDateDiv.style.display = 'block';
         if (dom.fullDebtBtn) dom.fullDebtBtn.classList.add('d-none');
     }
     document.getElementById('modal-subscriber-name').innerText = subscriberName;
@@ -1729,6 +1736,12 @@ function openModal(subscriberId, subscriberName, actionType, currentBalance) {
     document.getElementById('modal-subscriber-id').value = subscriberId;
     document.getElementById('modal-action-type').value = actionType;
     actionModal.show();
+}
+
+function updateRenewalPaymentMethodVisibility() {
+    const isRenewalCash = dom.isCashCheckbox.checked;
+    dom.paymentMethodDiv.style.display = isRenewalCash ? 'block' : 'none';
+    dom.promiseDateDiv.style.display = isRenewalCash ? 'none' : 'block';
 }
 
 function setQuickAmount(amount) {

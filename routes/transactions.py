@@ -139,6 +139,12 @@ def renew_subscription():
         }) , 400
     
     is_cash = data.get('is_cash', False)
+    payment_method = data.get('payment_type', 'cash')
+    if payment_method not in {'cash', 'electronic'}:
+        return jsonify({
+            "status": "error",
+            "message": "Invalid payment method. Must be 'cash' or 'electronic'."
+        }), 400
 
     sub.balance -= renewal_amount
     
@@ -155,7 +161,7 @@ def renew_subscription():
             subscriber_id=sub.id,
             user_id=user_id,
             transaction_type='payment',
-            payment_method='cash',
+            payment_method=payment_method,
             amount=renewal_amount
         )
 
