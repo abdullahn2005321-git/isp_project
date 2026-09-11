@@ -274,7 +274,7 @@ def test_admin_cannot_update_another_admins_staff(client):
     assert response.status_code == 404
 
     with app.app_context():
-        assert User.query.get(staff_id).role == 'editor'
+        assert db.session.get(User, staff_id).role == 'editor'
 
 
 def test_admin_can_update_staff_without_changing_username(client):
@@ -312,6 +312,6 @@ def test_admin_can_update_staff_without_changing_username(client):
     assert response.status_code == 200
 
     with app.app_context():
-        updated_staff = User.query.get(staff_id)
+        updated_staff = db.session.get(User, staff_id)
         assert updated_staff.role == 'viewer'
         assert updated_staff.is_active is False

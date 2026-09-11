@@ -65,7 +65,7 @@ def register_staff():
 @jwt_required()
 def my_team():
     user_id = get_jwt_identity()
-    user = User.query.get(int(user_id))
+    user = db.session.get(User, int(user_id))
 
     if not user:
         return jsonify({"status": "error", "message": "المستخدم غير موجود"}), 404
@@ -119,7 +119,7 @@ def update_staff(staff_id):
             "message": "بيانات التحديث مطلوبة"
         }), 400
 
-    staff = User.query.get(staff_id)
+    staff = db.session.get(User, staff_id)
     current_admin_id = int(get_jwt_identity())
     if not staff or staff.parent_admin_id != current_admin_id:
         return jsonify({
@@ -175,7 +175,7 @@ def delete_staff(staff_id):
             "message": "صلاحية غير كافية, يجب ان تكون ادمن لحذف الموظفين"
         }), 403
 
-    staff = User.query.get(staff_id)
+    staff = db.session.get(User, staff_id)
     if not staff or staff.parent_admin_id != get_jwt_identity():
         return jsonify({
             "status": "error",

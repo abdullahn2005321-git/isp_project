@@ -2,7 +2,7 @@ import pytest
 import os
 
 os.environ['DATABASE_URL'] = 'sqlite:///:memory:'
-os.environ['SECRET_KEY'] = 'test-secret'
+os.environ['SECRET_KEY'] = 'test-secret-key-for-jwt-warnings-123456'
 
 from app import app, db
 
@@ -12,7 +12,7 @@ def client():
 
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['JWT_SECRET_KEY'] = 'test-secret'
+    app.config['JWT_SECRET_KEY'] = 'test-secret-key-for-jwt-warnings-123456'
 
     with app.test_client() as client:
 

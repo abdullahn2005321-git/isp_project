@@ -18,7 +18,7 @@ def get_monthly_financial_summary():
     user_role = claims.get("role")
 
     current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
+    user = db.session.get(User, current_user_id)
 
     if user_role != 'admin' and user_role != 'editor':
         return jsonify({"error": "لا تملك صلاحية الوصول لهذا التقرير"}), 403
