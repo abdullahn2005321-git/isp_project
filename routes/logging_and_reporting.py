@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from models import User, db, Subscriber, Transaction, Area, DailyFinancialSummary, get_iraq_now
 from routes.subscribers import get_current_admin_id
-from flask_jwt_extended import get_jwt_identity, jwt_required
+from flask_jwt_extended import get_jwt_identity, jwt_required, get_jwt
 from sqlalchemy import extract
 from datetime import datetime, timedelta
 
@@ -14,14 +14,14 @@ logging_and_reporting_bp = Blueprint('logging_and_reporting', __name__)
 @logging_and_reporting_bp.route('/api/monthly-summary', methods=['GET'])
 @jwt_required()
 def get_monthly_financial_summary():
-    """
-    جلب ملخص مالي شهري للأدمن الحالي مع إجماليات الشهر.
-    المعاملات الاختيارية عبر الـ Query Params:
-    - year: السنة (افتراضياً: السنة الحالية بتوقيت العراق)
-    - month: الشهر (افتراضياً: الشهر الحالي بتوقيت العراق)
-    """
+    claims = get_jwt()
+    user_role = claims.get("role")
+
     current_user_id = get_jwt_identity()
     user = User.query.get(current_user_id)
+    
+    if user_role != 'admin' and user_role != 'editor':
+        return jsonify({"error": "لا تملك صلاحية الوصول لهذا التقرير"}), 403
 
     if not user:
         return jsonify({"error": "المستخدم غير موجود"}), 404
