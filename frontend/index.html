@@ -42,22 +42,43 @@
     </nav>
 
     <div id="loginPage" class="login-page">
-        <div class="card shadow-sm border-0 mx-auto login-card">
-            <div class="card-body">
-                <h3 class="card-title text-center mb-4">تسجيل الدخول</h3>
-                <p class="text-center text-muted mb-4">ادخل بياناتك لتسجيل الدخول.</p>
+        <div class="login-layout">
+            <div class="login-intro">
+                <div class="login-brand-mark"><i class="fa-solid fa-network-wired"></i></div>
+                <span class="login-eyebrow">إدارة أسهل، متابعة أوضح</span>
+                <h1>مرحبًا بك في <strong>وصله</strong></h1>
+                <p>نظّم المشتركين، راقب التحصيلات، وتابع عملياتك اليومية من مكان واحد.</p>
+                <div class="login-intro-line"><span></span><span></span><span></span></div>
+            </div>
+            <div class="card shadow-sm border-0 mx-auto login-card">
+                <div class="card-body login-card-body">
+                    <div class="login-heading">
+                        <span class="login-heading-icon"><i class="fa-solid fa-lock"></i></span>
+                        <div>
+                            <h2 class="card-title">تسجيل الدخول</h2>
+                            <p>أدخل بيانات حسابك للمتابعة</p>
+                        </div>
+                    </div>
                 <form id="loginForm" autocomplete="off">
                     <div class="mb-3">
                         <label for="loginUsername" class="form-label fw-bold">اسم المستخدم</label>
-                        <input type="text" class="form-control" id="loginUsername" placeholder="اسم المستخدم الخاص بك" required>
+                        <div class="input-group login-input">
+                            <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                            <input type="text" class="form-control" id="loginUsername" placeholder="اسم المستخدم الخاص بك" required>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="loginPassword" class="form-label fw-bold">كلمة المرور</label>
-                        <input type="password" class="form-control" id="loginPassword" placeholder="كلمة المرور الخاصة بك" required>
+                        <div class="input-group login-input">
+                            <span class="input-group-text"><i class="fa-solid fa-key"></i></span>
+                            <input type="password" class="form-control" id="loginPassword" placeholder="كلمة المرور الخاصة بك" required>
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">تسجيل الدخول</button>
+                    <button type="submit" class="btn login-submit w-100 py-2 fw-bold"><i class="fa-solid fa-arrow-left-to-bracket"></i> تسجيل الدخول</button>
                 </form>
-                <div id="loginMessage" class="text-center mt-3 text-danger"></div>
+                    <div id="loginMessage" class="login-message text-center mt-3"></div>
+                    <div class="login-security"><i class="fa-solid fa-shield-halved"></i> بياناتك محمية وتستخدم للوصول الآمن فقط</div>
+                </div>
             </div>
         </div>
     </div>
