@@ -230,24 +230,26 @@
             </div>
 
             <div id="areas" class="section-content">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
-                        <h5 class="m-0 text-secondary"><i class="fa-solid fa-map-location-dot"></i> إدارة المناطق</h5>
-                        <button type="button" class="btn btn-primary btn-sm shadow-sm" id="btn-add-area"><i class="fa-solid fa-plus"></i> إضافة منطقة</button>
+                <div class="areas-shell">
+                    <div class="areas-header">
+                        <div>
+                            <span class="areas-eyebrow">تنظيم التوزيع</span>
+                            <h4 class="areas-title"><i class="fa-solid fa-map-location-dot"></i> إدارة المناطق</h4>
+                            <p class="areas-subtitle">نظّم مناطق الخدمة واجعل الوصول إلى المشتركين أكثر سهولة.</p>
+                        </div>
+                        <button type="button" class="btn areas-add-button" id="btn-add-area"><i class="fa-solid fa-plus"></i> إضافة منطقة</button>
                     </div>
-                    <div class="card-body p-0">
-                        <table class="table table-hover table-bordered text-center align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>#</th>
-                                    <th>اسم المنطقة</th>
-                                    <th>الإجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody id="areas-table-body">
-                                <tr><td colspan="3" class="text-muted p-4">جاري تحميل المناطق...</td></tr>
-                            </tbody>
-                        </table>
+                    <div class="areas-table-frame">
+                        <div class="table-responsive">
+                            <table class="table areas-table text-center align-middle mb-0">
+                                <thead>
+                                    <tr><th>#</th><th>اسم المنطقة</th><th>الإجراءات</th></tr>
+                                </thead>
+                                <tbody id="areas-table-body">
+                                    <tr><td colspan="3" class="text-muted p-4">جاري تحميل المناطق...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
