@@ -11,6 +11,7 @@ const API_URL = (() => {
 })();
 
 let actionModal;
+let deleteSubscriberModal;
 let addSubModal;
 let addAreaModal;
 let editAreaModal;
@@ -119,6 +120,8 @@ const dom = {
     logFilterType: document.getElementById('logFilterType'),
     btnCopyDetails: document.getElementById('btn-copy-details'),
     btnDeleteSub: document.getElementById('btn-delete-sub'),
+    btnConfirmDelete: document.getElementById('btn-confirm-delete'),
+    deleteSubscriberName: document.getElementById('deleteSubscriberName'),
     btnViewSubscriberLogs: document.getElementById('btn-view-subscriber-logs'),
     btnEditSub: document.getElementById('btn-edit-sub'),
     btnCancelInlineEdit: document.getElementById('btn-cancel-inline-edit'),
@@ -491,6 +494,7 @@ function showApp() {
 
 function initPage() {
     actionModal = new bootstrap.Modal(document.getElementById('actionModal'));
+    deleteSubscriberModal = new bootstrap.Modal(document.getElementById('deleteSubscriberModal'));
     addSubModal = new bootstrap.Modal(document.getElementById('addSubscriberModal'));
     addAreaModal = new bootstrap.Modal(document.getElementById('addAreaModal'));
     editAreaModal = new bootstrap.Modal(document.getElementById('editAreaModal'));
@@ -722,6 +726,9 @@ function registerEventListeners() {
         showAlert(copied ? 'تم نسخ رقم الهاتف بنجاح' : 'لا يمكن نسخ الرقم الآن', copied ? 'success' : 'warning');
     });
     dom.btnDeleteSub.addEventListener('click', () => {
+        if (selectedSubscriberId !== null) requestSubscriberDeletion(selectedSubscriberId);
+    });
+    dom.btnConfirmDelete.addEventListener('click', () => {
         if (selectedSubscriberId !== null) deleteSubscriber(selectedSubscriberId);
     });
     if (dom.btnViewSubscriberLogs) {
@@ -1420,8 +1427,13 @@ async function submitEditSubscriber() {
     }
 }
 
+function requestSubscriberDeletion(subId) {
+    dom.deleteSubscriberName.innerText = selectedSubscriberData?.name || 'هذا المشترك';
+    deleteSubscriberModal.show();
+}
+
 async function deleteSubscriber(subId) {
-    if (!confirm('⚠️ تحذير: هل أنت متأكد أنك تريد حذف هذا المشترك نهائياً؟ لا يمكن التراجع عن هذا الإجراء!')) return;
+    deleteSubscriberModal.hide();
     try {
         const data = await apiCall(`/subscribers/${subId}`, 'DELETE');
         if (data && data.status === 'success') {
@@ -1801,7 +1813,7 @@ function openModal(subscriberId, subscriberName, actionType, currentBalance) {
     const confirmBtn = dom.confirmBtn;
     if (actionType === 'payment') {
         titleLabel.innerHTML = '<i class="fa-solid fa-hand-holding-dollar text-primary"></i> تسديد مبلغ';
-        confirmBtn.className = 'btn btn-primary w-100 py-2 fw-bold fs-5';
+        confirmBtn.className = 'btn action-confirm-button w-100 py-2 fw-bold fs-5';
         dom.cashPaymentDiv.style.display = 'none';
         dom.paymentMethodDiv.style.display = 'block';
         dom.paymentMethod.value = 'cash';
@@ -1809,7 +1821,7 @@ function openModal(subscriberId, subscriberName, actionType, currentBalance) {
         if (dom.fullDebtBtn) dom.fullDebtBtn.classList.remove('d-none');
     } else {
         titleLabel.innerHTML = '<i class="fa-solid fa-wifi text-success"></i> تجديد اشتراك';
-        confirmBtn.className = 'btn btn-success w-100 py-2 fw-bold fs-5';
+        confirmBtn.className = 'btn action-confirm-button w-100 py-2 fw-bold fs-5';
         dom.cashPaymentDiv.style.display = 'block';
         dom.paymentMethodDiv.style.display = 'none';
         dom.isCashCheckbox.checked = false;
