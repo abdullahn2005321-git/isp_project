@@ -1,4 +1,71 @@
-﻿body { background-color: #f8f9fa; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
+﻿/* Application notifications */
+.app-toast-container {
+    width: min(420px, calc(100vw - 2rem));
+}
+
+.app-toast {
+    min-width: min(340px, 100%);
+    color: #172033;
+    background: #ffffff;
+    border-right: 4px solid transparent !important;
+    box-shadow: 0 12px 30px rgba(20, 31, 53, 0.16);
+}
+
+.app-toast-success { border-right-color: #198754 !important; }
+.app-toast-info { border-right-color: #0d6efd !important; }
+.app-toast-warning { border-right-color: #f0ad00 !important; }
+.app-toast-danger { border-right-color: #dc3545 !important; }
+
+.app-toast .toast-body {
+    padding: 0.8rem 0.25rem;
+    line-height: 1.6;
+}
+
+.app-toast-title {
+    color: #26344d;
+    font-size: 0.82rem;
+    margin-bottom: 0.1rem;
+}
+
+.app-toast-icon {
+    font-size: 1.15rem;
+    margin: 0.8rem 0.2rem 0 0.75rem;
+}
+
+.app-toast-success .app-toast-icon { color: #198754; }
+.app-toast-info .app-toast-icon { color: #0d6efd; }
+.app-toast-warning .app-toast-icon { color: #cc9000; }
+.app-toast-danger .app-toast-icon { color: #dc3545; }
+
+.app-toast .btn-close {
+    opacity: 0.55;
+}
+
+.app-toast .btn-close:hover,
+.app-toast .btn-close:focus {
+    opacity: 1;
+}
+
+@keyframes toast-duplicate {
+    0%, 100% { transform: translateX(0); }
+    35% { transform: translateX(-6px); }
+    70% { transform: translateX(6px); }
+}
+
+.app-toast.toast-duplicate {
+    animation: toast-duplicate 260ms ease-in-out;
+}
+
+@media (max-width: 576px) {
+    .app-toast-container {
+        width: calc(100vw - 1rem);
+    }
+
+    .app-toast {
+        min-width: 0;
+    }
+}
+body { background-color: #f8f9fa; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
 .app-navbar {
     --navbar-height: 66px;
     position: sticky;

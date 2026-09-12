@@ -38,6 +38,8 @@ let logFilterEndDate = '';
 let activeLogSubscriberId = null;
 let isActionSubmitting = false;
 let notesSaveTimer = null;
+const activeAlerts = new Map();
+const maxVisibleAlerts = 3;
 let monthlyTrendChart = null;
 let monthlyPaymentMixChart = null;
 let subscriberFilters = {
@@ -284,7 +286,7 @@ function ensureToastContainer() {
 
     container = document.createElement('div');
     container.id = 'appToastContainer';
-    container.className = 'toast-container position-fixed top-0 start-50 translate-middle-x p-3';
+    container.className = 'toast-container app-toast-container position-fixed top-0 start-50 translate-middle-x p-3';
     container.style.zIndex = '2000';
     document.body.appendChild(container);
     return container;
@@ -303,23 +305,80 @@ function restoreModalFocus() {
 function showAlert(message, type = 'danger') {
     const container = ensureToastContainer();
     const tone = ['success', 'warning', 'info', 'danger'].includes(type) ? type : 'danger';
-    const toastEl = document.createElement('div');
+    const text = String(message ?? '').trim();
+    if (!text) return;
 
-    toastEl.className = `toast align-items-center text-bg-${tone} border-0`;
+    const alertKey = `${tone}:${text}`;
+    if (activeAlerts.has(alertKey)) {
+        const existingToast = activeAlerts.get(alertKey);
+        existingToast.classList.remove('toast-duplicate');
+        void existingToast.offsetWidth;
+        existingToast.classList.add('toast-duplicate');
+        return;
+    }
+
+    if (container.querySelectorAll('.app-toast').length >= maxVisibleAlerts) {
+        const oldestToast = container.querySelector('.app-toast');
+        const oldestInstance = oldestToast && bootstrap.Toast.getInstance(oldestToast);
+        if (oldestInstance) {
+            oldestInstance.hide();
+        } else {
+            oldestToast?.remove();
+        }
+    }
+
+    const toastEl = document.createElement('div');
+    const titleByTone = {
+        success: 'تم بنجاح',
+        info: 'معلومة',
+        warning: 'تنبيه',
+        danger: 'تعذر تنفيذ الطلب'
+    };
+    const iconByTone = {
+        success: 'fa-circle-check',
+        info: 'fa-circle-info',
+        warning: 'fa-triangle-exclamation',
+        danger: 'fa-circle-exclamation'
+    };
+
+    toastEl.className = `toast app-toast app-toast-${tone} border-0`;
     toastEl.setAttribute('role', 'alert');
-    toastEl.setAttribute('aria-live', 'assertive');
+    toastEl.setAttribute('aria-live', tone === 'danger' || tone === 'warning' ? 'assertive' : 'polite');
     toastEl.setAttribute('aria-atomic', 'true');
-    toastEl.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body">${message}</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-    `;
+
+    const content = document.createElement('div');
+    content.className = 'd-flex align-items-start gap-2';
+
+    const icon = document.createElement('i');
+    icon.className = `fa-solid ${iconByTone[tone]} app-toast-icon mt-1`;
+    icon.setAttribute('aria-hidden', 'true');
+
+    const body = document.createElement('div');
+    body.className = 'toast-body';
+
+    const title = document.createElement('strong');
+    title.className = 'app-toast-title d-block';
+    title.textContent = titleByTone[tone];
+
+    const messageText = document.createElement('span');
+    messageText.textContent = text;
+    body.append(title, messageText);
+
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'btn-close me-2 m-auto';
+    closeButton.setAttribute('data-bs-dismiss', 'toast');
+    closeButton.setAttribute('aria-label', 'إغلاق التنبيه');
+
+    content.append(icon, body, closeButton);
+    toastEl.appendChild(content);
 
     container.appendChild(toastEl);
-    const toast = new bootstrap.Toast(toastEl, { delay: 3500 });
+    const toast = new bootstrap.Toast(toastEl, { delay: 4000, autohide: true });
+    activeAlerts.set(alertKey, toastEl);
 
     toastEl.addEventListener('hidden.bs.toast', () => {
+        activeAlerts.delete(alertKey);
         toastEl.remove();
     }, { once: true });
 
