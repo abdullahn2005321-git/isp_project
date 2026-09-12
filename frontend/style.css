@@ -202,7 +202,7 @@
 #subscribers-table-body .subscriber-card-line i { flex: 0 0 16px; margin-top: 0.15rem; color: #0d6efd; }
 #subscribers-table-body .subscriber-card-line.last-renewal-date::before { content: "آخر اشتراك: "; color: #8290a0; font-weight: 700; }
 #subscribers-table-body .subscriber-card-line.promise-date::before { content: "وعد السداد: "; color: #a57520; font-weight: 700; }
-#subscribers-table-body .subscriber-card-notes { display: -webkit-box; min-height: 2.4rem; overflow: hidden; color: #64748b; font-size: 0.76rem; line-height: 1.55; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+#subscribers-table-body .subscriber-card-notes { display: -webkit-box; min-height: 2.4rem; overflow: hidden; color: #64748b; font-size: 0.76rem; line-height: 1.55; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
 #subscribers-table-body .subscriber-card-notes::before { content: "ملاحظات: "; color: #8290a0; font-weight: 700; }
 #subscribers-table-body .subscriber-card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; }
 #subscribers-table-body .subscriber-card-actions .btn { min-height: 39px; border-radius: 9px; font-size: 0.78rem; font-weight: 800; }
@@ -609,7 +609,9 @@
 .subscriber-details-footer { gap: 0.6rem; padding: 0.9rem 1.15rem; border-top: 1px solid #e5edf6; background: #ffffff; }
 .subscriber-details-footer .btn { border-radius: 9px; font-weight: 700; }
 .subscriber-details-footer #btn-edit-sub, .subscriber-details-footer #btn-save-edit { border-color: #0d6efd; color: #ffffff; background: #0d6efd; }
-.subscriber-details-footer #btn-view-subscriber-logs { border-color: #bfd6f4; color: #0b5ed7; background: #eef5ff; }
+.subscriber-details-footer #btn-view-subscriber-logs { border-color: #0d6efd; color: #ffffff; background: #0d6efd; }
+.subscriber-details-footer #btn-view-subscriber-logs:hover,
+.subscriber-details-footer #btn-view-subscriber-logs:focus-visible { border-color: #0b5ed7; color: #ffffff; background: #0b5ed7; box-shadow: 0 4px 10px rgba(13, 110, 253, 0.2); }
 .subscriber-details-footer #btn-copy-details { border-color: #cddceb; color: #41617f; background: #ffffff; }
 .subscriber-details-footer #btn-delete-sub { border-color: #f0c8ce; color: #b23a48; background: #fff5f6; }
 .subscriber-details-footer .btn:hover { filter: brightness(0.96); }

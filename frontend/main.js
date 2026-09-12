@@ -108,7 +108,7 @@ const dom = {
     btnUpdateArea: document.getElementById('btn-update-area'),
     newAreaName: document.getElementById('newAreaName'),
     editAreaName: document.getElementById('editAreaName'),
-    editAreaId: document.getElementById('editAreaId'),
+    editAreaRecordId: document.getElementById('editAreaRecordId'),
     todayPayments: document.getElementById('today-payments'),
     todayRenewals: document.getElementById('today-renewals'),
     reportStatusBadge: document.getElementById('report-status-badge'),
@@ -678,7 +678,7 @@ function registerEventListeners() {
 
         const areaId = Number(editButton.dataset.areaId);
         const currentName = editButton.dataset.areaName || '';
-        dom.editAreaId.value = areaId;
+        dom.editAreaRecordId.value = areaId;
         dom.editAreaName.value = currentName;
         editAreaModal.show();
     });
@@ -942,7 +942,7 @@ async function submitNewArea() {
 }
 
 async function submitAreaUpdate() {
-    const areaId = Number(dom.editAreaId.value);
+    const areaId = Number(dom.editAreaRecordId.value);
     const name = dom.editAreaName.value.trim();
 
     if (!areaId || !name) {
@@ -1370,6 +1370,7 @@ function enterInlineEditMode(sub) {
     if (dom.btnEditSub) dom.btnEditSub.classList.add('d-none');
     if (dom.btnCopyDetails) dom.btnCopyDetails.classList.add('d-none');
     if (dom.btnViewSubscriberLogs) dom.btnViewSubscriberLogs.classList.add('d-none');
+    if (dom.btnDeleteSub) dom.btnDeleteSub.classList.add('d-none');
     if (dom.btnCancelInlineEdit) dom.btnCancelInlineEdit.classList.remove('d-none');
     if (dom.btnSaveEdit) dom.btnSaveEdit.classList.remove('d-none');
     setDetailsModalMode(true);
@@ -1399,6 +1400,7 @@ function exitInlineEditMode(options = {}) {
     if (dom.btnEditSub) dom.btnEditSub.classList.remove('d-none');
     if (dom.btnCopyDetails) dom.btnCopyDetails.classList.remove('d-none');
     if (dom.btnViewSubscriberLogs) dom.btnViewSubscriberLogs.classList.toggle('d-none', !canViewAuditLog(getCurrentRole()));
+    if (dom.btnDeleteSub) dom.btnDeleteSub.classList.toggle('d-none', !canManageContent(getCurrentRole()));
     if (dom.btnCancelInlineEdit) dom.btnCancelInlineEdit.classList.add('d-none');
     if (dom.btnSaveEdit) dom.btnSaveEdit.classList.add('d-none');
     setDetailsModalMode(false);

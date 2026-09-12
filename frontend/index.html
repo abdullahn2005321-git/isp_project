@@ -407,7 +407,7 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body area-form-body">
-                    <input type="hidden" id="editAreaId">
+                    <input type="hidden" id="editAreaRecordId">
                     <label for="editAreaName" class="form-label fw-bold">اسم المنطقة</label>
                     <div class="input-group area-form-input">
                         <span class="input-group-text"><i class="fa-solid fa-map-location-dot"></i></span>
@@ -610,13 +610,13 @@
                         <button type="button" class="btn btn-info text-white" id="btn-view-subscriber-logs">
                             <i class="fa-solid fa-clock-rotate-left"></i> السجل
                         </button>
+                        <button type="button" class="btn btn-outline-danger" id="btn-delete-sub">
+                            <i class="fa-solid fa-trash"></i> الحذف
+                        </button>
                     </div>
                     <div class="d-flex flex-wrap gap-2">
                         <button type="button" class="btn btn-outline-secondary" id="btn-copy-details">
                             <i class="fa-solid fa-copy"></i> النسخ
-                        </button>
-                        <button type="button" class="btn btn-outline-danger" id="btn-delete-sub">
-                            <i class="fa-solid fa-trash"></i> الحذف
                         </button>
                         <button type="button" class="btn btn-outline-secondary d-none" id="btn-cancel-inline-edit">إلغاء</button>
                         <button type="button" class="btn btn-primary fw-bold px-4 d-none" id="btn-save-edit">حفظ التعديلات</button>
