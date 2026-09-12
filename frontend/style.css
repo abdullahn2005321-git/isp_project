@@ -153,6 +153,11 @@
 .subscriber-add-button:focus-visible { color: #ffffff; background: #0b5ed7; border-color: #0b5ed7; }
 .subscriber-body { padding: 1rem; background: #f8fbff; }
 .subscriber-filter-panel { margin-bottom: 1rem !important; }
+.subscriber-filter-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; padding-bottom: 0.8rem; border-bottom: 1px solid #e5edf6; }
+.subscriber-filter-heading span, .subscriber-filter-heading strong { display: block; }
+.subscriber-filter-heading span { margin-bottom: 0.2rem; color: #0d6efd; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em; }
+.subscriber-filter-heading strong { color: #1f2937; font-size: 0.95rem; }
+.subscriber-filter-heading i { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 10px; color: #0d6efd; background: #eef5ff; }
 .subscriber-filter-panel .form-control,
 .subscriber-filter-panel .form-select { border-color: #d3e1ef; border-radius: 9px; }
 .subscriber-filter-panel .form-control:focus,
@@ -182,9 +187,30 @@
     box-shadow: 0 5px 16px rgba(36, 74, 113, 0.06) !important;
     transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
+#subscribers-table-body .subscriber-card { min-height: 100%; }
+#subscribers-table-body .subscriber-card-body { display: flex; flex-direction: column; min-height: 100%; padding: 1rem; }
+#subscribers-table-body .subscriber-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; padding-bottom: 0.85rem; border-bottom: 1px solid #edf2f7; }
+#subscribers-table-body .subscriber-identity { min-width: 0; }
+#subscribers-table-body .subscriber-name { display: block; overflow: hidden; color: #155db5 !important; font-size: 1rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+#subscribers-table-body .subscriber-name:focus-visible { outline: 3px solid rgba(13, 110, 253, 0.2); outline-offset: 3px; border-radius: 4px; }
+#subscribers-table-body .subscriber-phone { color: #64748b !important; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+#subscribers-table-body .balance-badge { display: inline-flex; align-items: center; gap: 0.3rem; flex: 0 0 auto; padding: 0.45rem 0.6rem; border-radius: 9px; font-size: 0.75rem; font-weight: 800; white-space: nowrap; }
+#subscribers-table-body .balance-debt { border: 1px solid #f0c8ce; color: #b23a48; background: #fff0f2; }
+#subscribers-table-body .balance-credit { border: 1px solid #cfead8; color: #167346; background: #f0fff5; }
+#subscribers-table-body .subscriber-card-info { display: grid; gap: 0.55rem; flex: 1; padding: 0.9rem 0 1rem; }
+#subscribers-table-body .subscriber-card-line { display: flex; align-items: flex-start; gap: 0.45rem; min-width: 0; color: #526477 !important; font-size: 0.78rem; line-height: 1.5; }
+#subscribers-table-body .subscriber-card-line i { flex: 0 0 16px; margin-top: 0.15rem; color: #0d6efd; }
+#subscribers-table-body .subscriber-card-line.last-renewal-date::before { content: "آخر اشتراك: "; color: #8290a0; font-weight: 700; }
+#subscribers-table-body .subscriber-card-line.promise-date::before { content: "وعد السداد: "; color: #a57520; font-weight: 700; }
+#subscribers-table-body .subscriber-card-notes { display: -webkit-box; min-height: 2.4rem; overflow: hidden; color: #64748b; font-size: 0.76rem; line-height: 1.55; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+#subscribers-table-body .subscriber-card-notes::before { content: "ملاحظات: "; color: #8290a0; font-weight: 700; }
+#subscribers-table-body .subscriber-card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; }
+#subscribers-table-body .subscriber-card-actions .btn { min-height: 39px; border-radius: 9px; font-size: 0.78rem; font-weight: 800; }
+#subscribers-table-body .renew-btn { border: 1px solid #bfe2ce; color: #167346; background: #f0fff5; }
+#subscribers-table-body .renew-btn:hover { color: #ffffff; background: #168653; }
+#subscribers-table-body .payment-btn { border: 1px solid #bfd6f4; color: #0b5ed7; background: #eef5ff; }
+#subscribers-table-body .payment-btn:hover { color: #ffffff; background: #0d6efd; }
 #subscribers-table-body .card:hover { transform: translateY(-2px); border-color: #b9d4f2 !important; box-shadow: 0 9px 22px rgba(36, 74, 113, 0.11) !important; }
-#subscribers-table-body .subscriber-name { color: #155db5 !important; }
-#subscribers-table-body .subscriber-phone { color: #64748b !important; }
 #subscribers-table-body .area-name,
 #subscribers-table-body .last-renewal-date,
 #subscribers-table-body .promise-date,

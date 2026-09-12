@@ -1040,29 +1040,31 @@ function createSubscriberRow(sub) {
     const canProcess = canProcessTransactions(getCurrentRole());
 
     card.innerHTML = `
-        <div class="card h-100 shadow-sm border-0 rounded-4">
-            <div class="card-body p-3">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                        <div class="text-primary fw-bold subscriber-name" style="cursor: pointer; font-size: 1.05rem;"></div>
-                        <small class="text-primary subscriber-phone d-block mt-1"></small>
+        <div class="card subscriber-card h-100">
+            <div class="card-body subscriber-card-body">
+                <div class="subscriber-card-header">
+                    <div class="subscriber-identity">
+                        <div class="subscriber-name" role="button" tabindex="0"></div>
+                        <small class="subscriber-phone d-block mt-1"></small>
                     </div>
-                    <span class="badge rounded-pill balance-badge px-2 py-2"></span>
+                    <span class="balance-badge"></span>
                 </div>
 
-                <div class="small text-dark mb-2">
-                    <i class="fa-solid fa-location-dot me-1"></i>
+                <div class="subscriber-card-info">
+                    <div class="subscriber-card-line">
+                        <i class="fa-solid fa-location-dot"></i>
                     <span class="area-name"></span>
-                </div>
+                    </div>
 
-                <div class="small text-dark mb-2 last-renewal-date"></div>
-                <div class="small text-dark mb-2 promise-date"></div>
-                <div class="small text-dark mb-3 subscriber-notes"></div>
+                    <div class="subscriber-card-line last-renewal-date"></div>
+                    <div class="subscriber-card-line promise-date"></div>
+                    <div class="subscriber-card-notes subscriber-notes"></div>
+                </div>
 
                 ${canProcess ? `
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-outline-success flex-fill fw-bold renew-btn">تجديد</button>
-                        <button type="button" class="btn btn-sm btn-outline-primary flex-fill fw-bold payment-btn">تسديد</button>
+                    <div class="subscriber-card-actions">
+                        <button type="button" class="btn renew-btn"><i class="fa-solid fa-wifi"></i> تجديد</button>
+                        <button type="button" class="btn payment-btn"><i class="fa-solid fa-hand-holding-dollar"></i> تسديد</button>
                     </div>
                 ` : ''}
             </div>
@@ -1083,12 +1085,15 @@ function createSubscriberRow(sub) {
     subscriberNameEl.textContent = sub.name || '-';
     subscriberNameEl.title = 'انقر لعرض بطاقة المشترك';
     subscriberNameEl.addEventListener('click', () => showSubscriberDetails(sub.id));
+    subscriberNameEl.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') showSubscriberDetails(sub.id);
+    });
     card.querySelector('.area-name').textContent = area;
     card.querySelector('.last-renewal-date').textContent = lastRenewalText;
 
     const balanceBadge = card.querySelector('.balance-badge');
-    balanceBadge.textContent = isDebt ? `دين ${Math.abs(balanceValue).toLocaleString()}` : `رصيد ${balanceValue.toLocaleString()}`;
-    balanceBadge.classList.add(isDebt ? 'bg-danger' : 'bg-success');
+    balanceBadge.innerHTML = `<i class="fa-solid ${isDebt ? 'fa-arrow-trend-down' : 'fa-arrow-trend-up'}"></i><span>${isDebt ? `دين ${Math.abs(balanceValue).toLocaleString()}` : `رصيد ${balanceValue.toLocaleString()}`}</span>`;
+    balanceBadge.classList.add(isDebt ? 'balance-debt' : 'balance-credit');
 
     card.querySelector('.promise-date').textContent = promiseText;
     card.querySelector('.subscriber-notes').textContent = `ملاحظات: ${notes}`;
