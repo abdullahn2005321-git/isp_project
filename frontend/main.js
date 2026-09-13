@@ -257,6 +257,15 @@ function requestOptions(method = 'GET', body = null) {
     return options;
 }
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 async function apiCall(endpoint, method = 'GET', body = null) {
     try {
         const response = await fetch(buildUrl(endpoint), requestOptions(method, body));
@@ -435,6 +444,8 @@ async function copyPhoneToClipboard(phone) {
     if (!phone || phone === 'لا يوجد رقم') return false;
 
     const cleanPhone = String(phone).trim();
+    const isSafePhone = /^[+\d\s().-]+$/.test(cleanPhone);
+    if (!isSafePhone) return false;
 
     try {
         if (navigator.clipboard && window.isSecureContext) {
@@ -945,7 +956,7 @@ async function loadAreas() {
 function renderAreaOptions(areas) {
     let optionsHTML = '<option value="" disabled selected>اختر المنطقة...</option>';
     areas.forEach((area) => {
-        optionsHTML += `<option value="${area.id}">${area.name}</option>`;
+        optionsHTML += `<option value="${escapeHtml(area.id)}">${escapeHtml(area.name)}</option>`;
     });
     dom.addAreaId.innerHTML = optionsHTML;
     dom.editAreaId.innerHTML = optionsHTML;
@@ -954,7 +965,7 @@ function renderAreaOptions(areas) {
         const selectedAreaId = subscriberFilters.areaId;
         dom.areaFilter.innerHTML = '<option value="">كل المناطق</option>';
         areas.forEach((area) => {
-            dom.areaFilter.insertAdjacentHTML('beforeend', `<option value="${area.id}">${area.name}</option>`);
+            dom.areaFilter.insertAdjacentHTML('beforeend', `<option value="${escapeHtml(area.id)}">${escapeHtml(area.name)}</option>`);
         });
         dom.areaFilter.value = selectedAreaId;
     }
@@ -971,13 +982,13 @@ function renderAreasTable(areas) {
 
     areas.forEach((area, index) => {
         const editButton = canEditArea
-            ? `<button type="button" class="btn btn-sm btn-outline-primary edit-area-btn" data-area-id="${area.id}" data-area-name="${area.name}"><i class="fa-solid fa-pen"></i> تعديل</button>`
+            ? `<button type="button" class="btn btn-sm btn-outline-primary edit-area-btn" data-area-id="${escapeHtml(area.id)}" data-area-name="${escapeHtml(area.name)}"><i class="fa-solid fa-pen"></i> تعديل</button>`
             : '';
 
         dom.areasTableBody.innerHTML += `
             <tr>
                 <td>${index + 1}</td>
-                <td>${area.name}</td>
+                <td>${escapeHtml(area.name)}</td>
                 <td>${editButton}</td>
             </tr>
         `;
@@ -1031,7 +1042,7 @@ async function loadSubscribers(page = 1) {
         const data = await apiCall(`/subscribers?${params.toString()}`);
         if (requestId !== subscribersRequestId) return;
         if (!data || data.status !== 'success') {
-            dom.subscribersTableBody.innerHTML = `<div class="col-12 text-danger p-4 text-center">${data?.message || 'تعذر تحميل قائمة المشتركين.'}</div>`;
+            dom.subscribersTableBody.innerHTML = `<div class="col-12 text-danger p-4 text-center">${escapeHtml(data?.message || 'تعذر تحميل قائمة المشتركين.')}</div>`;
             return;
         }
         const subscribersList = (Array.isArray(data.subscribers) ? data.subscribers : [])
@@ -1268,8 +1279,8 @@ async function openTeamModal() {
             <div class="mb-3">
                 <div class="fw-bold text-primary mb-2"><i class="fa-solid fa-user-shield"></i> المدير</div>
                 <div class="border rounded p-2 bg-light">
-                    <div class="fw-semibold">${manager.username || '—'}</div>
-                    <div class="small text-muted">${roleLabel(manager.role || 'admin')}</div>
+                    <div class="fw-semibold">${escapeHtml(manager.username || '—')}</div>
+                    <div class="small text-muted">${escapeHtml(roleLabel(manager.role || 'admin'))}</div>
                 </div>
             </div>
             <div>
@@ -1278,10 +1289,10 @@ async function openTeamModal() {
                     <div class="border rounded p-2 mb-2">
                         <div class="d-flex justify-content-between align-items-center gap-2">
                             <div>
-                                <div class="fw-semibold">${member.username || '—'}</div>
-                                <div class="small text-muted">${roleLabel(member.role || 'viewer')}</div>
+                                <div class="fw-semibold">${escapeHtml(member.username || '—')}</div>
+                                <div class="small text-muted">${escapeHtml(roleLabel(member.role || 'viewer'))}</div>
                             </div>
-                            ${userRole === 'admin' ? `<button type="button" class="btn btn-sm btn-outline-primary edit-staff-btn" data-staff-id="${member.id}" data-staff-username="${member.username || ''}" data-staff-role="${member.role || 'viewer'}" data-staff-active="${member.is_active !== false}"><i class="fa-solid fa-pen"></i> تعديل</button>` : ''}
+                            ${userRole === 'admin' ? `<button type="button" class="btn btn-sm btn-outline-primary edit-staff-btn" data-staff-id="${escapeHtml(member.id)}" data-staff-username="${escapeHtml(member.username || '')}" data-staff-role="${escapeHtml(member.role || 'viewer')}" data-staff-active="${member.is_active !== false}"><i class="fa-solid fa-pen"></i> تعديل</button>` : ''}
                         </div>
                     </div>
                 `).join('') : '<div class="text-muted">لا يوجد موظفون مسجلون حتى الآن.</div>'}
@@ -1651,10 +1662,10 @@ function renderLogsTable(logsArray) {
         const displayDate = formatBaghdadDateTime(log.date);
         dom.logsTableBody.innerHTML += `
             <tr>
-                <td dir="ltr" class="text-muted small">${displayDate}</td>
-                <td class="fw-bold text-dark">${log.subscriber_name}</td>
-                <td class="small text-secondary">${log.processed_by || 'غير معروف'}</td>
-                <td><span class="badge ${badgeClass} fs-6"><i class="fa-solid ${icon}"></i> ${log.type}</span></td>
+                <td dir="ltr" class="text-muted small">${escapeHtml(displayDate)}</td>
+                <td class="fw-bold text-dark">${escapeHtml(log.subscriber_name)}</td>
+                <td class="small text-secondary">${escapeHtml(log.processed_by || 'غير معروف')}</td>
+                <td><span class="badge ${badgeClass} fs-6"><i class="fa-solid ${icon}"></i> ${escapeHtml(log.type)}</span></td>
                 <td class="fw-bold fs-6">${Number(log.amount || 0).toLocaleString()} د.ع</td>
             </tr>
         `;
@@ -1740,7 +1751,7 @@ function renderMonthlyReport(data) {
 
     dom.monthlyReportTableBody.innerHTML = days.map((day) => `
         <tr>
-            <td dir="ltr" class="text-muted">${day.summary_date || '-'}</td>
+            <td dir="ltr" class="text-muted">${escapeHtml(day.summary_date || '-')}</td>
             <td>${Number(day.payments_count || 0).toLocaleString()}</td>
             <td>${Number(day.renewals_count || 0).toLocaleString()}</td>
             <td>${formatIraqiDinar(day.total_renewals_amount)}</td>

@@ -268,11 +268,13 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${index + 1}</td>
-                    <td>${manager.username || '-'}</td>
+                    <td></td>
                     <td>admin</td>
                     <td><span class="badge ${manager.is_active === false ? 'bg-secondary' : 'bg-success'}">${manager.is_active === false ? 'غير نشط' : 'نشط'}</span></td>
-                    <td><button class="btn btn-sm btn-outline-primary edit-manager-btn" data-manager-id="${manager.id}" data-manager-username="${manager.username || ''}" data-manager-active="${manager.is_active !== false}"><i class="fa-solid fa-pen"></i> تعديل</button></td>
+                    <td><button class="btn btn-sm btn-outline-primary edit-manager-btn" data-manager-id="${manager.id}" data-manager-active="${manager.is_active !== false}"><i class="fa-solid fa-pen"></i> تعديل</button></td>
                 `;
+                row.children[1].textContent = manager.username || '-';
+                row.querySelector('.edit-manager-btn').dataset.managerUsername = manager.username || '';
                 tbody.appendChild(row);
             });
         }
@@ -302,11 +304,8 @@
                 }
 
                 if (!response.ok || result?.status !== 'success') {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="5" class="text-center text-danger">${result?.message || 'تعذر جلب قائمة المدراء.'}</td>
-                        </tr>
-                    `;
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger"></td></tr>';
+                    tbody.querySelector('td').textContent = result?.message || 'تعذر جلب قائمة المدراء.';
                     return;
                 }
 
