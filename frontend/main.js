@@ -38,6 +38,7 @@ let logFilterEndDate = '';
 let activeLogSubscriberId = null;
 let isActionSubmitting = false;
 let notesSaveTimer = null;
+let subscriberScrollState = null;
 const activeAlerts = new Map();
 const maxVisibleAlerts = 3;
 let monthlyTrendChart = null;
@@ -1054,10 +1055,49 @@ async function loadSubscribers(page = 1) {
 }
 
 async function refreshSubscribersKeepingScroll() {
-    const scrollPosition = window.scrollY;
+    const scrollPosition = window.scrollY || window.pageYOffset || 0;
+    const scrollState = subscriberScrollState || {
+        scrollPosition,
+        subscriberId: null,
+        viewportOffset: null
+    };
     const page = currentSubscriberPage;
     await loadSubscribers(page);
-    requestAnimationFrame(() => window.scrollTo({ top: scrollPosition, behavior: 'auto' }));
+    restoreSubscriberScroll(scrollState, scrollPosition);
+}
+
+function captureSubscriberScroll(subscriberId) {
+    const subscriberCard = document
+        .querySelector(`[data-subscriber-id="${CSS.escape(String(subscriberId))}"]`);
+    const viewportOffset = subscriberCard
+        ? subscriberCard.getBoundingClientRect().top
+        : null;
+
+    subscriberScrollState = {
+        scrollPosition: window.scrollY || window.pageYOffset || 0,
+        subscriberId: String(subscriberId),
+        viewportOffset
+    };
+}
+
+function restoreSubscriberScroll(scrollState, fallbackPosition = 0) {
+    const restore = () => {
+        const subscriberCard = scrollState.subscriberId
+            ? document.querySelector(`[data-subscriber-id="${CSS.escape(scrollState.subscriberId)}"]`)
+            : null;
+        const currentScroll = window.scrollY || window.pageYOffset || 0;
+        const targetPosition = subscriberCard && scrollState.viewportOffset !== null
+            ? currentScroll + subscriberCard.getBoundingClientRect().top - scrollState.viewportOffset
+            : scrollState.scrollPosition ?? fallbackPosition;
+
+        window.scrollTo({ top: Math.max(0, targetPosition), left: 0, behavior: 'auto' });
+    };
+
+    requestAnimationFrame(() => {
+        restore();
+        requestAnimationFrame(restore);
+    });
+    window.setTimeout(restore, 180);
 }
 
 function filterSubscribers() {
@@ -1143,9 +1183,17 @@ function createSubscriberRow(sub) {
     const subscriberNameEl = card.querySelector('.subscriber-name');
     subscriberNameEl.textContent = sub.name || '-';
     subscriberNameEl.title = 'انقر لعرض بطاقة المشترك';
-    subscriberNameEl.addEventListener('click', () => showSubscriberDetails(sub.id));
+    card.dataset.subscriberId = String(sub.id);
+    subscriberNameEl.addEventListener('click', () => {
+        captureSubscriberScroll(sub.id);
+        showSubscriberDetails(sub.id);
+    });
     subscriberNameEl.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' || event.key === ' ') showSubscriberDetails(sub.id);
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            captureSubscriberScroll(sub.id);
+            showSubscriberDetails(sub.id);
+        }
     });
     card.querySelector('.area-name').textContent = area;
     card.querySelector('.last-renewal-date').textContent = lastRenewalText;
