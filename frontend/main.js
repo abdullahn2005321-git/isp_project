@@ -309,6 +309,10 @@ function shouldSuppressModalFocusForMobileSafari() {
     return Boolean(coarsePointer && iosAgent);
 }
 
+function shouldSkipDirectInlineRefresh() {
+    return shouldSuppressModalFocusForMobileSafari();
+}
+
 function restoreModalFocus() {
     if (shouldSuppressModalFocusForMobileSafari()) {
         return;
@@ -1468,6 +1472,9 @@ async function saveSubscriberNotesDirectly() {
             notesSaveStatus.innerText = 'تم الحفظ';
             notesSaveStatus.className = 'text-success d-block mt-1';
         }
+        if (shouldSkipDirectInlineRefresh()) {
+            return;
+        }
         await refreshSubscribersKeepingScroll();
     } else if (notesSaveStatus) {
         notesSaveStatus.innerText = 'تعذر حفظ الملاحظات';
@@ -2013,6 +2020,9 @@ async function quickUpdatePromise() {
     try {
         const data = await apiCall(`/subscribers/${selectedSubscriberId}`, 'PUT', updatedData);
         if (data && data.status === 'success') {
+            if (shouldSkipDirectInlineRefresh()) {
+                return;
+            }
             refreshSubscribersKeepingScroll();
         } else {
             console.error('خطأ في تحديث الوعد:', data ? data.message : 'No response');
