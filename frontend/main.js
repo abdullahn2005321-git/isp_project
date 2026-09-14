@@ -1445,6 +1445,9 @@ async function saveSubscriberNotesDirectly() {
         notesSaveStatus.className = 'text-muted d-block mt-1';
     }
 
+    if (!subscriberScrollState || subscriberScrollState.subscriberId !== String(selectedSubscriberId)) {
+        captureSubscriberScroll(selectedSubscriberId);
+    }
     const data = await apiCall(`/subscribers/${selectedSubscriberId}`, 'PUT', { notes });
     if (data?.status === 'success') {
         if (selectedSubscriberData) selectedSubscriberData.notes = notes;
@@ -1991,6 +1994,9 @@ async function quickUpdatePromise() {
         return;
     }
     const updatedData = { promise_date: dom.quickPromiseInput.value || null };
+    if (!subscriberScrollState || subscriberScrollState.subscriberId !== String(selectedSubscriberId)) {
+        captureSubscriberScroll(selectedSubscriberId);
+    }
     try {
         const data = await apiCall(`/subscribers/${selectedSubscriberId}`, 'PUT', updatedData);
         if (data && data.status === 'success') {
