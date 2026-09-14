@@ -306,9 +306,10 @@ function restoreModalFocus() {
     const activeModal = document.querySelector('.modal.show');
     if (!activeModal) return;
 
-    const firstInput = activeModal.querySelector('input, select, textarea, button');
-    if (firstInput && typeof firstInput.focus === 'function') {
-        firstInput.focus({ preventScroll: true });
+    // Focus the modal container itself (not an input) so iOS Safari can't
+    // ignore preventScroll and drag the page up to reveal a virtual keyboard.
+    if (typeof activeModal.focus === 'function') {
+        activeModal.focus({ preventScroll: true });
     }
 }
 
@@ -1537,6 +1538,9 @@ async function submitEditSubscriber() {
         notes: document.getElementById('editNotes').value.trim(),
         promise_date: document.getElementById('editPromiseDate').value || null
     };
+    if (!subscriberScrollState || subscriberScrollState.subscriberId !== String(subId)) {
+        captureSubscriberScroll(subId);
+    }
     try {
         const data = await apiCall(`/subscribers/${subId}`, 'PUT', updatedData);
         if (data && data.status === 'success') {
