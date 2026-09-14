@@ -302,7 +302,18 @@ function ensureToastContainer() {
     return container;
 }
 
+function shouldSuppressModalFocusForMobileSafari() {
+    const coarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    const iosAgent = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    return Boolean(coarsePointer && iosAgent);
+}
+
 function restoreModalFocus() {
+    if (shouldSuppressModalFocusForMobileSafari()) {
+        return;
+    }
+
     const activeModal = document.querySelector('.modal.show');
     if (!activeModal) return;
 
@@ -394,7 +405,9 @@ function showAlert(message, type = 'danger') {
     }, { once: true });
 
     toast.show();
-    setTimeout(restoreModalFocus, 30);
+    if (!shouldSuppressModalFocusForMobileSafari()) {
+        setTimeout(restoreModalFocus, 30);
+    }
 }
 
 function normalizeRole(role) {
