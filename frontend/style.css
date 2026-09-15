@@ -510,6 +510,16 @@ body { background-color: #f8f9fa; font-family: "Segoe UI", Tahoma, Geneva, Verda
     .subscriber-footer { align-items: stretch; flex-direction: column; padding: 0.8rem; }
     .subscriber-footer > div { display: flex; }
     .subscriber-footer button { flex: 1; }
+    #subscribers-table-body .subscriber-card-body { padding: 0.75rem; }
+    #subscribers-table-body .subscriber-card-header { gap: 0.5rem; padding-bottom: 0.6rem; }
+    #subscribers-table-body .subscriber-name { font-size: 0.92rem; }
+    #subscribers-table-body .subscriber-phone { font-size: 0.72rem; }
+    #subscribers-table-body .balance-badge { padding: 0.35rem 0.45rem; border-radius: 7px; font-size: 0.69rem; }
+    #subscribers-table-body .subscriber-card-info { gap: 0.38rem; padding: 0.65rem 0 0.75rem; }
+    #subscribers-table-body .subscriber-card-line { gap: 0.35rem; font-size: 0.72rem; line-height: 1.4; }
+    #subscribers-table-body .subscriber-card-notes { min-height: 2.1rem; font-size: 0.7rem; line-height: 1.45; }
+    #subscribers-table-body .subscriber-card-actions { gap: 0.4rem; }
+    #subscribers-table-body .subscriber-card-actions .btn { min-height: 34px; padding: 0.35rem 0.45rem; border-radius: 7px; font-size: 0.71rem; }
     .areas-header { align-items: flex-start; flex-direction: column; padding: 1rem; }
     .areas-title { font-size: 1.1rem; }
     .areas-subtitle { font-size: 0.8rem; line-height: 1.6; }
