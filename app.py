@@ -17,7 +17,12 @@ from routes.user_management import user_management_bp
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+ALLOWED_ORIGINS = [
+    "https://ispproject-production-014e.up.railway.app",
+    "http://127.0.0.1:5000",
+    "http://localhost:5000",
+]
+CORS(app, origins=ALLOWED_ORIGINS)
 app.json.ensure_ascii = False
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'mysql+pymysql://root:@127.0.0.1/isp_db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -73,4 +78,5 @@ def serve_static_files(filename):
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    debug_mode = os.environ.get('FLASK_DEBUG', '0') == '1'
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)
