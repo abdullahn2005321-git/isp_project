@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from datetime import datetime
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
-from utils import server_error_response
+from utils import server_error_response, parse_optional_date
 
 subscribers_bp = Blueprint('subscribers', __name__)
 
@@ -133,12 +133,20 @@ def add_subscriber():
             "message": "Area not found or unauthorized."
         }), 403
     
+    try:
+        promise_date_value = parse_optional_date(data.get('promise_date'))
+    except ValueError:
+        return jsonify({
+            "status": "error",
+            "message": "Invalid promise_date format. Use YYYY-MM-DD."
+        }), 400
+
     new_subscriber = Subscriber(
         name = data['name'],
         phone_number = data['phone_number'],
         area_id = data['area_id'],
         balance = int(float(data.get('balance', 0.0))),
-        promise_date = data.get('promise_date', None),
+        promise_date = promise_date_value,
         notes = data.get('notes', '')
     )
     try:
@@ -426,8 +434,13 @@ def update_subscriber(sub_id):
         sub.notes = data['notes']
 
     if 'promise_date' in data:
-        raw_data = data['promise_date']
-        sub.promise_date = raw_data if raw_data and str(raw_data).strip() != "" else None
+        try:
+            sub.promise_date = parse_optional_date(data['promise_date'])
+        except ValueError:
+            return jsonify({
+                "status": "error",
+                "message": "Invalid promise_date format. Use YYYY-MM-DD."
+            }), 400
 
     try:
         db.session.commit()

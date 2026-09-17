@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from models import db, Subscriber, Transaction, Area, User
 from routes.subscribers import get_current_admin_id
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
-from utils import server_error_response
+from utils import server_error_response, parse_optional_date
 
 transactions_bp = Blueprint('transactions', __name__)
 
@@ -171,15 +171,20 @@ def renew_subscription():
             sub.promise_date = None
             
     else:
-        promise_date = data.get('promise_date')
+        promise_date_raw = data.get('promise_date')
         if sub.balance < 0:
-            if not promise_date or promise_date.strip() == "":
+            if not promise_date_raw or str(promise_date_raw).strip() == "":
                 return jsonify({
                     "status": "error",
                     "message": "المشترك أصبح مديوناً الآن. يجب تحديد تاريخ (وعد) للتسديد!"
                 }), 400
-            else:
-                sub.promise_date = promise_date
+            try:
+                sub.promise_date = parse_optional_date(promise_date_raw)
+            except ValueError:
+                return jsonify({
+                    "status": "error",
+                    "message": "Invalid promise_date format. Use YYYY-MM-DD."
+                }), 400
         else:
             sub.promise_date = None
 
