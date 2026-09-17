@@ -18,6 +18,7 @@ isp/
 
 # Pytest cache
 .pytest_cache/
+.coverage
 
 # Distribution / packaging
 build/
