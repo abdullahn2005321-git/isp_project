@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from models import db, Subscriber, Transaction, Area, User
 from routes.subscribers import get_current_admin_id
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from utils import server_error_response
 
 transactions_bp = Blueprint('transactions', __name__)
 
@@ -88,10 +89,7 @@ def add_payment():
         }), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            "status": "error",
-            "message": str(e)
-        }), 500
+        return server_error_response(e)
 
 #==============================
 #==========renewal endpoints
@@ -197,4 +195,4 @@ def renew_subscription():
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return server_error_response(e)

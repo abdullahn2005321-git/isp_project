@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from datetime import datetime
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from utils import server_error_response
 
 subscribers_bp = Blueprint('subscribers', __name__)
 
@@ -49,7 +50,7 @@ def add_area():
         db.session.rollback()
         if "Duplicate entry" in str(e) or "IntegrityError" in str(e):
              return jsonify({"status": "error", "message": "Area with this name already exists."}), 400
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return server_error_response(e)
     
 @subscribers_bp.route('/api/areas', methods=['GET'])
 @jwt_required()
@@ -66,7 +67,7 @@ def get_areas():
         }), 200
     
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return server_error_response(e)
 
 @subscribers_bp.route('/api/areas/<int:area_id>', methods=['PUT'])
 @jwt_required()
@@ -99,7 +100,7 @@ def update_area(area_id):
         }), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return server_error_response(e)
 
 #==============================
 #=======subscriber endpoints
@@ -157,10 +158,7 @@ def add_subscriber():
         }), 400
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            "status": "error",
-            "message": str(e)
-        }), 500
+        return server_error_response(e)
 
 @subscribers_bp.route('/api/subscribers', methods=['GET'])
 @jwt_required()
@@ -313,10 +311,7 @@ def get_subscribers():
         }), 200
     
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": str(e)
-        }), 500
+        return server_error_response(e)
 
 
 @subscribers_bp.route('/api/subscribers/<int:sub_id>', methods=['GET'])
@@ -448,10 +443,7 @@ def update_subscriber(sub_id):
         }), 400
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            "status": "error",
-            "message": str(e)
-        }), 500
+        return server_error_response(e)
 
 
 @subscribers_bp.route('/api/subscribers/<int:sub_id>', methods=['DELETE'])
@@ -490,7 +482,4 @@ def delete_subscriber(sub_id):
         }), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            "status": "error",
-            "message": str(e)
-        }), 500
+        return server_error_response(e)

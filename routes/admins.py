@@ -3,6 +3,7 @@ from flask_jwt_extended import get_jwt, jwt_required
 from flask_jwt_extended import get_jwt_identity
 from werkzeug.security import generate_password_hash
 from models import db, User
+from utils import server_error_response
 
 admins_bp = Blueprint('admins', __name__)
 
@@ -44,10 +45,7 @@ def register_admin():
         }), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            "status": "error",
-            "message": str(e)
-        }), 500
+        return server_error_response(e)
 
 
 @admins_bp.route('/api/admins', methods=['GET'])
@@ -77,10 +75,7 @@ def get_admins():
         }), 200
     
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": str(e)
-        }), 500
+        return server_error_response(e)
 
 @admins_bp.route('/api/admins/<int:admin_id>', methods=['PUT'])
 @jwt_required()
@@ -129,7 +124,4 @@ def update_admin(admin_id):
         }), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            "status": "error",
-            "message": str(e)
-        }), 500
+        return server_error_response(e)

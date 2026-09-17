@@ -4,6 +4,7 @@ from routes.subscribers import get_current_admin_id
 from flask_jwt_extended import get_jwt_identity, jwt_required, get_jwt
 from sqlalchemy import extract
 from datetime import datetime, timedelta
+from utils import server_error_response
 
 logging_and_reporting_bp = Blueprint('logging_and_reporting', __name__)
 
@@ -112,10 +113,7 @@ def daily_report():
         return jsonify(report_data), 200
     
     except Exception as e:
-         return jsonify({
-            "status": "error",
-            "message": str(e)
-        }), 500
+        return server_error_response(e)
 
 #==============================
 #==========logs endpoints
@@ -216,7 +214,4 @@ def get_logs():
         }), 200
     
     except Exception as e:
-         return jsonify({
-            "status": "error",
-            "message": str(e)
-        }), 500
+        return server_error_response(e)

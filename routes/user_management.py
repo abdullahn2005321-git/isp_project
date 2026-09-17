@@ -3,6 +3,7 @@ from flask_jwt_extended import get_jwt, jwt_required
 from flask_jwt_extended import get_jwt_identity
 from models import db, User
 from werkzeug.security import generate_password_hash
+from utils import server_error_response
 
 user_management_bp = Blueprint('user_management', __name__)
 
@@ -56,10 +57,7 @@ def register_staff():
         }), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify ({
-            "status": "error",
-            "message": str(e)
-        }), 500
+        return server_error_response(e)
 
 @user_management_bp.route('/api/staff', methods=['GET'])
 @jwt_required()
@@ -159,10 +157,7 @@ def update_staff(staff_id):
         }), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            "status": "error",
-            "message": str(e)
-        }), 500
+        return server_error_response(e)
 
 @user_management_bp.route('/api/my-team/<int:staff_id>', methods=['DELETE'])
 @jwt_required()
@@ -191,7 +186,4 @@ def delete_staff(staff_id):
         }), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            "status": "error",
-            "message": str(e)
-        }), 500
+        return server_error_response(e)
