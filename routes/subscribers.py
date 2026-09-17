@@ -137,7 +137,7 @@ def add_subscriber():
         name = data['name'],
         phone_number = data['phone_number'],
         area_id = data['area_id'],
-        balance = float(data.get('balance', 0.0)),
+        balance = int(float(data.get('balance', 0.0))),
         promise_date = data.get('promise_date', None),
         notes = data.get('notes', '')
     )

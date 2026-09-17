@@ -94,8 +94,6 @@ PUT /api/subscribers/<id> - Update subscriber details.
 
 DELETE /api/subscribers/<id> - Soft-delete a subscriber.
 
-GET /api/promises_today - List subscribers with a payment promise date equal to today.
-
 💰 Payments and Renewals
 POST /api/payments - Record a payment and reduce subscriber debt.
 
