@@ -176,7 +176,7 @@ def delete_staff(staff_id):
         }), 403
 
     staff = db.session.get(User, staff_id)
-    if not staff or staff.parent_admin_id != get_jwt_identity():
+    if not staff or staff.parent_admin_id != int(get_jwt_identity()):
         return jsonify({
             "status": "error",
             "message": "الموظف غير موجود أو لا يمكنك حذفه"

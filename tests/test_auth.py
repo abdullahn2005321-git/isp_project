@@ -315,3 +315,82 @@ def test_admin_can_update_staff_without_changing_username(client):
         updated_staff = db.session.get(User, staff_id)
         assert updated_staff.role == 'viewer'
         assert updated_staff.is_active is False
+
+
+def test_admin_can_delete_own_staff(client):
+    with app.app_context():
+        admin = User(
+            username='delete-admin',
+            password_hash=generate_password_hash('123456'),
+            role='admin'
+        )
+        db.session.add(admin)
+        db.session.flush()
+
+        staff = User(
+            username='removable-staff',
+            password_hash=generate_password_hash('123456'),
+            role='viewer',
+            parent_admin_id=admin.id
+        )
+        db.session.add(staff)
+        db.session.commit()
+        admin_id = admin.id
+        staff_id = staff.id
+
+        token = create_access_token(
+            identity=str(admin_id),
+            additional_claims={'role': 'admin', 'admin_id': admin_id}
+        )
+
+    response = client.delete(
+        f'/api/my-team/{staff_id}',
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    assert response.status_code == 200
+
+    with app.app_context():
+        assert db.session.get(User, staff_id) is None
+
+
+def test_admin_cannot_delete_another_admins_staff(client):
+    with app.app_context():
+        first_admin = User(
+            username='delete-first-admin',
+            password_hash=generate_password_hash('123456'),
+            role='admin'
+        )
+        second_admin = User(
+            username='delete-second-admin',
+            password_hash=generate_password_hash('123456'),
+            role='admin'
+        )
+        db.session.add_all([first_admin, second_admin])
+        db.session.flush()
+
+        staff = User(
+            username='delete-protected-staff',
+            password_hash=generate_password_hash('123456'),
+            role='editor',
+            parent_admin_id=second_admin.id
+        )
+        db.session.add(staff)
+        db.session.commit()
+        first_admin_id = first_admin.id
+        staff_id = staff.id
+
+        token = create_access_token(
+            identity=str(first_admin_id),
+            additional_claims={'role': 'admin', 'admin_id': first_admin_id}
+        )
+
+    response = client.delete(
+        f'/api/my-team/{staff_id}',
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    assert response.status_code == 404
+
+    with app.app_context():
+        assert db.session.get(User, staff_id) is not None
