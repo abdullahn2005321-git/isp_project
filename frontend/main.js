@@ -896,6 +896,7 @@ function loadInitialState() {
         }
         showApp();
         loadPageData();
+        restoreStateFromUrl();
     } else {
         showLogin();
     }
@@ -927,6 +928,7 @@ async function handleLogin(event) {
         }
         showApp();
         loadPageData();
+        restoreStateFromUrl();
     } else {
         dom.loginMessage.innerText = response?.message || 'فشل تسجيل الدخول. حاول مرة أخرى.';
     }
@@ -1131,6 +1133,7 @@ function filterSubscribers() {
     syncSubscriberFiltersFromDom();
     if (!hasValidSubscriberDateRange()) return;
     loadSubscribers(1);
+    updateUrlState();
 }
 
 function resetSubscriberFilters() {
@@ -1150,6 +1153,7 @@ function resetSubscriberFilters() {
 
     updateSubscriberFilterSummary();
     loadSubscribers(1);
+    updateUrlState();
 }
 
 function createSubscriberRow(sub) {
@@ -1952,7 +1956,59 @@ function switchSection(sectionName) {
     document.querySelectorAll('.section-content').forEach((el) => el.classList.remove('active'));
     document.querySelectorAll('.nav-tabs .nav-link').forEach((el) => el.classList.remove('active'));
     document.getElementById(sectionName).classList.add('active');
-    document.getElementById(`tab-${sectionName}`).classList.add('active');
+    document.getElementById(`tab-${sectionName}`)?.classList.add('active');
+    updateUrlState();
+}
+
+const URL_TRACKED_TABS = ['dashboard', 'subscribers', 'logs', 'monthly-report'];
+
+function updateUrlState() {
+    const activeTab = document.querySelector('.nav-tabs .nav-link.active')?.id?.replace('tab-', '');
+    const params = new URLSearchParams();
+
+    if (activeTab && URL_TRACKED_TABS.includes(activeTab) && activeTab !== 'dashboard') {
+        params.set('tab', activeTab);
+    }
+
+    if (activeTab === 'subscribers') {
+        const filterParams = buildSubscriberQueryParams();
+        filterParams.delete('page');
+        filterParams.delete('per_page');
+        filterParams.forEach((value, key) => params.set(key, value));
+    }
+
+    const query = params.toString();
+    const newUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+    history.replaceState(null, '', newUrl);
+}
+
+async function restoreStateFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (!tab || !URL_TRACKED_TABS.includes(tab) || tab === 'dashboard') return;
+
+    if (tab === 'subscribers') {
+        await loadAreas();
+
+        if (dom.searchInput) dom.searchInput.value = params.get('search') || '';
+        if (dom.areaFilter) dom.areaFilter.value = params.get('area_id') || '';
+        if (dom.renewalFromFilter) dom.renewalFromFilter.value = params.get('renewal_from') || '';
+        if (dom.renewalToFilter) dom.renewalToFilter.value = params.get('renewal_to') || '';
+        if (dom.financialBalanceFilter) {
+            if (params.get('debt_only') === 'true') dom.financialBalanceFilter.value = '-1';
+            else if (params.get('balance_only') === 'true') dom.financialBalanceFilter.value = '1';
+            else dom.financialBalanceFilter.value = '0';
+        }
+        syncSubscriberFiltersFromDom();
+        switchSection('subscribers');
+        loadSubscribers(1);
+    } else if (tab === 'logs') {
+        switchSection('logs');
+        loadLogs();
+    } else if (tab === 'monthly-report') {
+        switchSection('monthly-report');
+        loadMonthlyReport();
+    }
 }
 
 function openModal(subscriberId, subscriberName, actionType, currentBalance) {
