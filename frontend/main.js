@@ -792,6 +792,7 @@ function registerEventListeners() {
             }
 
             loadLogs(1, activeLogSubscriberId);
+            updateUrlState();
             logFilterModal.hide();
         });
     }
@@ -808,6 +809,7 @@ function registerEventListeners() {
             currentLogFilter = 'الكل';
             updateLogFilterButtonLabel();
             loadLogs(1);
+            updateUrlState();
             logFilterModal.hide();
         });
     }
@@ -1977,6 +1979,13 @@ function updateUrlState() {
         filterParams.forEach((value, key) => params.set(key, value));
     }
 
+    if (activeTab === 'logs') {
+        if (activeLogSubscriberId) params.set('subscriber_id', String(activeLogSubscriberId));
+        if (logFilterStartDate) params.set('start_date', logFilterStartDate);
+        if (logFilterEndDate) params.set('end_date', logFilterEndDate);
+        if (currentLogFilter && currentLogFilter !== 'الكل') params.set('log_type', currentLogFilter);
+    }
+
     const query = params.toString();
     const newUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
     history.replaceState(null, '', newUrl);
@@ -2003,8 +2012,22 @@ async function restoreStateFromUrl() {
         switchSection('subscribers');
         loadSubscribers(1);
     } else if (tab === 'logs') {
+        const subscriberId = params.get('subscriber_id');
+        activeLogSubscriberId = subscriberId ? Number(subscriberId) : null;
+        logFilterStartDate = params.get('start_date') || '';
+        logFilterEndDate = params.get('end_date') || '';
+        currentLogFilter = params.get('log_type') || 'الكل';
+
+        const subscriberIdInput = document.getElementById('logFilterSubscriberId');
+        if (subscriberIdInput) subscriberIdInput.value = activeLogSubscriberId || '';
+        const startInput = document.getElementById('logFilterStartDate');
+        if (startInput) startInput.value = logFilterStartDate;
+        const endInput = document.getElementById('logFilterEndDate');
+        if (endInput) endInput.value = logFilterEndDate;
+        if (dom.logFilterType) dom.logFilterType.value = currentLogFilter;
+
         switchSection('logs');
-        loadLogs();
+        loadLogs(1, activeLogSubscriberId);
     } else if (tab === 'monthly-report') {
         switchSection('monthly-report');
         loadMonthlyReport();
