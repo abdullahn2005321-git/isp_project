@@ -1381,7 +1381,6 @@ async function submitNewSubscriber() {
             addSubModal.hide();
             showAlert(data.message, 'success');
             loadSubscribers();
-            loadTotalSubscribersCount();
             loadDailyReport();
         } else {
             showAlert(`❌ خطأ: ${data ? data.message : 'تعذر حفظ المشترك.'}`);
@@ -1591,7 +1590,6 @@ async function deleteSubscriber(subId) {
             if (detailsModal) detailsModal.hide();
             showAlert(`🗑️ ${data.message}`, 'success');
             loadSubscribers();
-            loadTotalSubscribersCount();
         } else {
             showAlert(`❌ خطأ: ${data ? data.message : 'تعذر حذف المشترك.'}`);
         }
