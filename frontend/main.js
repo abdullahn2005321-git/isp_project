@@ -713,6 +713,7 @@ function registerEventListeners() {
     dom.btnProfileAreas.addEventListener('click', () => {
         dom.profileInfoCard.classList.add('d-none');
         switchSection('areas');
+        loadAreas();
         if (addAreaModal) addAreaModal.show();
     });
     if (dom.btnMyTeam) {
@@ -726,9 +727,11 @@ function registerEventListeners() {
     dom.tabSubscribers.addEventListener('click', () => {
         switchSection('subscribers');
         loadSubscribers(1);
+        loadAreas();
     });
     dom.tabLogs.addEventListener('click', () => {
         switchSection('logs');
+        loadLogs();
     });
     if (dom.tabMonthlyReport) {
         dom.tabMonthlyReport.addEventListener('click', () => {
@@ -938,21 +941,11 @@ function logoutUser() {
 }
 
 function loadPageData() {
+    // Dashboard is the tab shown right after login, so its data loads eagerly.
+    // Other tabs (subscribers, areas, logs) load lazily when opened - see their
+    // click handlers below.
     loadSubscribers();
-    loadTotalSubscribersCount();
-    loadAreas();
-    loadLogs();
     loadDailyReport();
-}
-
-async function loadTotalSubscribersCount() {
-    const data = await apiCall('/subscribers?page=1&per_page=1');
-    if (!data || data.status !== 'success') return;
-    totalSubscribersOverall = data.pagination?.total_subscribers || 0;
-    if (dom.totalSubscribers) {
-        dom.totalSubscribers.innerText = totalSubscribersOverall.toLocaleString();
-        dom.totalSubscribers.dataset.total = totalSubscribersOverall;
-    }
 }
 
 async function loadAreas() {
@@ -1070,6 +1063,11 @@ async function loadSubscribers(page = 1) {
         currentSubscriberPage = page;
         totalSubscriberPages = data.pagination?.total_pages || 1;
         totalDebtOverall = Number(data.pagination?.total_debt || 0);
+        totalSubscribersOverall = Number(data.pagination?.total_subscribers || 0);
+        if (dom.totalSubscribers) {
+            dom.totalSubscribers.innerText = totalSubscribersOverall.toLocaleString();
+            dom.totalSubscribers.dataset.total = totalSubscribersOverall;
+        }
         dom.subscriberPageInfo.innerText = `صفحة ${currentSubscriberPage} من ${totalSubscriberPages}`;
         dom.btnPrevPage.disabled = currentSubscriberPage <= 1;
         dom.btnNextPage.disabled = currentSubscriberPage >= totalSubscriberPages;
