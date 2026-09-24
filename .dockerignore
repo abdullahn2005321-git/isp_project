@@ -1,6 +1,5 @@
 .git
 .gitignore
-notes.md
 isp/
 __pycache__/
 .env
