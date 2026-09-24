@@ -160,7 +160,11 @@ All endpoints except `POST /api/login` and the very first `POST /api/admins` cal
 pytest
 ```
 
-30 tests currently cover authentication, role-based permissions, subscriber filtering, and daily summary generation.
+50 tests currently cover authentication, role-based permissions, subscriber filtering, admin/staff management, and daily summary generation.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
 
 ## Author
 
