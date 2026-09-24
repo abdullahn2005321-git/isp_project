@@ -3,3 +3,8 @@
 notes.md
 isp/
 __pycache__/
+.env
+.vscode/
+.claude/
+.pytest_cache/
+instance/
