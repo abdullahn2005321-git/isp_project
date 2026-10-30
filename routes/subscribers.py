@@ -46,10 +46,12 @@ def add_area():
         db.session.add(new_area)
         db.session.commit()
         return jsonify({"status": "success", "message": "Area added successfully."}), 201
+
+    except IntegrityError as e:
+        db.session.rollback()
+        return jsonify({"status": "error", "message":"Area with this name already exists."})
     except Exception as e:
         db.session.rollback()
-        if "Duplicate entry" in str(e) or "IntegrityError" in str(e):
-             return jsonify({"status": "error", "message": "Area with this name already exists."}), 400
         return server_error_response(e)
     
 @subscribers_bp.route('/api/areas', methods=['GET'])

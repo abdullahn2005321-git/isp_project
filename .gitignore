@@ -24,3 +24,5 @@ isp/
 build/
 dist/
 *.egg-info/
+
+.claude/
