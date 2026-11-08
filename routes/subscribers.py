@@ -49,7 +49,7 @@ def add_area():
 
     except IntegrityError as e:
         db.session.rollback()
-        return jsonify({"status": "error", "message":"Area with this name already exists."})
+        return jsonify({"status": "error", "message":"Area with this name already exists."}), 409
     except Exception as e:
         db.session.rollback()
         return server_error_response(e)

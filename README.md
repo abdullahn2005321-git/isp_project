@@ -9,7 +9,7 @@ A RESTful API for managing Internet Service Provider (ISP) subscribers, subscrip
 - **Backend:** Python, Flask, Flask Blueprints
 - **Database:** MySQL, SQLAlchemy (ORM), Flask-Migrate / Alembic
 - **Auth:** JWT (Flask-JWT-Extended), password hashing via Werkzeug
-- **Testing:** Pytest (30 passing tests covering auth, RBAC, subscribers, and reporting)
+- **Testing:** Pytest (50 passing tests covering auth, RBAC, subscribers, and reporting)
 - **DevOps:** Docker, Docker Compose, Gunicorn, GitHub Actions CI
 
 ## Key Features
@@ -41,7 +41,6 @@ isp_project/
 ├── tests/                     # Pytest suite
 ├── frontend/                  # Static HTML/CSS/JS admin UI, served by Flask
 ├── create_super_admin.py      # One-time bootstrap of the super_admin account
-├── seed_data.py                # Faker-based dummy subscriber generator for local testing
 ├── Dockerfile / docker-compose.yml
 └── requirements.txt
 ```
