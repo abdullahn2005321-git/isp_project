@@ -161,6 +161,10 @@ pytest
 
 50 tests currently cover authentication, role-based permissions, subscriber filtering, admin/staff management, and daily summary generation.
 
+## Backups
+
+Daily MySQL backups (mysqldump + gzip) are uploaded to a private Cloudflare R2 bucket, with a Telegram alert on failure. The backup service lives in a separate private repository for security.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
